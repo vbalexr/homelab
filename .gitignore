@@ -1,0 +1,56 @@
+# -----------------------------------------------------------------------
+# Secrets & credentials — never commit these
+# -----------------------------------------------------------------------
+
+# Private key files
+*.pem
+*.key
+*.p12
+*.pfx
+*.der
+*.ppk
+id_rsa
+id_rsa*
+id_dsa
+id_dsa*
+id_ecdsa
+id_ecdsa*
+id_ed25519
+id_ed25519*
+
+# Environment / secrets files
+.env
+.env.*
+!.env.example
+*.secret
+secrets.yaml
+secrets.yml
+!*.sops.yaml
+!*.sops.yml
+!sealed-secrets*.yaml
+!sealed-secrets*.yml
+
+# SOPS encrypted files are safe to commit; raw (unencrypted) originals are not
+# Naming convention: keep unencrypted originals out of git
+*.dec.yaml
+*.dec.yml
+*.plaintext.yaml
+*.plaintext.yml
+
+# -----------------------------------------------------------------------
+# OS / editor artefacts
+# -----------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# -----------------------------------------------------------------------
+# Build / runtime artefacts
+# -----------------------------------------------------------------------
+__pycache__/
+*.pyc
+node_modules/
+dist/
