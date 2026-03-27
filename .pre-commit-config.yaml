@@ -1,0 +1,27 @@
+repos:
+  # --------------------------------------------------------------------------
+  # Secret / credential detection
+  # --------------------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        name: Detect secrets with Gitleaks
+        description: Scans for hardcoded secrets, private keys, and credentials.
+
+  # --------------------------------------------------------------------------
+  # General file hygiene
+  # --------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+        name: Detect private keys
+        description: Blocks files that contain private key material (RSA, DSA, EC, etc.).
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ["--unsafe"]   # allow multi-document YAML (Kubernetes manifests)
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
