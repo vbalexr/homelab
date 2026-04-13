@@ -172,8 +172,8 @@ cilium install \
     --set cluster.name=magi \
     --set operator.replicas=1 \
     --set routingMode=native \
-    --set ipv4NativeRoutingCIDR=10.255.0.0/24 \
-    --set ipv6NativeRoutingCIDR=fd7a:2201:7351::/64 \
+    --set ipv4NativeRoutingCIDR=10.41.0.0/16 \
+    --set ipv6NativeRoutingCIDR=fd7a:41::/48 \
     --set devices="bond0" \
     --set directRoutingDevice=bond1 \
     --set tunnelProtocol=vxlan
