@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fio-rwm-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: longhorn
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fio-rwm-benchmark
+  namespace: default
+spec:
+  restartPolicy: Never
+  containers:
+    - name: fio
+      image: docker.io/xridge/fio:latest
+      args:
+        - --name=randrw
+        - --filename=/data/testfile
+        - --size=4G
+        - --bs=4k
+        - --rw=randrw
+        - --ioengine=libaio
+        - --iodepth=16
+        - --numjobs=4
+        - --runtime=60
+        - --time_based
+        - --direct=1
+        - --group_reporting
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: fio-rwm-pvc

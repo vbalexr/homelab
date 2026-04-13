@@ -54,3 +54,6 @@ __pycache__/
 *.pyc
 node_modules/
 dist/
+
+/**/generated/
+talos-secrets.yaml

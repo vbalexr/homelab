@@ -1,0 +1,41 @@
+machine:
+  network:
+    interfaces:
+      - interface: bond0
+        dhcp: false
+        bond:
+          mode: 802.3ad
+          lacpRate: fast
+          miimon: 100
+          interfaces:
+            - enp87s0
+            - enp90s0
+        addresses:
+          - fd7a:2201:1ab::7/64
+          - 10.1.0.7/22
+        routes:
+          - network: ::/0
+            gateway: fd7a:2201:1ab::1
+          - network: 0.0.0.0/0
+            gateway: 10.1.0.1
+      - interface: bond1
+        dhcp: false
+        mtu: 9000
+        bond:
+          mode: 802.3ad
+          lacpRate: fast
+          miimon: 100
+          interfaces:
+            - enp2s0f0np0
+            - enp2s0f1np1
+        addresses:
+          - 10.255.0.2/24
+          - fd7a:2201:7351::2/64
+  install:
+    diskSelector:
+      serial: 2M322LACB8FL
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: casper
+auto: off

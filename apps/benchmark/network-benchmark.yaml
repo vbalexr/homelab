@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iperf3-server
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iperf3-server
+  template:
+    metadata:
+      labels:
+        app: iperf3-server
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - iperf3-client
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: iperf3
+          image: docker.io/networkstatic/iperf3:latest
+          args:
+            - -s
+          ports:
+            - containerPort: 5201
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf3
+  namespace: default
+spec:
+  selector:
+    app: iperf3-server
+  ports:
+    - name: iperf3
+      port: 5201
+      targetPort: 5201
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: iperf3-client
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: iperf3-client
+    spec:
+      restartPolicy: Never
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - iperf3-server
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: iperf3
+          image: docker.io/networkstatic/iperf3:latest
+          args:
+            - -c
+            - iperf3.default.svc.cluster.local
+            - -t
+            - "30"
+            - -P
+            - "4"

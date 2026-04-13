@@ -1,0 +1,7 @@
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/i915-ucode
+      - siderolabs/intel-ucode
+      - siderolabs/nut-client
+      - siderolabs/gasket-driver
