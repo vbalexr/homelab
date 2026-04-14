@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fio-throughput-rwo-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: ceph-block
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fio-throughput-job-rwo
+  namespace: default
+data:
+  throughput.fio: |
+    [global]
+    ioengine=libaio
+    direct=1
+    time_based=1
+    runtime=60
+    group_reporting=1
+    iodepth=32
+    numjobs=4
+    bs=1m
+    size=8g
+    filename=/data/testfile
+
+    [write]
+    rw=write
+    stonewall
+
+    [read]
+    rw=read
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fio-throughput-rwo-benchmark
+  namespace: default
+spec:
+  restartPolicy: Never
+  containers:
+    - name: fio
+      image: docker.io/xridge/fio:latest
+      args:
+        - /job/throughput.fio
+      volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: job
+          mountPath: /job
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: fio-throughput-rwo-pvc
+    - name: job
+      configMap:
+        name: fio-throughput-job-rwo
+        items:
+          - key: throughput.fio
+            path: throughput.fio

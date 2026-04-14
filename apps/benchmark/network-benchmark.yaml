@@ -44,6 +44,20 @@ spec:
       port: 5201
       targetPort: 5201
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf3-headless
+  namespace: default
+spec:
+  clusterIP: None
+  selector:
+    app: iperf3-server
+  ports:
+    - name: iperf3
+      port: 5201
+      targetPort: 5201
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -67,12 +81,89 @@ spec:
                       - iperf3-server
               topologyKey: kubernetes.io/hostname
       containers:
-        - name: iperf3
-          image: docker.io/networkstatic/iperf3:latest
+        - name: netbench
+          image: docker.io/nicolaka/netshoot:latest
+          command:
+            - /bin/sh
+            - -lc
           args:
-            - -c
-            - iperf3.default.svc.cluster.local
-            - -t
-            - "30"
-            - -P
-            - "4"
+            - |
+              set -euo pipefail
+
+              SERVER_DNS="iperf3-headless.default.svc.cluster.local"
+              SERVER_IP="$(getent ahostsv4 "$SERVER_DNS" | awk '{print $1; exit}')"
+              echo "Target: $SERVER_DNS ($SERVER_IP)"
+
+              summarize_tcp() {
+                label="$1"
+                shift
+                out="/tmp/iperf-${label}.txt"
+                rm -f "$out"
+                iperf3 "$@" 2>&1 | tee "$out" >/dev/null
+                # Prefer final sender/receiver lines (contain Retr on sender).
+                if grep -E 'sender|receiver' "$out" >/dev/null 2>&1; then
+                  grep -E 'sender|receiver' "$out"
+                  sum_sender="$(grep -E '^\[SUM\].* sender$' "$out" | tail -n 1 || true)"
+                  if [ -n "$sum_sender" ]; then
+                    # Example:
+                    # [SUM]   0.00-30.00  sec  31.4 GBytes  8.99 Gbits/sec  362031             sender
+                    printf "%s\n" "$sum_sender" | awk '
+                      function to_gb(val, unit) {
+                        # Return decimal GB for simple ratio; good enough for comparing runs.
+                        if (unit ~ /^GBytes$/) return val;
+                        if (unit ~ /^MBytes$/) return val / 1000.0;
+                        if (unit ~ /^KBytes$/) return val / 1000000.0;
+                        if (unit ~ /^Bytes$/)  return val / 1000000000.0;
+                        return val;
+                      }
+                      {
+                        transfer_val=$4; transfer_unit=$5;
+                        bw_val=$6; bw_unit=$7;
+                        retrans=$8;
+                        gb=to_gb(transfer_val, transfer_unit);
+                        if (gb > 0 && retrans ~ /^[0-9]+$/) {
+                          printf "Summary: %.2f %s, %.2f %s, retrans=%d (%.0f retrans/GB)\n", transfer_val, transfer_unit, bw_val, bw_unit, retrans, retrans/gb;
+                        }
+                      }
+                    '
+                  fi
+                else
+                  tail -n 12 "$out"
+                fi
+              }
+
+              summarize_udp() {
+                label="$1"
+                shift
+                out="/tmp/iperf-${label}.txt"
+                rm -f "$out"
+                iperf3 "$@" 2>&1 | tee "$out" >/dev/null
+                if grep -E 'receiver' "$out" >/dev/null 2>&1; then
+                  grep -E 'receiver' "$out"
+                else
+                  tail -n 12 "$out"
+                fi
+              }
+
+              printf "\nRTT (ICMP)\n"
+              ping -n -c 30 -i 0.2 -W 1 "$SERVER_IP" | tail -n 1
+
+              printf "\nTCP (forward)\n"
+              summarize_tcp tcp-fwd -c "$SERVER_IP" -t 30 -P 4
+
+              printf "\nTCP (reverse)\n"
+              summarize_tcp tcp-rev -c "$SERVER_IP" -t 30 -P 4 -R
+
+              printf "\nUDP (loss/jitter)\n"
+              summarize_udp udp -c "$SERVER_IP" -t 30 -u -b 0
+
+              printf "\nTCP (single stream, forward)\n"
+              summarize_tcp tcp-fwd-p1 -c "$SERVER_IP" -t 30 -P 1
+
+              printf "\nTCP (single stream, reverse)\n"
+              summarize_tcp tcp-rev-p1 -c "$SERVER_IP" -t 30 -P 1 -R
+
+              printf "\nUDP (fixed 9G, loss/jitter)\n"
+              summarize_udp udp-9g -c "$SERVER_IP" -t 30 -u -b 9G
+
+              printf "\nRaw outputs saved in /tmp: iperf-*.txt\n"

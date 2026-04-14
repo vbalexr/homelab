@@ -9,7 +9,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: longhorn
+  storageClassName: ceph-filesystem
 ---
 apiVersion: v1
 kind: Pod
