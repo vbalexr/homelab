@@ -26,3 +26,254 @@ flux bootstrap github \
   --path=cluster/<cluster-name> \
   --personal
 ```
+
+## Secrets Management with SOPS and Age
+
+Secret encryption in git using SOPS and age keys. This allows you to safely store encrypted secrets in the repository.
+
+### 1. Generate Age Key
+
+Generate a new age key for this cluster:
+
+```bash
+age-keygen -o cluster/<cluster-name>/.sops.age
+```
+
+**Important**: Keep this key safe! It's used to decrypt all secrets in the repository.
+- Add to `.gitignore` — Don't commit unencrypted keys
+- Back up securely — You need this to decrypt secrets
+- Rotate periodically — Consider key rotation in security practices
+
+### 2. Configure SOPS
+
+Create `.sops.yaml` in repository root (or cluster-specific override):
+
+```yaml
+creation_rules:
+  - path_regex: cluster/.*\.y[a]?ml
+    age: >-
+      age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    provider: age
+    encrypted_regex: ^(data|stringData)$
+    mac_only_encrypted: true
+```
+
+Replace the age public key with your generated key's public key:
+
+```bash
+# Extract public key (first line of .sops.age)
+cat cluster/<cluster-name>/.sops.age | grep "^# public key:" | cut -d' ' -f4
+```
+
+### 3. Install Tools
+
+```bash
+# macOS
+brew install sops age
+
+# Linux (Ubuntu/Debian)
+sudo apt-get install age
+wget https://github.com/mozilla/sops/releases/download/v3.8.1/sops-v3.8.1.linux.amd64
+sudo mv sops-v3.8.1.linux.amd64 /usr/local/bin/sops
+sudo chmod +x /usr/local/bin/sops
+
+# Or build from source
+go install github.com/mozilla/sops/v3/cmd/sops@latest
+go install github.com/FiloSottile/age/cmd/age@latest
+go install github.com/FiloSottile/age/cmd/age-keygen@latest
+```
+
+### 4. Create Encrypted Secrets
+
+Create a secret file and encrypt it:
+
+```bash
+# Create secret in plain text
+cat > cluster/<cluster-name>/velero-secret.yaml << EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: velero-credentials
+  namespace: velero
+type: Opaque
+stringData:
+  cloud: |
+    [default]
+    aws_access_key_id=YOUR_KEY_ID
+    aws_secret_access_key=YOUR_SECRET_KEY
+EOF
+
+# Encrypt with SOPS
+sops --encrypt cluster/<cluster-name>/velero-secret.yaml > cluster/<cluster-name>/velero-secret.enc.yaml
+
+# Or encrypt in-place
+sops --in-place cluster/<cluster-name>/velero-secret.yaml
+
+# Remove plain text version
+rm cluster/<cluster-name>/velero-secret.yaml
+```
+
+### 5. Configure Flux CD to Use Age Key
+
+Add the age key as a secret in the cluster:
+
+```bash
+# Create flux-system namespace if not exists
+kubectl create namespace flux-system --dry-run=client -o yaml | kubectl apply -f -
+
+# Create secret from age key
+kubectl create secret generic sops-age \
+  --from-file=age.agekey=cluster/<cluster-name>/.sops.age \
+  -n flux-system \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+### 6. Enable SOPS in Flux Kustomization
+
+Update your cluster's infrastructure Kustomization (e.g., `cluster/magi/infrastructure.yaml`) to decrypt on apply:
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./overlays/magi/infrastructure
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  timeout: 10m0s
+  wait: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+```
+
+This applies SOPS decryption to all resources under `overlays/magi/infrastructure/` (multus, rook, velero, etc.)
+
+### 7. Workflow: Edit Encrypted Secrets
+
+```bash
+# Open encrypted file in editor (SOPS auto-decrypts)
+sops cluster/<cluster-name>/velero-secret.enc.yaml
+
+# Make changes, save, SOPS auto-encrypts on exit
+
+# Or decrypt to edit manually
+sops --decrypt cluster/<cluster-name>/velero-secret.enc.yaml > /tmp/secret.yaml
+# Edit /tmp/secret.yaml
+sops --encrypt /tmp/secret.yaml > cluster/<cluster-name>/velero-secret.enc.yaml
+rm /tmp/secret.yaml
+```
+
+### 8. Verify Encryption
+
+```bash
+# Check file is encrypted (will show binary/garbled content)
+cat cluster/<cluster-name>/velero-secret.enc.yaml | head
+
+# Decrypt and view
+sops --decrypt cluster/<cluster-name>/velero-secret.enc.yaml
+
+# Verify Flux can decrypt
+kubectl get secrets -n velero
+```
+
+### Example: Encrypt Backblaze Credentials
+
+```bash
+# Reference: overlays/magi/infrastructure/velero/backblaze-secret.yaml
+
+# 1. Create unencrypted
+cat > backblaze-secret-plain.yaml << EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: velero-credentials
+  namespace: velero
+type: Opaque
+stringData:
+  cloud: |
+    [default]
+    aws_access_key_id=004f44aeec97b540000000003
+    aws_secret_access_key=K004O4L2UXVsiMo6V+hvpY8CNoghrzQ
+EOF
+
+# 2. Encrypt with SOPS
+sops --encrypt backblaze-secret-plain.yaml > overlays/magi/infrastructure/velero/backblaze-secret.enc.yaml
+
+# 3. Update kustomization.yaml to reference encrypted secret
+# overlays/magi/infrastructure/velero/kustomization.yaml:
+# resources:
+#   - ../../../apps/velero
+#   - backblaze-secret.enc.yaml
+
+# 4. Commit encrypted version
+git add overlays/magi/infrastructure/velero/backblaze-secret.enc.yaml
+git rm backblaze-secret-plain.yaml  # Remove plain text
+
+# 5. Flux will automatically decrypt via cluster/magi/infrastructure.yaml
+#    (decryption is configured at the parent Kustomization level)
+```
+
+## Troubleshooting SOPS
+
+### "Error: age: failed to decrypt data"
+
+The age key isn't available. Check:
+```bash
+# Verify secret exists in cluster
+kubectl get secrets -n flux-system sops-age
+
+# Check Flux logs
+kubectl logs -n flux-system deployment/source-controller
+kubectl logs -n flux-system deployment/kustomize-controller
+```
+
+### "sops: command not found"
+
+Install SOPS:
+```bash
+# Verify installation
+which sops
+
+# Or reinstall
+brew reinstall sops  # macOS
+```
+
+### Decrypt fails locally
+
+Wrong age key or no key configured:
+```bash
+# Set age key path
+export SOPS_AGE_KEY_FILE=cluster/<cluster-name>/.sops.age
+sops --decrypt cluster/<cluster-name>/velero-secret.enc.yaml
+```
+
+### Re-encrypt with different key
+
+If you rotate keys:
+```bash
+# Decrypt with old key
+SOPS_AGE_KEY_FILE=old.age sops --decrypt secret.enc.yaml > secret-plain.yaml
+
+# Encrypt with new key
+SOPS_AGE_KEY_FILE=new.age sops --encrypt secret-plain.yaml > secret.enc.yaml
+
+# Update Flux secret
+kubectl create secret generic sops-age \
+  --from-file=age.agekey=new.age \
+  -n flux-system \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+## References
+
+- [SOPS Documentation](https://github.com/mozilla/sops)
+- [Age Documentation](https://github.com/FiloSottile/age)
+- [Flux Secrets Documentation](https://fluxcd.io/docs/guides/mozilla-sops/)
+- [GitOps Best Practices](https://kustomize.io/)

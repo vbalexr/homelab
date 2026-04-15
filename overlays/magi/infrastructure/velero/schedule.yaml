@@ -1,0 +1,35 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: velero-daily
+  namespace: velero
+spec:
+  schedule: "0 2 * * *"  # Daily at 02:00 UTC
+  template:
+    includedNamespaces:
+      - "*"
+    excludedNamespaces:
+      - kube-node-lease
+      - kube-public
+    storageLocation: default
+    ttl: 168h  # 7 days retention
+    defaultVolumesToRestic: true
+    hooks: {}
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: velero-weekly
+  namespace: velero
+spec:
+  schedule: "0 0 * * 0"  # Weekly at 00:00 UTC on Sundays
+  template:
+    includedNamespaces:
+      - "*"
+    excludedNamespaces:
+      - kube-node-lease
+      - kube-public
+    storageLocation: default
+    ttl: 336h  # 14 days retention
+    defaultVolumesToRestic: true
+    hooks: {}

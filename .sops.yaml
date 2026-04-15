@@ -1,0 +1,7 @@
+creation_rules:
+  - path_regex: overlays/magi/.*\.y[a]?ml
+    age: >-
+      age1meluhn5ap2s46h7668rmumz30020shyh7h9jtz6ae0428kxhyagqfpzla0
+    provider: age
+    encrypted_regex: ^(data|stringData)$
+    mac_only_encrypted: true
