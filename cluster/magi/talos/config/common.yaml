@@ -32,33 +32,47 @@ machine:
     nameservers:
       - 10.1.0.1
       - fd7a:2201:1ab::1
-    interfaces:
-      - interface: bond0
-        vip: 
-          ip: "fd7a:2201:1ab::5"
-        dhcp: false
-        vlans:
-          - vlanId: 15
-            dhcp: false
-            addresses: []
-          - vlanId: 20
-            dhcp: false
-            addresses: []
-          - vlanId: 25
-            dhcp: false
-            addresses: []
-      - interface: bond1
-        dhcp: false
   install:
     disk: nil
     bootloader: true
     wipe: true
     image: factory.talos.dev/installer/f5fec1a516586f044dfc011cbcb3e0cb9b0db66a3620e5db7bf087621b5deb7c:v1.12.6
-
   kernel:
     modules:
       - name: gasket
       - name: apex
+---
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: fd7a:2201:1ab::5
+link: bond0
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: bond0.15
+vlanID: 15
+vlanMode: 802.1q
+parent: bond0
+up: true
+addresses: []
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: bond0.20
+vlanID: 20
+vlanMode: 802.1q
+parent: bond0
+up: true
+addresses: []
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: bond0.25
+vlanID: 25
+vlanMode: 802.1q
+parent: bond0
+up: true
+addresses: []
 ---
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig

@@ -1,36 +1,63 @@
+---
+apiVersion: v1alpha1
+kind: BondConfig
+name: bond0
+links:
+    - enp87s0
+    - enp90s0
+bondMode: 802.3ad
+lacpRate: fast
+miimon: 100
+updelay: 200
+downdelay: 200
+xmitHashPolicy: layer3+4
+up: true
+addresses:
+    - address: fd7a:2201:1ab::7/64
+    - address: 10.1.0.7/22
+routes:
+  - gateway: fd7a:2201:1ab::1
+  - gateway: 10.1.0.1
+---
+apiVersion: v1alpha1
+kind: BondConfig
+name: bond1
+links:
+    - enp2s0f0np0
+    - enp2s0f1np1
+bondMode: 802.3ad
+lacpRate: fast
+miimon: 100
+updelay: 200
+downdelay: 200
+xmitHashPolicy: layer2+3
+mtu: 9000
+up: true
+addresses:
+    - address: 10.255.0.2/29
+    - address: fd7a:2201:7351::2/64
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: bond1.2
+vlanID: 2
+vlanMode: 802.1q
+parent: bond1
+up: true
+addresses:
+    - address: 10.255.254.2/29
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: bond1.3
+vlanID: 3
+vlanMode: 802.1q
+parent: bond1
+up: true
+addresses:
+    - address: 10.255.255.2/29
+---
 machine:
-  network:
-    interfaces:
-      - interface: bond0
-        dhcp: false
-        bond:
-          mode: 802.3ad
-          lacpRate: fast
-          miimon: 100
-          interfaces:
-            - enp87s0
-            - enp90s0
-        addresses:
-          - fd7a:2201:1ab::7/64
-          - 10.1.0.7/22
-        routes:
-          - network: ::/0
-            gateway: fd7a:2201:1ab::1
-          - network: 0.0.0.0/0
-            gateway: 10.1.0.1
-      - interface: bond1
-        dhcp: false
-        mtu: 9000
-        bond:
-          mode: 802.3ad
-          lacpRate: fast
-          miimon: 100
-          interfaces:
-            - enp2s0f0np0
-            - enp2s0f1np1
-        addresses:
-          - 10.255.0.2/24
-          - fd7a:2201:7351::2/64
   install:
     diskSelector:
       serial: 2M322LACB8FL

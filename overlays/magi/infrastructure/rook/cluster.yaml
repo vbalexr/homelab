@@ -82,3 +82,11 @@ spec:
             csi.storage.k8s.io/node-stage-secret-name: rook-csi-cephfs-node
             csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
             csi.storage.k8s.io/fstype: ext4
+    cephCluster:
+      network:
+        provider: host
+        addressRanges:
+          public:
+            - 10.255.255.0/29  # VLAN 3 network
+          cluster:
+            - 10.255.254.0/29  # VLAN 2 network

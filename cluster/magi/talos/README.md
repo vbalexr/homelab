@@ -183,9 +183,3 @@ cilium install \
 - `devices=bond0` ensures Cilium attaches to the external-facing bond where LoadBalancer/BGP traffic arrives
 - `directRoutingDevice=bond1` ensures node routes / native routing use the 10Gb bond
 - Native routing uses bond1 (10.255.0.0/24,fd7a:2201:7351::/64) for pod-to-pod traffic and bond0 for external traffic
-
-Note: if you ever want to pass multiple devices via Helm `--set`, commas must be escaped. Example:
-
-```sh
---set-string devices='bond0\,bond1'
-```
