@@ -1,0 +1,122 @@
+name: Check PostgreSQL and VectorChord Updates
+
+on:
+  schedule:
+    # Run every Monday at 02:00 UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: vbalexr/postgres
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      # PostgreSQL version tracking removed - only PG_MAJOR_VERSION=16 is used in Dockerfile
+      
+      - name: Check VectorChord updates
+        id: vc_check
+        run: |
+          # Get current VectorChord version from version.txt
+          CURRENT_VC_VERSION=$(grep VECTORCHORD_VERSION containers/postgres/version.txt | cut -d= -f2)
+          echo "current_vc_version=${CURRENT_VC_VERSION}" >> $GITHUB_OUTPUT
+          
+          # Query GitHub API for latest VectorChord release
+          LATEST_VC_VERSION=$(curl -s https://api.github.com/repos/tensorchord/vectorchord/releases/latest \
+            | grep '"tag_name"' | cut -d'"' -f4)
+          
+          echo "latest_vc_version=${LATEST_VC_VERSION}" >> $GITHUB_OUTPUT
+          
+          if [ "${CURRENT_VC_VERSION}" != "${LATEST_VC_VERSION}" ]; then
+            echo "vectorchord_update_available=true" >> $GITHUB_OUTPUT
+            echo "VectorChord update available: ${CURRENT_VC_VERSION} -> ${LATEST_VC_VERSION}"
+          else
+            echo "vectorchord_update_available=false" >> $GITHUB_OUTPUT
+            echo "VectorChord is up to date: ${CURRENT_VC_VERSION}"
+          fi
+      
+      - name: Check pgvector updates
+        id: pv_check
+        run: |
+          # Get current pgvector version from version.txt
+          CURRENT_PV_VERSION=$(grep PGVECTOR_VERSION containers/postgres/version.txt | cut -d= -f2)
+          echo "current_pv_version=${CURRENT_PV_VERSION}" >> $GITHUB_OUTPUT
+          
+          # Query GitHub API for latest pgvector release
+          LATEST_PV_VERSION=$(curl -s https://api.github.com/repos/pgvector/pgvector/releases/latest \
+            | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
+          
+          echo "latest_pv_version=${LATEST_PV_VERSION}" >> $GITHUB_OUTPUT
+          
+          if [ "${CURRENT_PV_VERSION}" != "${LATEST_PV_VERSION}" ]; then
+            echo "pgvector_update_available=true" >> $GITHUB_OUTPUT
+            echo "pgvector update available: ${CURRENT_PV_VERSION} -> ${LATEST_PV_VERSION}"
+          else
+            echo "pgvector_update_available=false" >> $GITHUB_OUTPUT
+            echo "pgvector is up to date: ${CURRENT_PV_VERSION}"
+          fi
+      
+      - name: Update version.txt if updates available
+        id: update_versions
+        if: |
+          steps.vc_check.outputs.vectorchord_update_available == 'true' ||
+          steps.pv_check.outputs.pgvector_update_available == 'true'
+        run: |
+          # Create new version.txt content
+          cat > containers/postgres/version.txt << EOF
+          PGVECTOR_VERSION=${{ steps.pv_check.outputs.latest_pv_version }}
+          VECTORCHORD_VERSION=${{ steps.vc_check.outputs.latest_vc_version }}
+          BUILD_DATE=$(date -u +%Y-%m-%d)
+          EOF
+          
+          echo "versions_updated=true" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push version updates
+        if: steps.update_versions.outputs.versions_updated == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add containers/postgres/version.txt
+          git commit -m "chore(postgres): update container dependency versions
+          
+          - pgvector: ${{ steps.pv_check.outputs.current_pv_version }} -> ${{ steps.pv_check.outputs.latest_pv_version }}
+          - VectorChord: ${{ steps.vc_check.outputs.current_vc_version }} -> ${{ steps.vc_check.outputs.latest_vc_version }}
+          
+          [skip ci]"
+          
+          git push
+      
+      - name: Summary
+        run: |
+          echo "## Dependency Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### pgvector" >> $GITHUB_STEP_SUMMARY
+          echo "- Current: ${{ steps.pv_check.outputs.current_pv_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Latest: ${{ steps.pv_check.outputs.latest_pv_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### VectorChord" >> $GITHUB_STEP_SUMMARY
+          echo "- Current: ${{ steps.vc_check.outputs.current_vc_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Latest: ${{ steps.vc_check.outputs.latest_vc_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Update Available: ${{ steps.pg_check.outputs.postgres_update_available }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### pgvector" >> $GITHUB_STEP_SUMMARY
+          echo "- Current: ${{ steps.pv_check.outputs.current_pv_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Latest: ${{ steps.pv_check.outputs.latest_pv_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Update Available: ${{ steps.pv_check.outputs.pgvector_update_available }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### VectorChord" >> $GITHUB_STEP_SUMMARY
+          echo "- Current: ${{ steps.vc_check.outputs.current_vc_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Latest: ${{ steps.vc_check.outputs.latest_vc_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Update Available: ${{ steps.vc_check.outputs.vectorchord_update_available }}" >> $GITHUB_STEP_SUMMARY
