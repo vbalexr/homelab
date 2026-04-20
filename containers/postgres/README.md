@@ -1,249 +1,348 @@
 # PostgreSQL 16 with VectorChord Container
 
-Production-ready PostgreSQL 16 Docker image with pgvector and VectorChord vector database extensions pre-installed, optimized for homelab environments.
+Production-ready PostgreSQL 16 Docker image with pgvector and VectorChord vector database extensions pre-installed.
 
-## Components
+## Features
 
-### 1. Container Image
-- **Base**: PostgreSQL 16.3 on Debian Bookworm
-- **Extensions**: 
-  - **pgvector** (v0.5.1) - Vector similarity search
-  - **VectorChord** (v0.2.1) - Advanced vector indexing
-- **Multi-stage build**: Compiled extensions for minimal final image size
-- **Health checks**: Built-in PostgreSQL readiness probes
-
-### 2. GitHub Actions Workflows
-
-#### `build-postgres-image.yml` - Container Build Pipeline
-**Triggers**: 
-- Push to `main` branch (any change in `containers/postgres/**`)
-- Git tags matching `v*`
-- Manual dispatch via GitHub UI
-
-**Capabilities**:
-- Multi-architecture builds (linux/amd64, linux/arm64)
-- Automatic semantic versioning
-- Builds cached for faster iterations
-- Pushes to `ghcr.io/vbalexr/postgres:latest` + version tags
-
-#### `check-postgres-updates.yml` - Automated Dependency Updates
-**Schedule**: Every Monday at 02:00 UTC
-
-**Process**:
-1. Queries Docker Hub API for latest PostgreSQL 16.x release
-2. Queries GitHub API for latest pgvector release
-3. Queries GitHub API for latest VectorChord release
-4. Compares with versions in `containers/postgres/version.txt`
-5. If updates found:
-   - Updates `version.txt`
-   - Auto-commits with detailed change log
-   - Triggers `build-postgres-image.yml` workflow
-   - Generates GitHub Actions summary
-
-**Outputs**: Automatic version bumps, weekly build cycles if updates available
-
-### 3. Kubernetes Manifests
-
-#### Base Manifests (`apps/postgres/`)
-- **Namespace**: `postgres` (isolated from other workloads)
-- **StatefulSet**: Single replica PostgreSQL pod with:
-  - Volume mounts for data, config, and init scripts
-  - Liveness/readiness probes (pg_isready)
-  - Security context (non-root, FSGroup 999)
-  - Resource requests: 500m CPU, 512Mi memory
-  - Resource limits: 2 CPU, 2Gi memory
-- **Service**: Headless service for DNS discovery
-- **PersistentVolumeClaim**: 20Gi using Rook Ceph RBD storage
-- **ConfigMaps**: 
-  - PostgreSQL configuration (postgresql.conf, pg_hba.conf)
-  - Initialization SQL scripts (extensions, sample table setup)
-- **Secret**: Database credentials (plaintext in base, encrypted in overlay)
-
-#### Overlay Configuration (`overlays/magi/databases/postgres/`)
-- **Patches**:
-  - StatefulSet resource limits customized for magi cluster (1CPU, 1Gi memory requests)
-  - Secret password override with cluster-specific credentials
-- **SOPS Integration**: Secrets encrypted with age key from `.sops.yaml`
-- **Labels**: Cluster identification tags (`cluster: magi`, `environment: homelab`)
-
-### 4. FluxCD Integration
-**Manifest**: `cluster/magi/databases.yaml`
-
-New Kustomization resource that:
-- Points to `overlays/magi/databases`
-- Enables SOPS decryption via `sops-age` secret
-- Depends on `infrastructure` kustomization (ensures Rook Ceph ready before PostgreSQL deployment)
-- Reconciles every 10 minutes
+- **Base Image**: PostgreSQL 16 on Debian Trixie
+- **Pre-installed Extensions**:
+  - **pgvector** - Vector similarity search and indexing
+  - **VectorChord** - Advanced vector indexing with improved performance
+- **Multi-stage Build**: Optimized for minimal image size
+- **Multi-architecture**: Built for `linux/amd64` and `linux/arm64`
+- **Health Checks**: Built-in PostgreSQL readiness probes
+- **Auto-updates**: Weekly GitHub Actions checks for dependency updates
 
 ## Deployment Quick Start
 
 ### Prerequisites
-- Kubernetes cluster with Rook Ceph storage (already available in your magi cluster)
-- FluxCD bootstrapped with SOPS age key (`sops-age` secret in flux-system namespace)
-- GitHub Container Registry (GHCR) credentials for image pulls
 
-### Manual Deployment (Local Testing)
+- Docker or Docker Desktop installed
+- Docker Compose (optional, for compose examples)
 
+## Quick Start
+
+### Build Locally
 ```bash
-# Validate base manifests
-kustomize build apps/postgres/
-
-# Validate overlay manifests
-kustomize build overlays/magi/databases/postgres/
-
-# Deploy base only (without secrets encryption)
-kubectl apply -k apps/postgres/
-
-# Deploy overlay (with SOPS-encrypted secrets)
-kubectl apply -k overlays/magi/databases/postgres/
+docker build -t postgres-vectorchord:local .
 ```
 
-### Automatic Deployment via FluxCD
+### Run Container
+```bash
+docker run -d \
+  --name postgres-test \
+  -e POSTGRES_PASSWORD=securepassword \
+  -p 5432:5432 \
+  postgres-vectorchord:local
+```
 
-1. **Initial Setup**: Push changes to `main` branch
-2. **FluxCD Reconciliation**: 
-   ```bash
-   flux reconcile kustomization databases --with-source
-   ```
-3. **Verify Deployment**:
-   ```bash
-   kubectl get statefulset -n postgres
-   kubectl get pods -n postgres
-   kubectl logs -f -n postgres postgres-0
-   ```
+### Connect
+```bash
+# From host machine
+psql -h localhost -U postgres -d postgres
 
-## Configuration Customization
+# From another container
+docker exec -it postgres-test psql -U postgres -d postgres
+```
 
-### Change PostgreSQL Version
-1. Edit `containers/postgres/version.txt`:
-   ```
-   PG_VERSION=16.4
-   PGVECTOR_VERSION=0.5.2
-   VECTORCHORD_VERSION=0.3.0
-   ```
-2. Push to main → GitHub Actions rebuilds automatically
-
-### Change Database Password
-1. Edit `overlays/magi/databases/postgres/secret-patch.yaml`:
-   ```yaml
-   stringData:
-     password: "YourStrongPassword123!"
-   ```
-2. Use SOPS to encrypt before committing:
-   ```bash
-   sops overlays/magi/databases/postgres/secret-patch.yaml
-   ```
-3. Commit and push → FluxCD applies encrypted secret
-
-### Adjust Resource Limits
-Edit `overlays/magi/databases/postgres/statefulset-patch.yaml`:
+### Using Docker Compose
 ```yaml
-resources:
-  requests:
-    cpu: 2
-    memory: 2Gi
-  limits:
-    cpu: 4
-    memory: 4Gi
+version: '3.8'
+services:
+  postgres:
+    image: postgres-vectorchord:local
+    environment:
+      POSTGRES_PASSWORD: mypassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
 ```
 
-### Modify PostgreSQL Configuration
-Edit `apps/postgres/configmap.yaml` - `postgres-config` ConfigMap:
-- `postgresql.conf`: Query optimization, memory settings, WAL configuration
-- `pg_hba.conf`: Authentication rules and allowed client connections
+Run with:
+```bash
+docker-compose up -d
+```
+
+## Environment Variables
+
+- `POSTGRES_PASSWORD` - Password for the postgres user (required)
+- `POSTGRES_USER` - Username (default: `postgres`)
+- `POSTGRES_DB` - Initial database name (default: `postgres`)
+- `POSTGRES_INITDB_ARGS` - Additional arguments for initdb
+
+## Extensions Setup & Usage
+
+### pgvector
+
+pgvector is a PostgreSQL extension for storing and searching vector embeddings.
+
+#### Enable pgvector
+```sql
+-- Connect to your database
+psql -h localhost -U postgres
+
+-- Create the extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Verify installation
+SELECT extversion FROM pg_extension WHERE extname = 'vector';
+```
+
+#### Basic Usage Example
+```sql
+-- Create a table with vector column
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    content TEXT,
+    embedding vector(1536)  -- 1536-dimensional vectors (e.g., from OpenAI)
+);
+
+-- Insert sample data
+INSERT INTO documents (content, embedding) VALUES
+    ('Hello world', '[0.1, 0.2, ..., 0.5]'::vector),
+    ('PostgreSQL rocks', '[0.2, 0.3, ..., 0.6]'::vector);
+
+-- Search for similar vectors (cosine distance)
+SELECT id, content, embedding <-> '[0.15, 0.25, ..., 0.55]'::vector AS distance
+FROM documents
+ORDER BY distance
+LIMIT 5;
+```
+
+#### Supported Distance Operators
+- `<->` - Cosine distance
+- `<#>` - Negative inner product
+- `<=>` - Euclidean distance
+
+#### Create Vector Indexes
+```sql
+-- IVFFlat index (good for large datasets)
+CREATE INDEX ON documents USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 100);
+
+-- HNSW index (better for dynamic workloads)
+CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 200);
+```
+
+### VectorChord
+
+VectorChord is an advanced PostgreSQL extension providing high-performance vector indexing and search capabilities.
+
+#### Enable VectorChord
+```sql
+-- Create the extension
+CREATE EXTENSION IF NOT EXISTS vectorchord;
+
+-- Verify installation
+SELECT extversion FROM pg_extension WHERE extname = 'vectorchord';
+```
+
+#### Create Vector Indexes
+```sql
+-- Create a table with vector column
+CREATE TABLE embeddings (
+    id SERIAL PRIMARY KEY,
+    data JSONB,
+    vector REAL[] NOT NULL
+);
+
+-- Create an IVFFlat index using VectorChord
+CREATE INDEX ON embeddings USING ivfflat (vector vector_l2_ops)
+    WITH (lists = 100);
+
+-- Alternative: HNSW index
+CREATE INDEX ON embeddings USING hnsw (vector vector_l2_ops)
+    WITH (m = 16, ef_construction = 200);
+```
+
+#### Query with Vector Indexes
+```sql
+-- Insert sample vectors
+INSERT INTO embeddings (data, vector) VALUES
+    ('{"name": "doc1"}', ARRAY[0.1, 0.2, 0.3]::REAL[]),
+    ('{"name": "doc2"}', ARRAY[0.15, 0.25, 0.35]::REAL[]);
+
+-- Search using L2 distance (will use index if available)
+SELECT id, data, vector <-> ARRAY[0.12, 0.22, 0.32]::REAL[] AS distance
+FROM embeddings
+ORDER BY distance
+LIMIT 10;
+
+-- Search using cosine similarity
+SELECT id, data
+FROM embeddings
+ORDER BY vector <=> ARRAY[0.12, 0.22, 0.32]::REAL[]
+LIMIT 10;
+```
+
+#### Index Types Available
+- **IVFFlat** - Good for large static datasets, memory efficient
+- **HNSW** - Hierarchical Navigable Small World, better for dynamic data
+- **DiskANN** - For very large datasets that don't fit in memory
+
+### Using Both Extensions Together
+
+For optimal performance with both pgvector and VectorChord:
+
+```sql
+-- Enable both
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS vectorchord;
+
+-- Create table using pgvector types
+CREATE TABLE ai_embeddings (
+    id BIGSERIAL PRIMARY KEY,
+    document_id TEXT NOT NULL,
+    text_content TEXT,
+    embedding vector(1536),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create HNSW index for fast similarity search
+CREATE INDEX ON ai_embeddings USING hnsw (embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 200);
+
+-- Verify indexes
+SELECT schemaname, tablename, indexname, indexdef 
+FROM pg_indexes 
+WHERE tablename = 'ai_embeddings';
+
+-- Example: Semantic search
+SELECT 
+    id,
+    document_id,
+    text_content,
+    1 - (embedding <=> '[0.1, 0.2, ..., 0.5]'::vector) AS similarity_score
+FROM ai_embeddings
+WHERE 1 - (embedding <=> '[0.1, 0.2, ..., 0.5]'::vector) > 0.7
+ORDER BY similarity_score DESC
+LIMIT 10;
+```
+
+### Performance Tuning
+
+When using large vector datasets:
+
+```sql
+-- Set appropriate work_mem for vector operations
+SET work_mem = '256MB';
+
+-- Enable parallel query execution
+SET max_parallel_workers_per_gather = 4;
+
+-- For IVFFlat indexes, tune list count
+-- lists = sqrt(total_rows) is a good starting point
+-- For 1M rows: lists = 1000
+
+-- Monitor index usage
+SELECT * FROM pg_stat_user_indexes 
+WHERE relname = 'ai_embeddings';
+```
+
+### Automatic Initialization
+
+Both extensions are automatically pre-loaded when the container starts:
+```dockerfile
+ENV POSTGRES_INITDB_ARGS="-c shared_preload_libraries=vectorchord,pgvector"
+```
+
+This means they are available immediately in any database without manual loading.
+
+## Build Automation
+
+### GitHub Actions Workflows
+
+#### `build-postgres-image.yml` - Container Build Pipeline
+Automatically builds and pushes the image to `ghcr.io/vbalexr/postgres` when:
+- Changes are pushed to `containers/postgres/` folder
+- Git tags matching `v*` are created
+- Manual trigger via GitHub UI
+
+**Features**:
+- Multi-architecture builds (amd64, arm64)
+- Semantic versioning with git tags
+- Build caching for faster iterations
+- Pushes to GitHub Container Registry
+
+#### `check-postgres-updates.yml`
+Automatically checks for upstream updates every Monday at 02:00 UTC:
+- Queries pgvector GitHub tags (latest release)
+- Queries VectorChord GitHub releases
+- Updates `version.txt` if newer versions available
+- Commits changes and triggers rebuild
 
 ## Version Tracking
 
-**File**: `containers/postgres/version.txt`
+**File**: `version.txt`
 
-Used by both workflows to determine current versions and trigger updates. Format:
+Used by build workflows to determine current versions and trigger updates:
 ```
-PG_VERSION=16.3
-PGVECTOR_VERSION=0.5.1
-VECTORCHORD_VERSION=0.2.1
-BUILD_DATE=2026-04-17
+PG_MAJOR_VERSION=18
+PGVECTOR_VERSION=0.8.2
+VECTORCHORD_VERSION=1.1.1
+BUILD_DATE=2026-04-20
 ```
 
-## Security Notes
+To update versions manually:
+```bash
+# Edit the file
+vi version.txt
 
-1. **Non-root container**: PostgreSQL runs as UID 999 (postgres user)
-2. **Read-only root filesystem**: Disabled (PostgreSQL needs write access to /var/run)
-3. **Drop all capabilities**: Prevents privilege escalation
-4. **Secret encryption**: SOPS age encryption applied via FluxCD
-5. **Network policies**: Consider adding NetworkPolicies to restrict pod-to-pod traffic
-6. **Default password**: Change from `changeme` before production deployment
+# Commit and push
+git add version.txt
+git commit -m "chore: update dependency versions"
+git push
+```
+
+## Customization
+
+To customize the container:
+
+1. **Change versions** - Edit `version.txt` and rebuild
+2. **Modify Dockerfile** - Add packages, change base image, etc.
+3. **Add scripts** - Place custom SQL or shell scripts and copy them in
+
+Example custom Dockerfile:
+```dockerfile
+FROM ghcr.io/vbalexr/postgres:latest
+
+# Add custom tools
+RUN apt-get update && apt-get install -y pgbackrest && rm -rf /var/lib/apt/lists/*
+
+# Copy custom initialization script
+COPY ./init-custom.sql /docker-entrypoint-initdb.d/
+```
 
 ## Troubleshooting
 
-### Pod fails to start
+### Container fails to start
 ```bash
-kubectl describe pod -n postgres postgres-0
-kubectl logs -n postgres postgres-0
+docker logs postgres-test
 ```
 
-### Storage not provisioning
+### Extensions not loaded
 ```bash
-kubectl get pvc -n postgres
-kubectl describe pvc -n postgres postgres-data-postgres-0
+docker exec postgres-test psql -U postgres -c "SELECT extname FROM pg_extension;"
 ```
 
-### Extensions not loading
+### Verify versions in container
 ```bash
-kubectl exec -it -n postgres postgres-0 -- psql -U postgres -c \
-  "SELECT extname FROM pg_extension WHERE extname IN ('pgvector', 'vectorchord');"
+docker exec postgres-test psql -U postgres -c "SELECT version();"
 ```
 
-### Verify version running
+### Check vector extension functions
 ```bash
-kubectl exec -n postgres postgres-0 -- psql -U postgres -c "SELECT version();"
+docker exec postgres-test psql -U postgres -c "\df *vector*"
 ```
-
-## Files Overview
-
-```
-homelab/
-├── containers/postgres/           # Container build context
-│   ├── Dockerfile                 # Multi-stage PostgreSQL 16 + extensions build
-│   ├── .dockerignore              # Docker build exclusions
-│   ├── version.txt                # Current dependency versions
-│   ├── init-db.sql                # Database initialization script
-│   └── README.md                  # This file
-├── apps/postgres/                 # Base Kubernetes manifests
-│   ├── kustomization.yaml         # Base kustomization
-│   ├── namespace.yaml             # postgres namespace
-│   ├── statefulset.yaml           # StatefulSet definition
-│   ├── service.yaml               # Headless service
-│   ├── pvc.yaml                   # Storage definition
-│   ├── configmap.yaml             # Configuration files
-│   └── secret.yaml                # Secret template (override in overlay)
-├── overlays/magi/databases/       # Cluster-specific configuration
-│   ├── kustomization.yaml         # Kustomize aggregator
-│   └── postgres/                  # PostgreSQL overlay
-│       ├── kustomization.yaml     # Overlay configuration
-│       ├── statefulset-patch.yaml # Resource limit overrides
-│       └── secret-patch.yaml      # SOPS-encrypted credentials
-├── cluster/magi/                  # FluxCD orchestration
-│   ├── infrastructure.yaml        # Infrastructure Kustomization (Rook, Multus)
-│   └── databases.yaml             # Database Kustomization (PostgreSQL)
-└── .github/workflows/             # CI/CD automation
-    ├── build-postgres-image.yml   # Container build and push
-    └── check-postgres-updates.yml # Automated weekly version checks
-```
-
-## Next Steps
-
-1. **Encrypt secrets**: Use SOPS to encrypt database password in overlay
-2. **Test build workflow**: Push a test commit to trigger GitHub Actions
-3. **Deploy to cluster**: Apply databases overlay via FluxCD
-4. **Verify extensions**: Connect to database and verify pgvector/VectorChord loaded
-5. **Monitor**: Watch logs for any startup issues or resource constraints
-6. **Schedule backups**: Consider Velero snapshots for PVC backups
 
 ## Related Resources
 
 - [PostgreSQL Official Docs](https://www.postgresql.org/docs/16/)
 - [pgvector GitHub](https://github.com/pgvector/pgvector)
 - [VectorChord GitHub](https://github.com/tensorchord/vectorchord)
-- [FluxCD Documentation](https://fluxcd.io/docs/)
-- [Kustomize Documentation](https://kustomize.io/)
-- [SOPS Documentation](https://github.com/mozilla/sops)
+- [Docker Documentation](https://docs.docker.com/)
