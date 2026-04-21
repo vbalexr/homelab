@@ -1,0 +1,40 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
+metadata:
+  name: router-peer-config
+  namespace: kube-system
+spec:
+  timers:
+    connectRetryTimeSeconds: 3
+    holdTimeSeconds: 90
+    keepAliveTimeSeconds: 30
+  gracefulRestart:
+    enabled: true
+    restartTimeSeconds: 3
+  families:
+    - afi: ipv4
+      safi: unicast
+    - afi: ipv6
+      safi: unicast
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: bgp-cluster-config
+  namespace: kube-system
+spec:
+  bgpInstances:
+    - name: "default"
+      localASN: 64513
+      peers:
+        - name: "router-ipv4"
+          peerAddress: "10.1.1.1"
+          peerASN: 64512
+          peerConfigRef:
+            name: router-peer-config
+        - name: "router-ipv6"
+          peerAddress: "fd7a:2201:1ab::1"
+          peerASN: 64512
+          peerConfigRef:
+            name: router-peer-config

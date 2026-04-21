@@ -1,0 +1,23 @@
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: public-pool
+  namespace: kube-system
+spec:
+  blocks:
+    - start: 10.1.1.0
+      stop: 10.1.1.255
+    - start: "fd7a:2201:1ab:1::"
+      stop: "fd7a:2201:1ab:1::ffff"
+---
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: private-pool
+  namespace: kube-system
+spec:
+  blocks:
+    - start: 10.1.2.0
+      stop: 10.1.2.255
+    - start: "fd7a:2201:1ab:2::"
+      stop: "fd7a:2201:1ab:2::ffff"
