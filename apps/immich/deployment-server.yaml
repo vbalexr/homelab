@@ -28,6 +28,28 @@ spec:
         fsGroup: 999
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: init-storage
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data/encoded-video
+              mkdir -p /data/library
+              mkdir -p /data/upload
+              mkdir -p /data/thumbs
+              mkdir -p /data/profile
+              mkdir -p /data/backups
+              touch /data/encoded-video/.immich
+              touch /data/library/.immich
+              touch /data/upload/.immich
+              touch /data/thumbs/.immich
+              touch /data/profile/.immich
+              touch /data/backups/.immich
+          volumeMounts:
+            - name: upload-data
+              mountPath: /data
       containers:
         - name: server
           image: ghcr.io/immich-app/immich-server:release
