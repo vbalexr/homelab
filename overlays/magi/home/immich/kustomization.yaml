@@ -1,0 +1,57 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: immich
+  namespace: home
+
+namespace: home
+
+resources:
+  - ../../../../apps/immich
+  - secret.yaml
+  - pvc.yaml
+  - hpa-ml.yaml
+
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: immich-server
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/volumes
+        value:
+          - name: upload-data
+            persistentVolumeClaim:
+              claimName: immich-uploads
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: immich-machine-learning
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/volumes
+        value:
+          - name: model-cache
+            persistentVolumeClaim:
+              claimName: immich-model-cache
+  - path: deployment-server-patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: immich-server
+  - path: deployment-ml-patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: immich-machine-learning
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: immich
+      app.kubernetes.io/instance: magi
+    includeSelectors: true

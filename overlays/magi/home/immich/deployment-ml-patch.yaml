@@ -1,0 +1,40 @@
+# Strategic merge patch for immich-machine-learning Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-machine-learning
+spec:
+  replicas: 1
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: machine-learning
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+            limits:
+              cpu: 4000m
+              memory: 4Gi
+          env:
+            - name: MPLCONFIGDIR
+              value: /tmp/matplotlib
+            - name: HOME
+              value: /tmp
+          volumeMounts:
+            - name: model-cache
+              mountPath: /cache
+            - name: tmp-config
+              mountPath: /tmp
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: immich-model-cache
+        - name: tmp-config
+          emptyDir: {}

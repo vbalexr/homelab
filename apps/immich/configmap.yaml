@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: immich-config
+  labels:
+    app: immich
+data:
+  # Server Configuration
+  IMMICH_VERSION: "release"
+  IMMICH_PORT: "2283"
+  IMMICH_LOG_LEVEL: "log"
+  
+  # Database Configuration (sourced from secret in overlay)
+  # DB_HOSTNAME: from secret
+  # DB_PORT: from secret
+  # DB_USERNAME: from secret
+  # DB_PASSWORD: from secret
+  # DB_DATABASE_NAME: from secret
+  
+  # Redis Configuration (sourced from secret in overlay)
+  # REDIS_HOSTNAME: from secret
+  # REDIS_PORT: from secret
+  # REDIS_PASSWORD: from secret
+  # REDIS_DBINDEX: from secret
+  
+  # Machine Learning
+  MACHINE_LEARNING_CLIP_MODEL_NAME: "ViT-B-32::openai"
+  MACHINE_LEARNING_ENABLED: "true"
+  MACHINE_LEARNING_REQUEST_TIMEOUT: "120"
+  MACHINE_LEARNING_URL: "http://immich-machine-learning:3003"
+  
+  # Server timezone
+  TZ: "UTC"

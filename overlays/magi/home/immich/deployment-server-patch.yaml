@@ -1,0 +1,43 @@
+# Strategic merge patch for immich-server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-server
+spec:
+  replicas: 1
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: server
+          image: ghcr.io/immich-app/immich-server:release
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          env:
+            - name: MPLCONFIGDIR
+              value: /tmp/matplotlib
+            - name: HOME
+              value: /tmp
+            - name: IMMICH_HOST
+              value: "0.0.0.0"
+          volumeMounts:
+            - name: upload-data
+              mountPath: /data
+            - name: tmp-config
+              mountPath: /tmp
+      volumes:
+        - name: upload-data
+          persistentVolumeClaim:
+            claimName: immich-uploads
+        - name: tmp-config
+          emptyDir: {}
