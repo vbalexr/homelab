@@ -13,6 +13,18 @@ spec:
         fsGroup: 999
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: init-cache
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /cache
+              touch /cache/.immich
+          volumeMounts:
+            - name: model-cache
+              mountPath: /cache
       containers:
         - name: machine-learning
           resources:
