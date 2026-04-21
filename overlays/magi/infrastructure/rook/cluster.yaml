@@ -90,3 +90,9 @@ spec:
             - 10.255.255.0/29  # VLAN 3 network
           cluster:
             - 10.255.254.0/29  # VLAN 2 network
+      dashboard:
+        enabled: true
+        ssl: true
+        # Optional: Expose the dashboard via a service
+        # port: 8443
+        # urlPrefix: /ceph-dashboard
