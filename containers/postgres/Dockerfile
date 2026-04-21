@@ -62,9 +62,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables
-ENV POSTGRES_INITDB_ARGS="-c shared_preload_libraries=vectorchord,pgvector"
-
 # Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=40s --retries=3 \
     CMD pg_isready -U postgres
