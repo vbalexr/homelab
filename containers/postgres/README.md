@@ -1,103 +1,37 @@
-# PostgreSQL 16 with VectorChord Container
+# PostgreSQL 16 with VectorChord
 
-Production-ready PostgreSQL 16 Docker image with pgvector and VectorChord vector database extensions pre-installed.
+Production Docker image: PostgreSQL 16 + pgvector + VectorChord.
 
 ## Features
 
-- **Base Image**: PostgreSQL 16 on Debian Trixie
-- **Pre-installed Extensions**:
-  - **pgvector** - Vector similarity search and indexing
-  - **VectorChord** - Advanced vector indexing with improved performance
-- **Multi-stage Build**: Optimized for minimal image size
-- **Multi-architecture**: Built for `linux/amd64` and `linux/arm64`
-- **Health Checks**: Built-in PostgreSQL readiness probes
-- **Auto-updates**: Weekly GitHub Actions checks for dependency updates
+- **Base**: PostgreSQL 16 on Debian
+- **Extensions**: pgvector, VectorChord pre-installed
+- **Multi-arch**: linux/amd64, linux/arm64
+- **Health checks**: Built-in readiness probes
 
-## Deployment Quick Start
+## Build
 
-### Prerequisites
-
-- Docker or Docker Desktop installed
-- Docker Compose (optional, for compose examples)
-
-## Quick Start
-
-### Build Locally
 ```bash
-docker build -t postgres-vectorchord:local .
+docker build -t ghcr.io/vbalexr/postgres:latest .
 ```
 
-### Run Container
+## Run
+
 ```bash
-docker run -d \
-  --name postgres-test \
-  -e POSTGRES_PASSWORD=securepassword \
-  -p 5432:5432 \
-  postgres-vectorchord:local
+docker run -e POSTGRES_PASSWORD=secret -p 5432:5432 ghcr.io/vbalexr/postgres:latest
 ```
 
-### Connect
-```bash
-# From host machine
-psql -h localhost -U postgres -d postgres
-
-# From another container
-docker exec -it postgres-test psql -U postgres -d postgres
-```
-
-### Using Docker Compose
-```yaml
-version: '3.8'
-services:
-  postgres:
-    image: postgres-vectorchord:local
-    environment:
-      POSTGRES_PASSWORD: mypassword
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
-
-Run with:
-```bash
-docker-compose up -d
-```
-
-## Environment Variables
-
-- `POSTGRES_PASSWORD` - Password for the postgres user (required)
-- `POSTGRES_USER` - Username (default: `postgres`)
-- `POSTGRES_DB` - Initial database name (default: `postgres`)
-- `POSTGRES_INITDB_ARGS` - Additional arguments for initdb
-
-## Extensions Setup & Usage
+## Extensions
 
 ### pgvector
-
-pgvector is a PostgreSQL extension for storing and searching vector embeddings.
-
-#### Enable pgvector
 ```sql
--- Connect to your database
-psql -h localhost -U postgres
-
--- Create the extension
 CREATE EXTENSION IF NOT EXISTS vector;
-
--- Verify installation
-SELECT extversion FROM pg_extension WHERE extname = 'vector';
 ```
 
-#### Basic Usage Example
+### VectorChord
 ```sql
--- Create a table with vector column
-CREATE TABLE documents (
-    id SERIAL PRIMARY KEY,
-    content TEXT,
+CREATE EXTENSION IF NOT EXISTS vectorchord;
+```
     embedding vector(1536)  -- 1536-dimensional vectors (e.g., from OpenAI)
 );
 

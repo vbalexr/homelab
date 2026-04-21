@@ -1,78 +1,42 @@
-# Talos install for Magi
+# Talos Linux for Magi Cluster
 
-This guide uses Talos v1.12 and the config patches in this directory.
+Talos v1.12 cluster configuration with three control-plane nodes.
 
-## Prereqs
-- `talosctl` v1.12 on your workstation
-- DNS for `magi.vbalex.com` points to the control-plane VIP or a control-plane node
-- Talos ISO or PXE boot for each node
-- Each node has 3 NVMe drives: 1 small (<512GB) for OS, 2 larger (>=512GB) for Longhorn storage
-- This configuration includes Longhorn requirements (iscsi-tools, util-linux-tools, V2 data engine support)
+## Prerequisites
 
-## 1) Create custom Talos image with Image Factory
-Talos v1.12+ uses Image Factory to create custom boot assets with extensions and kernel arguments baked in.
+- `talosctl` v1.12
+- 3 nodes with 3 NVMe drives each (1 small for OS, 2 large for storage)
+- DNS: `magi.vbalex.com` → control-plane VIP
 
-Upload the schematic to get a custom image URL:
+## Quick Setup
 
-```sh
+### 1. Create Custom Image Schematic
+
+Upload to Image Factory:
+```bash
 curl -X POST --data-binary @cluster/magi/talos/image-factory-schematic.yaml \
   https://factory.talos.dev/schematics
-
-# This returns a JSON response with the schematic ID, for example:
-# {"id":"YOUR_SCHEMATIC_ID"}
+# Returns: {"id":"YOUR_SCHEMATIC_ID"}
 ```
 
-Update [cluster/magi/talos/config/common.yaml](cluster/magi/talos/config/common.yaml) with your schematic ID:
-- Replace `YOUR_SCHEMATIC_ID` in `machine.install.image` with the ID returned above
-- The image URL format is: `factory.talos.dev/installer/YOUR_SCHEMATIC_ID:v1.12.4`
+Update `config/common.yaml` with your schematic ID.
 
-Alternatively, use the web interface at https://factory.talos.dev to generate the schematic visually.
+### 2. Generate Secrets
 
-The schematic includes:
-- **Extensions**: i915-ucode, intel-ucode, nut-client, gasket-driver
-
-## 2) Prepare secrets (gitignored)
-Generate the Talos secrets file once and keep it out of git:
-
-```sh
+```bash
 talosctl gen secrets -o cluster/magi/talos/talos-secrets.yaml
 ```
 
-## 3) Update per-node patches
-Edit the node files and confirm the install disk matches your OS disk (should be the smallest NVMe, typically `/dev/nvme0n1`):
-- [cluster/magi/talos/config/node-balthasar.yaml](cluster/magi/talos/config/node-balthasar.yaml)
-- [cluster/magi/talos/config/node-casper.yaml](cluster/magi/talos/config/node-casper.yaml)
-- [cluster/magi/talos/config/node-melchior.yaml](cluster/magi/talos/config/node-melchior.yaml)
+### 3. Verify Node Configs
 
-Each node config must include `kubelet.nodeIP.validSubnets` pointing to the bond1 network (10.255.0.0/24,fd7a:2201:7351::/64) for pod-to-pod communication. Cilium will use bond0 for external LoadBalancer traffic (BGP) and bond1 for pod networking via native routing.
+Edit node files and confirm:
+- Install disk = smallest NVMe (usually `/dev/nvme0n1`)
+- `bond1` network = cluster-only (`10.255.0.0/24` + IPv6)
 
-Important (address family + ordering):
-- Keep `machine.kubelet.nodeIP.validSubnets` ordered with IPv4 first (`10.255.0.0/24` before `fd7a:2201:7351::/64`).
-- Keep `bond1.addresses` ordered with IPv4 first (`10.255.0.x/24` before `fd7a:2201:7351::x/64`).
+### 4. Generate Machine Configs
 
-If IPv6 is selected as the node "public address" while your `serviceSubnets` are IPv4-first, `kube-apiserver` can exit with an error like:
-
-```text
-service IP family "10.42.0.0/16" must match public address family "fd7a:2201:7351::1"
-```
-
-Network note:
-- `bond1` is cluster-only and untagged in Talos (no VLAN subinterfaces on `bond1`).
-- `bond1` is configured for jumbo frames (`mtu: 9000`). Ensure the full L2 path supports jumbo frames (switch ports/MLAG + NICs), otherwise you can see drops/retransmits.
-
-Optional adjustments (if needed):
-- Bond mode (`active-backup` vs `802.3ad`)
-- Default route and DNS servers under `machine.network`
-- Install disk device serial
-- Aditional disk devices serials
-
-## 4) Generate machine configs
-Generate one config per node:
-
-```sh
+```bash
 mkdir -p cluster/magi/talos/generated
-
-# If you need to re-run this and overwrite existing files, add `--force`.
 
 talosctl gen config magi https://magi.vbalex.com:6443 \
   --with-secrets cluster/magi/talos/talos-secrets.yaml \
@@ -80,23 +44,27 @@ talosctl gen config magi https://magi.vbalex.com:6443 \
   --config-patch @cluster/magi/talos/config/node-balthasar.yaml \
   --output cluster/magi/talos/generated/balthasar.yaml \
   --output-types controlplane
-
-talosctl gen config magi https://magi.vbalex.com:6443 \
-  --with-secrets cluster/magi/talos/talos-secrets.yaml \
-  --config-patch @cluster/magi/talos/config/common.yaml \
-  --config-patch @cluster/magi/talos/config/node-casper.yaml \
-  --output cluster/magi/talos/generated/casper.yaml \
-  --output-types controlplane
-
-talosctl gen config magi https://magi.vbalex.com:6443 \
-  --with-secrets cluster/magi/talos/talos-secrets.yaml \
-  --config-patch @cluster/magi/talos/config/common.yaml \
-  --config-patch @cluster/magi/talos/config/node-melchior.yaml \
-  --output cluster/magi/talos/generated/melchior.yaml \
-  --output-types controlplane
 ```
 
-Generate the talosconfig once:
+Repeat for `casper.yaml` and `melchior.yaml`.
+
+### 5. Bootstrap & Apply
+
+```bash
+# Boot nodes with ISO and apply configs
+talosctl apply-config --insecure --nodes=<node-ip> \
+  --file=cluster/magi/talos/generated/balthasar.yaml
+
+# Wait for nodes to boot, then create kubeconfig
+talosctl kubeconfig -n <node-ip>
+```
+
+## Key Notes
+
+- All nodes are control-plane (HA etcd)
+- Jumbo frames (MTU 9000) on `bond1`
+- Cilium uses `bond0` (external) + `bond1` (pod networking)
+- IPv4 must come before IPv6 in subnet configs
 
 ```sh
 talosctl gen config magi https://magi.vbalex.com:6443 \

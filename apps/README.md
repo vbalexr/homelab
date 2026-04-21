@@ -1,18 +1,23 @@
 # apps
 
-Base application definitions shared across clusters.
+Base application definitions (environment-agnostic Kubernetes manifests).
 
-Each subdirectory contains a Kustomize `kustomization.yaml` along with Kubernetes manifests (Deployments, Services, ConfigMaps, etc.) for a single application.
+Each app directory contains a `kustomization.yaml` + manifests (Deployment, Service, ConfigMap, etc.).
 
-These base manifests are environment-agnostic. Cluster- and namespace-specific configuration is applied via overlays in the `overlays/` directory.
+## Adding an App
 
-## Adding a New Application
-
+```bash
+mkdir apps/my-app
+cd apps/my-app
+cat > kustomization.yaml << EOF
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deployment.yaml
+  - service.yaml
+EOF
 ```
-apps/
-└── my-app/
-    ├── kustomization.yaml
-    ├── deployment.yaml
-    ├── service.yaml
-    └── configmap.yaml
-```
+
+## Customization
+
+Use overlays in `overlays/<cluster>/<app>/` for environment-specific changes.
