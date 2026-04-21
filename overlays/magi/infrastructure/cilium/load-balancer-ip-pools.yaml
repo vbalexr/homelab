@@ -4,10 +4,13 @@ metadata:
   name: public-pool
   namespace: kube-system
 spec:
+  serviceSelector:
+    matchLabels:
+      pool: public
   blocks:
-    - start: 10.1.1.0
+    - start: 10.1.1.1
       stop: 10.1.1.255
-    - start: "fd7a:2201:1ab:1::"
+    - start: "fd7a:2201:1ab:1::1"
       stop: "fd7a:2201:1ab:1::ffff"
 ---
 apiVersion: cilium.io/v2
@@ -16,8 +19,11 @@ metadata:
   name: private-pool
   namespace: kube-system
 spec:
+  serviceSelector:
+    matchLabels:
+      pool: private
   blocks:
-    - start: 10.1.2.0
+    - start: 10.1.2.1
       stop: 10.1.2.255
-    - start: "fd7a:2201:1ab:2::"
+    - start: "fd7a:2201:1ab:2::1"
       stop: "fd7a:2201:1ab:2::ffff"

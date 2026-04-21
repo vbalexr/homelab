@@ -12,4 +12,9 @@ patches:
       version: v1
       kind: StatefulSet
       name: postgres
+  - path: service-patch.yaml
+    target:
+      version: v1
+      kind: Service
+      name: postgres
 
