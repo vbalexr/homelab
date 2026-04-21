@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: valkey
+spec:
+  template:
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: valkey
+        resources:
+          requests:
+            cpu: 100m
+            memory: 2Gi
+          # No limits to avoid pod termination during spikes
+  volumeClaimTemplates:
+  - metadata:
+      name: valkey-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ceph-block
+      resources:
+        requests:
+          storage: 10Gi

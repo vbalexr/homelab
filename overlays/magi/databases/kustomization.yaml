@@ -6,4 +6,5 @@ namespace: postgres
 resources:
   - namespace.yaml
   - postgres
+  - valkey
 
