@@ -1,0 +1,43 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: balthasar
+  namespace: kube-system
+spec:
+  bgpInstances:
+    - name: "default"
+      peers:
+        - name: "router-ipv4"
+          localAddress: "10.1.0.6"
+        - name: "router-ipv6"
+          localAddress: "fd7a:2201:1ab::6"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: casper
+  namespace: kube-system
+spec:
+  bgpInstances:
+    - name: "default"
+      peers:
+        - name: "router-ipv4"
+          localAddress: "10.1.0.7"
+        - name: "router-ipv6"
+          localAddress: "fd7a:2201:1ab::7"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: melchior
+  namespace: kube-system
+spec:
+  bgpInstances:
+    - name: "default"
+      peers:
+        - name: "router-ipv4"
+          localAddress: "10.1.0.8"
+        - name: "router-ipv6"
+          localAddress: "fd7a:2201:1ab::8"
+

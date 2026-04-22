@@ -1,0 +1,28 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: cluster-pods
+  namespace: kube-system
+  labels:
+    bgp-advertise: "enabled"
+spec:
+  advertisements:
+    - advertisementType: "PodCIDR"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: cluster-services
+  namespace: kube-system
+  labels:
+    bgp-advertise: "enabled"
+spec:
+  advertisements:
+    - advertisementType: "Service"
+      selector:
+        matchLabels:
+          pool: public
+      service:
+        addresses:
+          - "LoadBalancerIP"

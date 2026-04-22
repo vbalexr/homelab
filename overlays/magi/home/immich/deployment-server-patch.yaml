@@ -23,7 +23,7 @@ spec:
             - name: HOME
               value: /tmp
             - name: IMMICH_HOST
-              value: "0.0.0.0"
+              value: "::"
           volumeMounts:
             - name: upload-data
               mountPath: /data

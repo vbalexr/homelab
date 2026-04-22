@@ -123,6 +123,9 @@ TALOSCONFIG=cluster/magi/talos/talosconfig talosctl kubeconfig -n 10.1.0.6 -e 10
 ```sh
 cilium install \
     --set ipv6.enabled=true \
+    --set bpf.masquerade=true \
+    --set enableIPv6Masquerade=true \
+    --set loadBalancer.mode=snat \
     --set ipam.mode=kubernetes \
     --set kubeProxyReplacement=true \
     --set securityContext.capabilities.ciliumAgent="{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}" \

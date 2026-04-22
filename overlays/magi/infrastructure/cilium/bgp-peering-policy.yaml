@@ -15,8 +15,14 @@ spec:
   families:
     - afi: ipv4
       safi: unicast
+      advertisements:
+        matchLabels:
+          bgp-advertise: "enabled"
     - afi: ipv6
       safi: unicast
+      advertisements:
+        matchLabels:
+          bgp-advertise: "enabled"
 ---
 apiVersion: cilium.io/v2
 kind: CiliumBGPClusterConfig
@@ -24,12 +30,14 @@ metadata:
   name: bgp-cluster-config
   namespace: kube-system
 spec:
+  nodeSelector:
+    matchLabels: {}
   bgpInstances:
     - name: "default"
       localASN: 64513
       peers:
         - name: "router-ipv4"
-          peerAddress: "10.1.1.1"
+          peerAddress: "10.1.0.1"
           peerASN: 64512
           peerConfigRef:
             name: router-peer-config

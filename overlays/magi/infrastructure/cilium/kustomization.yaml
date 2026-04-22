@@ -3,4 +3,6 @@ kind: Kustomization
 
 resources:
   - bgp-peering-policy.yaml
+  - bgp-advertisement.yaml
+  - bgp-node-overrides.yaml
   - load-balancer-ip-pools.yaml
