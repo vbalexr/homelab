@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-machine-learning
+spec:
+  ipFamilies:
+    - IPv4
+    - IPv6
+  ipFamilyPolicy: PreferDualStack

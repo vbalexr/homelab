@@ -6,6 +6,7 @@ metadata:
 
 resources:
   - service.yaml
+  - service-ml.yaml
   - deployment-server.yaml
   - deployment-ml.yaml
   - configmap.yaml

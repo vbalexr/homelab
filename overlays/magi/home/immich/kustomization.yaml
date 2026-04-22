@@ -54,6 +54,11 @@ patches:
       version: v1
       kind: Service
       name: immich
+  - path: service-ml-patch.yaml
+    target:
+      version: v1
+      kind: Service
+      name: immich-machine-learning
 
 labels:
   - pairs:
