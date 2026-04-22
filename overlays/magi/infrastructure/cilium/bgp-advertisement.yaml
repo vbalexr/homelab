@@ -21,8 +21,12 @@ spec:
   advertisements:
     - advertisementType: "Service"
       selector:
-        matchLabels:
-          pool: public
+        matchExpressions:
+          - key: pool
+            operator: In
+            values:
+              - public
+              - private
       service:
         addresses:
           - "LoadBalancerIP"
