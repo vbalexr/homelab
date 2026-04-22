@@ -1,11 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: postgres-headless
   labels:
     app: postgres
 spec:
   type: ClusterIP
+  clusterIP: None  # Headless service for StatefulSet DNS discovery
   selector:
     app: postgres
   ports:
@@ -13,3 +14,4 @@ spec:
     port: 5432
     targetPort: postgresql
     protocol: TCP
+  publishNotReadyAddresses: true

@@ -17,4 +17,9 @@ patches:
       version: v1
       kind: Service
       name: postgres
+  - path: service-headless-patch.yaml
+    target:
+      version: v1
+      kind: Service
+      name: postgres-headless
 

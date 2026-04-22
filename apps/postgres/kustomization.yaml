@@ -5,6 +5,7 @@ resources:
   - configmap-initdb.yaml
   - configmap-config.yaml
   - service.yaml
+  - service-headless.yaml
   - statefulset.yaml
 
 images:
