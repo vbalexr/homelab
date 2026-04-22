@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vaultwarden-config
+  namespace: home
+data:
+  DOMAIN: "https://vault.vbalex.com"
+  SIGNUPS_ALLOWED: "false"
+  INVITATIONS_ALLOWED: "true"
+  WEBSOCKET_ENABLED: "true"
+  ROCKET_PORT: "80"
+  LOG_LEVEL: "info"
