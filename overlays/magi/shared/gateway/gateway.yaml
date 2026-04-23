@@ -1,8 +1,8 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: home-gateway
-  namespace: home
+  name: shared-gateway
+  namespace: shared
 spec:
   gatewayClassName: cilium
   listeners:
@@ -18,7 +18,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: home-tls
+          - name: shared-tls
       allowedRoutes:
         namespaces:
           from: Same

@@ -4,4 +4,4 @@ resources:
   - ./infrastructure.yaml
   - ./configurations.yaml
   - ./databases.yaml
-  - ./home.yaml
+  - ./shared.yaml
