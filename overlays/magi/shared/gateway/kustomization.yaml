@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - gateway.yaml
+  - service-patch.yaml
   - httproute-immich-redirect.yaml
   - httproute-immich.yaml
   - httproute-vaultwarden-redirect.yaml

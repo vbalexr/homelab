@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cilium-gateway-shared-gateway
+  namespace: shared
+  labels:
+    pool: public
+    gateway.networking.k8s.io/gateway-name: shared-gateway
+    io.cilium.gateway/owning-gateway: shared-gateway
+spec:
+  type: LoadBalancer
+  selector:
+    io.cilium.gateway/owning-gateway: shared-gateway
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+
