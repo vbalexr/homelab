@@ -16,6 +16,11 @@ spec:
       initContainers:
         - name: init-cache
           image: busybox:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           command:
             - sh
             - -c
