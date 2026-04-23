@@ -1,0 +1,16 @@
+# Plain-text password files - NEVER commit these to version control!
+# These are local working files only.
+passwords.txt
+*.passwd
+*.pass
+*.pwd
+*.txt
+
+# Secret backups
+secret-*.backup
+*.secret
+
+# Generated files
+*.swp
+*.swo
+.DS_Store

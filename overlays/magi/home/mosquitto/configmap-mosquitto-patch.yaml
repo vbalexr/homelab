@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+data:
+  mosquitto.conf: |
+    # Mosquitto configuration
+    persistence true
+    persistence_location /mosquitto/data/
+
+    # Authentication - password file is created by init container from secret
+    password_file /mosquitto/data/passwd
+    acl_file /mosquitto/data/acl
+
+    # Log configuration
+    log_dest stdout
+    log_type all
+    log_timestamp true
+
+    # Default listener (MQTT)
+    listener 1883
+    allow_anonymous false
+
+    # WebSocket listener (MQTT-WS)
+    listener 9001
+    protocol websockets
+    allow_anonymous false
+
+    # TLS listener (MQTT-TLS)
+    listener 8883
+    protocol mqtt
+    certfile /mosquitto/certs/tls.crt
+    keyfile /mosquitto/certs/tls.key
+    allow_anonymous false
+
+    # Secure WebSocket listener (MQTT-WSS)
+    listener 9002
+    protocol websockets
+    certfile /mosquitto/certs/tls.crt
+    keyfile /mosquitto/certs/tls.key
+    allow_anonymous false

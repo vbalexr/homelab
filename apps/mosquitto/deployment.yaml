@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto
+  labels:
+    app: mosquitto
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: setup-passwords
+          image: busybox:latest
+          command: ['sh', '-c', 'cp /secret-source/passwd /mosquitto/data/passwd && cp /secret-source/acl /mosquitto/data/acl && chmod 640 /mosquitto/data/passwd && chmod 640 /mosquitto/data/acl']
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: mosquitto-secret-source
+              mountPath: /secret-source
+              readOnly: true
+            - name: mosquitto-data
+              mountPath: /mosquitto/data
+      containers:
+        - name: mosquitto
+          image: eclipse-mosquitto:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1883
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: mqtt
+              containerPort: 1883
+              protocol: TCP
+            - name: mqtt-ws
+              containerPort: 9001
+              protocol: TCP
+            - name: mqtt-tls
+              containerPort: 8883
+              protocol: TCP
+            - name: mqtt-wss
+              containerPort: 9002
+              protocol: TCP
+          volumeMounts:
+            - name: mosquitto-config
+              mountPath: /mosquitto/config
+              readOnly: true
+            - name: mosquitto-data
+              mountPath: /mosquitto/data
+      volumes:
+        - name: mosquitto-config
+          configMap:
+            name: mosquitto-config
+            defaultMode: 0644
+        - name: mosquitto-secret-source
+          secret:
+            secretName: mosquitto-users
+            defaultMode: 0644
+        - name: mosquitto-data
+          persistentVolumeClaim:
+            claimName: mosquitto-data

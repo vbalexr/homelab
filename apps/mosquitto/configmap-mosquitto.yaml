@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+data:
+  mosquitto.conf: |
+    # Mosquitto configuration
+    persistence true
+    persistence_location /mosquitto/data/
+
+    # Authentication - IMPORTANT: To enable, use proper argon2id hashed passwords
+    # See: overlays/magi/home/mosquitto/generate-passwords.py for generation script
+    # password_file /mosquitto/data/passwd
+    # acl_file /mosquitto/data/acl
+
+    # Log configuration
+    log_dest stdout
+    log_type all
+    log_timestamp true
+
+    # Default listener
+    listener 1883
+    allow_anonymous true
+
+    # WebSocket listener (plain)
+    listener 9001
+    protocol websockets
+    allow_anonymous true
+
+    # TLS listener (enable in overlay with cert-manager)
+    # listener 8883
+    # protocol mqtt
+    # certfile /mosquitto/certs/tls.crt
+    # keyfile /mosquitto/certs/tls.key
+
+    # Secure WebSocket listener (enable in overlay with cert-manager)
+    # listener 9002
+    # protocol websockets
+    # certfile /mosquitto/certs/tls.crt
+    # keyfile /mosquitto/certs/tls.key

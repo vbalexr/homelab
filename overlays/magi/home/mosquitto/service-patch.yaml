@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto
+  labels:
+    pool: private
+  annotations:
+    io.cilium/lb-ipam-ips: ""
+spec:
+  type: LoadBalancer
+  ipFamilies:
+    - IPv4
+    - IPv6
+  ipFamilyPolicy: PreferDualStack
