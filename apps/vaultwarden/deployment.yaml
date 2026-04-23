@@ -39,19 +39,11 @@ spec:
               containerPort: 80
               protocol: TCP
           env:
-            - name: PGHOST
-              value: postgres.databases.svc.cluster.local
-            - name: PGPORT
-              value: "5432"
-            - name: PGUSER
-              value: home_vaultwarden
-            - name: PGPASSWORD
+            - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: vaultwarden-secret
-                  key: DB_PASSWORD
-            - name: PGDATABASE
-              value: home_vaultwarden
+                  key: DATABASE_URL
           envFrom:
             - configMapRef:
                 name: vaultwarden-config
