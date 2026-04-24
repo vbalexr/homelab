@@ -8,6 +8,6 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - mosquitto.vbalex.com  # Change this to your actual domain
+    - mqtt.vbalex.com  # Change this to your actual domain
   duration: 2160h  # 90 days
   renewBefore: 720h  # 30 days before expiry
