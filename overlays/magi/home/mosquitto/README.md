@@ -40,25 +40,7 @@ dnsNames:
   - mosquitto.example.com  # Change to your domain
 ```
 
-### 3. Update Passwords
-
-The default Secret (`secret-users.yaml`) contains 3 users. To regenerate:
-
-```bash
-# 1. Create plain-text password file (DO NOT COMMIT)
-cat > passwords.txt << 'EOF'
-hassio:YourPassword123
-z2m:AnotherPassword456
-device:DevicePassword789
-EOF
-
-# 2. Generate hashed passwords
-python3 ../../../../apps/mosquitto/generate-passwords.py passwords.txt
-
-# 3. Copy base64 output to secret-users.yaml data.passwd
-
 # 4. Cleanup
-rm passwords.txt
 ```
 
 ### 4. Deploy

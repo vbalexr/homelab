@@ -84,7 +84,7 @@ overlays/<cluster>/<namespace>/mosquitto/
   ├── kustomization.yaml       # Assembles resources
   ├── pvc.yaml                 # (optional) PVC for /mosquitto/data
   ├── certificate.yaml         # (optional) TLS cert via cert-manager
-  ├── secret-users.yaml        # Password file (from generate-passwords.py)
+  ├── secret-users.yaml        # Password file (created with mosquitto_passwd)
   └── deployment-patch.yaml    # (optional) Additional patches
 ```
 
@@ -105,42 +105,57 @@ resources:
 
 ### Generate Hashed Passwords
 
-Use the provided script to generate argon2id hashed passwords compatible with Mosquitto 2.1.2:
+Use the `mosquitto_passwd` CLI tool to generate hashed passwords for Mosquitto 2.1.2:
 
 ```bash
-./generate-passwords.py
-```
+# Create a password file locally
+mosquitto_passwd -c passwd.txt username
+# You'll be prompted to enter and confirm the password
 
-This outputs:
-- Base64-encoded passwd file (copy to your Secret resource)
-- Plain text for reference
-- ACL rules (if using the default users)
+# Add additional users (without -c flag)
+mosquitto_passwd passwd.txt another_user
+
+# View the generated hashed passwords
+cat passwd.txt
+```
 
 ### Enable Authentication
 
-1. **Generate passwords**:
-   ```bash
-   ./generate-passwords.py
-   ```
+1. **Generate passwords** using `mosquitto_passwd` (see above)
 
-2. **Update your overlay's Secret**:
+2. **Create a Secret in your overlay** (`secret-users.yaml`):
    ```yaml
    apiVersion: v1
    kind: Secret
    metadata:
      name: mosquitto-users
    type: Opaque
-   data:
-     passwd: <base64-output-from-script>
-     acl: <base64-encoded-acl-rules>
+   stringData:
+     passwd: |
+       ---- passwd.txt content here ----
+     acl: |
+       user hassio
+       topic readwrite #
+       
+       user z2m
+       topic readwrite zigbee2mqtt/#
    ```
+   
+   Replace the hashed passwords with output from your `mosquitto_passwd` command.
 
-3. **Update configmap-mosquitto.yaml** (this file):
+3. **Update configmap-mosquitto.yaml** (in the base app):
    - Uncomment: `password_file /mosquitto/data/passwd`
-   - Uncomment: `acl_file /mosquitto/data/acl`
+   - Uncomment: `acl_file /mosquitto/data/acl` (if using ACLs)
    - Change: `allow_anonymous false` (in each listener)
 
-4. **Redeploy**:
+4. **Add the Secret to your overlay's kustomization.yaml**:
+   ```yaml
+   resources:
+     - ../../../../apps/mosquitto
+     - secret-users.yaml
+   ```
+
+5. **Redeploy**:
    ```bash
    kubectl apply -k <your-overlay>
    ```
@@ -213,7 +228,6 @@ Use a WebSocket MQTT client with URL: `ws://mosquitto:9001`
 - `service.yaml` - 4-port Service resource
 - `configmap-mosquitto.yaml` - mosquitto.conf configuration
 - `kustomization.yaml` - Base kustomization
-- `generate-passwords.py` - Script to generate hashed passwords
 
 ## Notes
 
