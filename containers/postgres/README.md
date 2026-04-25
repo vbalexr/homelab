@@ -1,103 +1,11 @@
 # PostgreSQL 16 with VectorChord
 
-Production Docker image: PostgreSQL 16 + pgvector + VectorChord.
-
-## Features
-
-- **Base**: PostgreSQL 16 on Debian
-- **Extensions**: pgvector, VectorChord pre-installed
-- **Multi-arch**: linux/amd64, linux/arm64
-- **Health checks**: Built-in readiness probes
-
-## Build
+Production Docker image: PostgreSQL 16 + pgvector + VectorChord. Multi-arch (amd64, arm64).
 
 ```bash
 docker build -t ghcr.io/vbalexr/postgres:latest .
-```
-
-## Run
-
-```bash
 docker run -e POSTGRES_PASSWORD=secret -p 5432:5432 ghcr.io/vbalexr/postgres:latest
 ```
-
-## Extensions
-
-### pgvector
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-```
-
-### VectorChord
-```sql
-CREATE EXTENSION IF NOT EXISTS vectorchord;
-```
-    embedding vector(1536)  -- 1536-dimensional vectors (e.g., from OpenAI)
-);
-
--- Insert sample data
-INSERT INTO documents (content, embedding) VALUES
-    ('Hello world', '[0.1, 0.2, ..., 0.5]'::vector),
-    ('PostgreSQL rocks', '[0.2, 0.3, ..., 0.6]'::vector);
-
--- Search for similar vectors (cosine distance)
-SELECT id, content, embedding <-> '[0.15, 0.25, ..., 0.55]'::vector AS distance
-FROM documents
-ORDER BY distance
-LIMIT 5;
-```
-
-#### Supported Distance Operators
-- `<->` - Cosine distance
-- `<#>` - Negative inner product
-- `<=>` - Euclidean distance
-
-#### Create Vector Indexes
-```sql
--- IVFFlat index (good for large datasets)
-CREATE INDEX ON documents USING ivfflat (embedding vector_cosine_ops)
-    WITH (lists = 100);
-
--- HNSW index (better for dynamic workloads)
-CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops)
-    WITH (m = 16, ef_construction = 200);
-```
-
-### VectorChord
-
-VectorChord is an advanced PostgreSQL extension providing high-performance vector indexing and search capabilities.
-
-#### Enable VectorChord
-```sql
--- Create the extension
-CREATE EXTENSION IF NOT EXISTS vectorchord;
-
--- Verify installation
-SELECT extversion FROM pg_extension WHERE extname = 'vectorchord';
-```
-
-#### Create Vector Indexes
-```sql
--- Create a table with vector column
-CREATE TABLE embeddings (
-    id SERIAL PRIMARY KEY,
-    data JSONB,
-    vector REAL[] NOT NULL
-);
-
--- Create an IVFFlat index using VectorChord
-CREATE INDEX ON embeddings USING ivfflat (vector vector_l2_ops)
-    WITH (lists = 100);
-
--- Alternative: HNSW index
-CREATE INDEX ON embeddings USING hnsw (vector vector_l2_ops)
-    WITH (m = 16, ef_construction = 200);
-```
-
-#### Query with Vector Indexes
-```sql
--- Insert sample vectors
-INSERT INTO embeddings (data, vector) VALUES
     ('{"name": "doc1"}', ARRAY[0.1, 0.2, 0.3]::REAL[]),
     ('{"name": "doc2"}', ARRAY[0.15, 0.25, 0.35]::REAL[]);
 

@@ -2,10 +2,4 @@
 
 Network topology and configuration documentation.
 
-## Files
-
-- `topology.md` — Physical/logical diagrams
-- `vlans.md` — VLAN assignments
-- `ip-addressing.md` — Subnets and IPs
-- `firewall-rules.md` — Firewall rules
-- `dns.md` — DNS records
+Create: `topology.md`, `vlans.md`, `ip-addressing.md`, `firewall-rules.md`, `dns.md`
