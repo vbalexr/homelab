@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-server
+spec:
+  template:
+    spec:
+      nodeSelector:
+        feature.node.kubernetes.io/intel-gpu.present: "true"
+      containers:
+        - name: server
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+              gpu.intel.com/i915: "1"

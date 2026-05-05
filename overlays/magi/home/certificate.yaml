@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: home-gateway-tls
+spec:
+  secretName: home-gateway-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - cameras.vbalex.com
+    - assistant.vbalex.com

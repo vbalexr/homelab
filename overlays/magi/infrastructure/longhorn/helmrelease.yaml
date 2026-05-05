@@ -1,0 +1,43 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: longhorn
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: longhorn-system
+  chart:
+    spec:
+      chart: longhorn
+      sourceRef:
+        kind: HelmRepository
+        name: longhorn
+        namespace: flux-system
+      version: 1.11.2
+  values:
+    defaultSettings:
+      storageNetwork: longhorn-system/longhorn-storage
+      endpointNetworkForRWXVolume: longhorn-system/longhorn-rwm
+      defaultReplicaCount: 2
+      defaultDataPath: /var/mnt/disk2
+      replicaAutoBalance: least-effort
+      replicaSoftAntiAffinity: true
+      replicaDiskSoftAntiAffinity: true
+      replicaZoneSoftAntiAffinity: true
+      createDefaultDiskLabeledNodes: true
+      storageReservedPercentageForDefaultDisk: 10
+      storageMinimalAvailablePercentage: 15
+      allowVolumeCreationWithDegradedAvailability: false
+      concurrentReplicaRebuildPerNodeLimit: 1
+      rebuildConcurrentSyncLimit: 2
+      kubernetesClusterAutoscalerEnabled: false
+      nodeDrainPolicy: always-allow
+      nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+      detachManuallyAttachedVolumesWhenCordoned: true
+      autoSalvage: true
+    persistence:
+      createStorageClass: false
+      defaultClass: false
+      defaultDataLocality: best-effort
+    longhornUI:
+      replicas: 1

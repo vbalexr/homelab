@@ -1,0 +1,61 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+title = "homelab gitleaks config"
+
+[extend]
+# Extend the default ruleset shipped with gitleaks
+useDefault = true
+
+# ---------------------------------------------------------------------------
+# Additional rules on top of the defaults
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id          = "private-key-file"
+description = "Private key file (PEM / DER / PPK)"
+regex       = '''(?i)-----BEGIN[ A-Z]{0,30}PRIVATE KEY-----'''
+tags        = ["key", "secret"]
+
+[[rules]]
+id          = "ssh-private-key"
+description = "SSH private key block"
+regex       = '''(?i)-----BEGIN OPENSSH PRIVATE KEY-----'''
+tags        = ["key", "ssh"]
+
+[[rules]]
+id          = "rsa-private-key"
+description = "RSA private key block"
+regex       = '''(?i)-----BEGIN RSA PRIVATE KEY-----'''
+tags        = ["key", "rsa"]
+
+[[rules]]
+id          = "dsa-private-key"
+description = "DSA private key block"
+regex       = '''(?i)-----BEGIN DSA PRIVATE KEY-----'''
+tags        = ["key", "dsa"]
+
+[[rules]]
+id          = "ec-private-key"
+description = "EC private key block"
+regex       = '''(?i)-----BEGIN EC PRIVATE KEY-----'''
+tags        = ["key", "ec"]
+
+[[rules]]
+id          = "pgp-private-key"
+description = "PGP private key block"
+regex       = '''(?i)-----BEGIN PGP PRIVATE KEY BLOCK-----'''
+tags        = ["key", "pgp"]
+
+# ---------------------------------------------------------------------------
+# Paths to always ignore
+# ---------------------------------------------------------------------------
+
+[allowlist]
+description = "Global allow-list"
+paths = [
+  # Allow SOPS-encrypted files — they intentionally contain ciphertext
+  '''\.sops\.yaml$''',
+  # Test fixtures that may contain example (non-real) key strings
+  '''testdata/''',
+]

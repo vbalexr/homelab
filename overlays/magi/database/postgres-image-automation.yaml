@@ -1,0 +1,49 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: postgres
+  namespace: flux-system
+spec:
+  image: ghcr.io/vbalexr/postgres
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: postgres
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: postgres
+  filterTags:
+    pattern: "^([0-9]{8}\\.[0-9]{4})$"
+    extract: "$1"
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: postgres
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update postgres image to latest tag"
+    push:
+      branch: main
+  update:
+    path: ./
+    strategy: Setters

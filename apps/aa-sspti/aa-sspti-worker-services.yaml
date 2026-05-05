@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aa-sspti-worker-services
+  labels:
+    app: aa-sspti-worker-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aa-sspti-worker-services
+  template:
+    metadata:
+      labels:
+        app: aa-sspti-worker-services
+    spec:
+      containers:
+        - name: aa-sspti-worker-services
+          image: ghcr.io/vbalexr/aa-sspti-worker_services:latest
+          imagePullPolicy: IfNotPresent
+          command: ["celery", "-A", "myauth", "worker", "--pool=threads", "--concurrency=1", "-Q", "services", "-n", "worker_services_%n"]
+          workingDir: /home/allianceauth/myauth/
+          envFrom:
+            - secretRef:
+                name: aa-sspti-secret
+          volumeMounts:
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/celery.py
+              subPath: celery.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/urls.py
+              subPath: urls.py
+      volumes:
+        - name: app-config
+          persistentVolumeClaim:
+            claimName: aa-sspti-config

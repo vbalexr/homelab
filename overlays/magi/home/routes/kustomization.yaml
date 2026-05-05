@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: home
+resources:
+  - frigate-http-redirect-httproute.yaml
+  - frigate-httproute.yaml
+  - homeassistant-http-redirect-httproute.yaml
+  - homeassistant-httproute.yaml

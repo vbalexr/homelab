@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - aa-sspti-config.yaml
+  - aa-sspti-gunicorn.yaml
+  - aa-sspti-beat.yaml
+  - aa-sspti-worker.yaml
+  - aa-sspti-worker-services.yaml
+  - aa-sspti-nginx.yaml

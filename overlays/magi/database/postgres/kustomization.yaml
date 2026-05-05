@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: database
+resources:
+  - ../../../../apps/postgres
+  - secret.yaml
+  - service-lb.yaml
+images:
+  - name: ghcr.io/vbalexr/postgres
+    newTag: "20260506.1644" # {"$imagepolicy":"flux-system:postgres:tag"}
+patches:
+  - path: patches.yaml

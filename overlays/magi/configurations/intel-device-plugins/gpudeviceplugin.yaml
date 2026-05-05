@@ -1,0 +1,10 @@
+apiVersion: deviceplugin.intel.com/v1
+kind: GpuDevicePlugin
+metadata:
+  name: gpudeviceplugin
+spec:
+  image: intel/intel-gpu-plugin:0.35.0
+  nodeSelector:
+    feature.node.kubernetes.io/intel-gpu.present: "true"
+  sharedDevNum: 4
+  preferredAllocationPolicy: balanced

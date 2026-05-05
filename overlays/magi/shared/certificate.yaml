@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: shared-gateway-tls
+spec:
+  secretName: shared-gateway-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - vault.vbalex.com
+    - photos.vbalex.com
+    - llm.vbalex.com

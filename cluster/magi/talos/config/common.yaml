@@ -1,0 +1,85 @@
+cluster:
+  allowSchedulingOnControlPlanes: true
+  network:
+    cni:
+      name: none
+    podSubnets:
+      - 10.41.0.0/16
+      - fd7a:41::/48
+    serviceSubnets:
+      - 10.42.0.0/16
+      - fd7a:42::/112
+  proxy:
+    disabled: true
+  apiServer:
+    certSANs:
+      - magi.vbalex.com
+      - "*.magi.vbalex.com"
+machine:
+  features:
+    kubePrism:
+      enabled: true
+      port: 7445
+  kubelet:
+    nodeIP:
+      validSubnets:
+        - 10.255.0.0/24
+        - fd7a:2201:7351::/64
+  type: controlplane
+  network:
+    kubespan:
+      enabled: false
+    nameservers:
+      - 10.1.0.1
+      - fd7a:2201:1ab::1
+  install:
+    disk: nil
+    bootloader: true
+    wipe: true
+    image: factory.talos.dev/installer/9d8a1f81cedcf4fdb8055fb0dc5c85aae5e54e5b3b93d4a188283327e7860cf8:v1.13.0
+  kernel:
+    modules:
+      - name: gasket
+      - name: apex
+---
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: fd7a:2201:1ab::5
+link: bond0
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: bond0.15
+vlanID: 15
+vlanMode: 802.1q
+parent: bond0
+up: true
+addresses: []
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: bond0.20
+vlanID: 20
+vlanMode: 802.1q
+parent: bond0
+up: true
+addresses: []
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: bond0.25
+vlanID: 25
+vlanMode: 802.1q
+parent: bond0
+up: true
+addresses: []
+---
+apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: nut-client
+configFiles:
+  - content: |-
+      MONITOR forza@10.1.0.79 1 observer OBSERVER_PASSWORD_HERE secondary
+      SHUTDOWNCMD "/sbin/poweroff"
+      POWERDOWNFLAG /var/run/nut.powerdown
+    mountPath: /usr/local/etc/nut/upsmon.conf

@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: production-service
+  labels:
+    app: production-service
+spec:
+  type: ClusterIP
+  selector:
+    app: production-service
+  ports:
+    - name: http
+      port: 3004
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: production-service
+  labels:
+    app: production-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: production-service
+  template:
+    metadata:
+      labels:
+        app: production-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: production-service
+          image: ghcr.io/vbalexr/qualitydocs-production-service:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 3004
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3004"
+            - name: SERVICE_NAME
+              value: production-service
+            - name: DB_SCHEMA
+              value: production
+          envFrom:
+            - secretRef:
+                name: qualitydocs-secret

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aa-sspti-beat
+  labels:
+    app: aa-sspti-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aa-sspti-beat
+  template:
+    metadata:
+      labels:
+        app: aa-sspti-beat
+    spec:
+      containers:
+        - name: aa-sspti-beat
+          image: ghcr.io/vbalexr/aa-sspti-beat:latest
+          imagePullPolicy: IfNotPresent
+          command: ["celery", "-A", "myauth", "beat"]
+          workingDir: /home/allianceauth/myauth/
+          envFrom:
+            - secretRef:
+                name: aa-sspti-secret
+          volumeMounts:
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/celery.py
+              subPath: celery.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/urls.py
+              subPath: urls.py
+      volumes:
+        - name: app-config
+          persistentVolumeClaim:
+            claimName: aa-sspti-config

@@ -1,0 +1,49 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: longhorn-storage
+  namespace: longhorn-system
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "type": "bridge",
+      "bridge": "br-storage",
+      "mtu": 9000,
+      "ipam": {
+        "type": "whereabouts",
+        "range": "10.255.254.0/24",
+        "range_start": "10.255.254.100",
+        "range_end": "10.255.254.250",
+        "exclude": [
+          "10.255.254.1/32",
+          "10.255.254.2/32",
+          "10.255.254.3/32"
+        ]
+      }
+    }
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: longhorn-rwm
+  namespace: longhorn-system
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "type": "bridge",
+      "bridge": "br-rwx",
+      "mtu": 9000,
+      "ipam": {
+        "type": "whereabouts",
+        "range": "10.255.255.0/24",
+        "range_start": "10.255.255.100",
+        "range_end": "10.255.255.250",
+        "exclude": [
+          "10.255.255.1/32",
+          "10.255.255.2/32",
+          "10.255.255.3/32"
+        ]
+      }
+    }

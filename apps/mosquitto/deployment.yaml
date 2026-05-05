@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto
+  labels:
+    app: mosquitto
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      securityContext:
+        fsGroup: 1883
+        fsGroupChangePolicy: Always
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: setup-data
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              mkdir -p /mosquitto/data
+              if [ -d /mosquitto/data/passwd ]; then
+                rm -rf /mosquitto/data/passwd
+              else
+                rm -f /mosquitto/data/passwd
+              fi
+              cp -f /secret-source/passwd /mosquitto/data/passwd
+              if [ -d /mosquitto/data/acl ]; then
+                rm -rf /mosquitto/data/acl
+              else
+                rm -f /mosquitto/data/acl
+              fi
+              cp -f /secret-source/acl /mosquitto/data/acl
+              find /mosquitto/data \( -name lost+found -prune \) -o -exec chmod g+rwX {} +
+              chmod 640 /mosquitto/data/passwd /mosquitto/data/acl
+          securityContext:
+            runAsUser: 1883
+            runAsGroup: 1883
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: mosquitto-secret-source
+              mountPath: /secret-source
+              readOnly: true
+            - name: mosquitto-data
+              mountPath: /mosquitto/data
+      containers:
+        - name: mosquitto
+          image: eclipse-mosquitto:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1883
+            runAsGroup: 1883
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: mqtt
+              containerPort: 1883
+              protocol: TCP
+            - name: mqtt-ws
+              containerPort: 9001
+              protocol: TCP
+            - name: mqtt-tls
+              containerPort: 8883
+              protocol: TCP
+            - name: mqtt-wss
+              containerPort: 9002
+              protocol: TCP
+          volumeMounts:
+            - name: mosquitto-config
+              mountPath: /mosquitto/config
+              readOnly: true
+            - name: mosquitto-data
+              mountPath: /mosquitto/data
+      volumes:
+        - name: mosquitto-config
+          configMap:
+            name: mosquitto-config
+            defaultMode: 0644
+        - name: mosquitto-secret-source
+          secret:
+            secretName: mosquitto-users
+            defaultMode: 0644
+        - name: mosquitto-data
+          persistentVolumeClaim:
+            claimName: mosquitto-data

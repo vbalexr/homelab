@@ -1,0 +1,68 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: immich-server
+  namespace: shared
+spec:
+  image: ghcr.io/immich-app/immich-server
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: immich-server
+  namespace: shared
+spec:
+  imageRepositoryRef:
+    name: immich-server
+  policy:
+    semver:
+      range: ">=2.0.0 <3.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: immich-machine-learning
+  namespace: shared
+spec:
+  image: ghcr.io/immich-app/immich-machine-learning
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: immich-machine-learning
+  namespace: shared
+spec:
+  imageRepositoryRef:
+    name: immich-machine-learning
+  policy:
+    semver:
+      range: ">=2.0.0 <3.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: immich
+  namespace: shared
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update immich images to latest v2 tag"
+    push:
+      branch: main
+  update:
+    path: ./
+    strategy: Setters

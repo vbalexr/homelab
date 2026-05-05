@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vaultwarden-config
+  labels:
+    app: vaultwarden
+data:
+  DOMAIN: https://vault.vbalex.com
+  ROCKET_ADDRESS: ::0
+  WEBSOCKET_ADDRESS: ::0

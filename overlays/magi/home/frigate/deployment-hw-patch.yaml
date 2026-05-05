@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frigate
+spec:
+  template:
+    spec:
+      nodeSelector:
+        feature.node.kubernetes.io/intel-gpu.present: "true"
+        feature.node.kubernetes.io/coral-tpu.installed: "true"
+      containers:
+        - name: frigate
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+          resources:
+            limits:
+              gpu.intel.com/i915: "1"
+          volumeMounts:
+            - name: dev-apex
+              mountPath: /dev/apex_0
+      volumes:
+        - name: dev-apex
+          hostPath:
+            path: /dev/apex_0
+            type: CharDevice

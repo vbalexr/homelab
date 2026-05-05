@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aa-sspti-gunicorn
+  labels:
+    app: aa-sspti-gunicorn
+spec:
+  type: ClusterIP
+  selector:
+    app: aa-sspti-gunicorn
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aa-sspti-gunicorn
+  labels:
+    app: aa-sspti-gunicorn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aa-sspti-gunicorn
+  template:
+    metadata:
+      labels:
+        app: aa-sspti-gunicorn
+    spec:
+      containers:
+        - name: aa-sspti-gunicorn
+          image: ghcr.io/vbalexr/aa-sspti-gunicorn:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - gunicorn
+            - myauth.wsgi
+            - --bind=0.0.0.0:8000
+            - --workers=3
+            - --timeout=120
+            - --max-requests=500
+            - --max-requests-jitter=50
+          workingDir: /home/allianceauth/myauth/
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: aa-sspti-secret
+          volumeMounts:
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/celery.py
+              subPath: celery.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/urls.py
+              subPath: urls.py
+            - name: app-config
+              mountPath: /memory_check.sh
+              subPath: memory_check.sh
+            - name: static-volume
+              mountPath: /var/www/myauth/static
+      volumes:
+        - name: app-config
+          persistentVolumeClaim:
+            claimName: aa-sspti-config
+        - name: static-volume
+          persistentVolumeClaim:
+            claimName: aa-sspti-static

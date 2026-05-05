@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aa-sspti-nginx
+  labels:
+    app: aa-sspti-nginx
+spec:
+  type: ClusterIP
+  selector:
+    app: aa-sspti-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aa-sspti-nginx
+  labels:
+    app: aa-sspti-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aa-sspti-nginx
+  template:
+    metadata:
+      labels:
+        app: aa-sspti-nginx
+    spec:
+      containers:
+        - name: aa-sspti-nginx
+          image: ghcr.io/vbalexr/aa-sspti-nginx:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: static-volume
+              mountPath: /var/www/myauth/static
+      volumes:
+        - name: nginx-config
+          persistentVolumeClaim:
+            claimName: aa-sspti-config
+        - name: static-volume
+          persistentVolumeClaim:
+            claimName: aa-sspti-static

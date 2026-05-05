@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llamacpp
+  labels:
+    app: llamacpp
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: llamacpp
+  template:
+    metadata:
+      labels:
+        app: llamacpp
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: llamacpp
+          image: ghcr.io/ggml-org/llama.cpp:server
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          args:
+            - "--host"
+            - "::"
+            - "--port"
+            - "8080"
+            - "--hf-repo"
+            - "Qwen/Qwen2.5-7B-Instruct-GGUF"
+            - "--hf-file"
+            - "qwen2.5-7b-instruct-q6_k-00001-of-00002.gguf"
+            - "-c"
+            - "131072"
+            - "--parallel"
+            - "2"
+            - "--cache-type-k"
+            - "q8_0"
+            - "--cache-type-v"
+            - "q8_0"
+            - "--jinja"
+            - "--no-mmap"
+            - "--no-context-shift"
+            - "--no-cache-idle-slots"
+            - "-t"
+            - "8"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: LLAMA_CACHE
+              value: /cache/llama
+            - name: HF_HOME
+              value: /cache/huggingface
+          resources:
+            requests:
+              cpu: "8"
+              memory: 13Gi
+            limits:
+              memory: 16Gi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: model-cache
+              mountPath: /cache
+      volumes:
+        - name: model-cache
+          emptyDir: {}
