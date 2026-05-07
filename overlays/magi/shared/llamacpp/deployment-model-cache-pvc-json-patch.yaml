@@ -1,6 +1,0 @@
-- op: remove
-  path: /spec/template/spec/volumes/0/emptyDir
-- op: add
-  path: /spec/template/spec/volumes/0/persistentVolumeClaim
-  value:
-    claimName: llamacpp-model-cache

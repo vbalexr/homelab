@@ -9,5 +9,4 @@ resources:
   - vaultwarden-image-automation.yaml
   - vaultwarden
   - immich
-  - llamacpp
   - routes

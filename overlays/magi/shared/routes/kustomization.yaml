@@ -6,5 +6,3 @@ resources:
   - vaultwarden-httproute.yaml
   - immich-http-redirect-httproute.yaml
   - immich-httproute.yaml
-  - llamacpp-http-redirect-httproute.yaml
-  - llamacpp-httproute.yaml
