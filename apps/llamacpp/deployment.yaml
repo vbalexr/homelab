@@ -35,17 +35,20 @@ spec:
             - "--port"
             - "8080"
             - "--hf-repo"
-            - "Qwen/Qwen2.5-7B-Instruct-GGUF"
+            - "Qwen/Qwen3-VL-8B-Thinking-GGUF"
             - "--hf-file"
-            - "qwen2.5-7b-instruct-q6_k-00001-of-00002.gguf"
-            - "-c"
-            - "131072"
-            - "--parallel"
-            - "2"
+            - "Qwen3VL-8B-Thinking-Q8_0.gguf"
+            - "--mmproj-url"
+            - "https://huggingface.co/Qwen/Qwen3-VL-8B-Thinking-GGUF/resolve/main/mmproj-Qwen3VL-8B-Thinking-F16.gguf"
+            - "--no-mmproj-offload"
             - "--cache-type-k"
             - "q8_0"
             - "--cache-type-v"
             - "q8_0"
+            - "-c"
+            - "65536"
+            - "-np"
+            - "1"
             - "--jinja"
             - "--no-mmap"
             - "--no-context-shift"
@@ -64,9 +67,9 @@ spec:
           resources:
             requests:
               cpu: "8"
-              memory: 13Gi
+              memory: 20Gi
             limits:
-              memory: 16Gi
+              memory: 20Gi
           startupProbe:
             httpGet:
               path: /health
