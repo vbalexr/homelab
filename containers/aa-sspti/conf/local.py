@@ -61,11 +61,14 @@ DEFAULT_FROM_EMAIL = os.environ.get("AA_DEFAULT_FROM_EMAIL", "")
 ROOT_URLCONF = "myauth.urls"
 WSGI_APPLICATION = "myauth.wsgi.application"
 STATIC_ROOT = "/var/www/myauth/static/"
-BROKER_URL = f"redis://{os.environ.get('AA_REDIS', 'redis:6379')}/0"
+_redis_host = os.environ.get("AA_REDIS", "redis:6379")
+_redis_password = os.environ.get("AA_REDIS_PASSWORD", "")
+_redis_auth = f":{_redis_password}@" if _redis_password else ""
+BROKER_URL = f"redis://{_redis_auth}{_redis_host}/0"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.environ.get('AA_REDIS', 'redis:6379')}/1",
+        "LOCATION": f"redis://{_redis_auth}{_redis_host}/1",
     }
 }
 
