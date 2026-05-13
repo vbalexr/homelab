@@ -50,12 +50,12 @@ CREATE INDEX ON ai_embeddings USING hnsw (embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 200);
 
 -- Verify indexes
-SELECT schemaname, tablename, indexname, indexdef 
-FROM pg_indexes 
+SELECT schemaname, tablename, indexname, indexdef
+FROM pg_indexes
 WHERE tablename = 'ai_embeddings';
 
 -- Example: Semantic search
-SELECT 
+SELECT
     id,
     document_id,
     text_content,
@@ -82,7 +82,7 @@ SET max_parallel_workers_per_gather = 4;
 -- For 1M rows: lists = 1000
 
 -- Monitor index usage
-SELECT * FROM pg_stat_user_indexes 
+SELECT * FROM pg_stat_user_indexes
 WHERE relname = 'ai_embeddings';
 ```
 

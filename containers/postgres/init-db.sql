@@ -18,6 +18,6 @@ CREATE TABLE IF NOT EXISTS embeddings (
 -- CREATE INDEX ON embeddings USING hnsw (embedding vector_cosine_ops);
 
 -- Verify extensions are loaded
-SELECT extname, extversion FROM pg_extension 
+SELECT extname, extversion FROM pg_extension
 WHERE extname IN ('pgvector', 'vectorchord')
 ORDER BY extname;

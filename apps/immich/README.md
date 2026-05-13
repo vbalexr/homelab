@@ -10,4 +10,3 @@ CREATE DATABASE home_immich OWNER home_immich;
 CREATE EXTENSION vchord CASCADE;
 CREATE EXTENSION earthdistance CASCADE;
 ```
-

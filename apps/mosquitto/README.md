@@ -43,11 +43,11 @@ cat passwd.txt
      acl: |
        user hassio
        topic readwrite #
-       
+
        user z2m
        topic readwrite zigbee2mqtt/#
    ```
-   
+
    Replace the hashed passwords with output from your `mosquitto_passwd` command.
 
 3. **Update configmap-mosquitto.yaml** (in the base app):
@@ -162,7 +162,7 @@ stringData:
   acl: |
     user admin
     topic readwrite #
-    
+
     user user1
     topic read sensors/#
     topic write commands/user1/#
