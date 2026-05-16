@@ -72,6 +72,12 @@ jobs:
       - build-app-images
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
@@ -79,12 +85,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull and retag nginx
+      - name: Generate tags
+        id: tags
         run: |
-          DATE_TAG="$(date +%Y%m%d-%H%M)"
-          TARGET_IMAGE="${{ env.REGISTRY }}/${{ env.OWNER }}/aa-sspti-nginx"
-          docker pull docker.io/nginx:stable
-          docker tag docker.io/nginx:stable "${TARGET_IMAGE}:${DATE_TAG}"
-          docker tag docker.io/nginx:stable "${TARGET_IMAGE}:latest"
-          docker push "${TARGET_IMAGE}:${DATE_TAG}"
-          docker push "${TARGET_IMAGE}:latest"
+          echo "date_tag=$(date +%Y%m%d-%H%M)" >> "$GITHUB_OUTPUT"
+          echo "image=${{ env.REGISTRY }}/${{ env.OWNER }}/aa-sspti-nginx" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push nginx image
+        uses: docker/build-push-action@v5
+        with:
+          context: containers/aa-sspti
+          file: containers/aa-sspti/nginx.dockerfile
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.image }}:${{ steps.tags.outputs.date_tag }}
+            ${{ steps.tags.outputs.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
