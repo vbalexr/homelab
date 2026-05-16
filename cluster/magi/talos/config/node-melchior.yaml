@@ -92,13 +92,6 @@ machine:
           - bind
           - rshared
           - rw
-      - destination: /var/mnt/disk2
-        type: bind
-        source: /var/mnt/disk2
-        options:
-          - bind
-          - rshared
-          - rw
   install:
     diskSelector:
       serial: 2M322L1CBHHE
@@ -118,14 +111,6 @@ provisioning:
   minSize: 900GiB
   diskSelector:
     match: disk.serial == "50026B72836AC7FD"
----
-apiVersion: v1alpha1
-kind: UserVolumeConfig
-name: disk2
-provisioning:
-  minSize: 900GiB
-  diskSelector:
-    match: disk.model == "049-2GH172"
 ---
 apiVersion: v1alpha1
 kind: HostnameConfig
