@@ -14,5 +14,5 @@ parameters:
   dataLocality: "best-effort"
   unmapMarkSnapChainRemoved: "ignored"
   disableRevisionCounter: "true"
-  migratable: "true"
+  migratable: "false"
   diskSelector: "hdd"
