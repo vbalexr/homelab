@@ -6,4 +6,5 @@ customization:
       - siderolabs/nut-client
       - siderolabs/gasket-driver
       - siderolabs/iscsi-tools
+      - siderolabs/nfs-client
       - siderolabs/util-linux-tools

@@ -36,7 +36,7 @@ machine:
     disk: nil
     bootloader: true
     wipe: true
-    image: factory.talos.dev/installer/9d8a1f81cedcf4fdb8055fb0dc5c85aae5e54e5b3b93d4a188283327e7860cf8:v1.13.0
+    image: factory.talos.dev/installer/3e88890334fa90673a31ecefa49d364cdc4177d0b888d36c6776eaa348183ca5:v1.13.2
   kernel:
     modules:
       - name: gasket
