@@ -11,7 +11,7 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: http
+      targetPort: 8080
       protocol: TCP
 ---
 apiVersion: apps/v1
@@ -30,24 +30,28 @@ spec:
       labels:
         app: aa-sspti-nginx
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: aa-sspti-nginx
           image: ghcr.io/vbalexr/aa-sspti-nginx:latest
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 101
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/nginx.conf
-              subPath: nginx.conf
             - name: static-volume
               mountPath: /var/www/myauth/static
       volumes:
-        - name: nginx-config
-          persistentVolumeClaim:
-            claimName: aa-sspti-config
         - name: static-volume
           persistentVolumeClaim:
             claimName: aa-sspti-static

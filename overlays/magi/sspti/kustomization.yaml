@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sspti
+resources:
+  - namespace.yaml
+  - ../../../apps/aa-sspti
+  - secret.yaml
+  - configmap.yaml
+  - aa-sspti-image-automation.yaml
+patches:
+  - path: pvc-storageclass-patch.yaml
+images:
+  - name: ghcr.io/vbalexr/aa-sspti-gunicorn
+    newTag: 20260516-0039 # {"$imagepolicy":"sspti:aa-sspti-gunicorn:tag"}
+  - name: ghcr.io/vbalexr/aa-sspti-beat
+    newTag: 20260516-0039 # {"$imagepolicy":"sspti:aa-sspti-beat:tag"}
+  - name: ghcr.io/vbalexr/aa-sspti-worker
+    newTag: 20260516-0039 # {"$imagepolicy":"sspti:aa-sspti-worker:tag"}
+  - name: ghcr.io/vbalexr/aa-sspti-worker_services
+    newTag: 20260516-0039 # {"$imagepolicy":"sspti:aa-sspti-worker-services:tag"}
+  - name: ghcr.io/vbalexr/aa-sspti-nginx
+    newTag: 20260516-0040 # {"$imagepolicy":"sspti:aa-sspti-nginx:tag"}

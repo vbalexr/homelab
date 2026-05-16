@@ -14,15 +14,27 @@ spec:
       labels:
         app: aa-sspti-worker
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: aa-sspti-worker
           image: ghcr.io/vbalexr/aa-sspti-worker:latest
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 61000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           command: ["celery", "-A", "myauth", "worker", "--pool=threads", "--concurrency=5", "-n", "worker_%n"]
           workingDir: /home/allianceauth/myauth/
           envFrom:
             - secretRef:
                 name: aa-sspti-secret
+            - configMapRef:
+                name: aa-sspti-env
           volumeMounts:
             - name: app-config
               mountPath: /home/allianceauth/myauth/myauth/settings/local.py

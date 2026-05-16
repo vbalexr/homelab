@@ -5,4 +5,5 @@ resources:
   - ./databases.yaml
   - ./home.yaml
   - ./shared.yaml
+  - ./sspti.yaml
   - ./configurations.yaml

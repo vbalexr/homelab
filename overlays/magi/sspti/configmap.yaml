@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aa-sspti-env
+data:
+  PROTOCOL: "https://"
+  AA_SITENAME: "SSPTI - Authentication"
+  AUTH_SUBDOMAIN: "auth"
+  DOMAIN: "suspectsquadron.co.uk"
+  AA_DEBUG: "False"
+  AA_DB_NAME: "sspti_aa"
+  AA_DB_USER: "sspti_aa"
+  AA_DB_HOST: "mariadb.database.svc.cluster.local"
+  AA_DB_PORT: "3306"
+  AA_DB_CHARSET: "utf8mb4"
+  AA_REDIS: "valkey.database.svc.cluster.local:6379"
+  ESI_SSO_CLIENT_ID: "f42f1008b32646bc8ee31f4f9f5191be"
+  ESI_USER_CONTACT_EMAIL: "vb.alexr@gmail.com"
+  AA_EXTRA_INSTALLED_APPS: "aa_skip_email,modeltranslation,eveuniverse,structures,allianceauth.services.modules.discord,eve_sde,aasrp,corptools,securegroups"
+  DISCORD_GUILD_ID: "1173291390755676200"
+  DISCORD_APP_ID: "1471020717322797210"
+  DISCORD_SYNC_NAMES: "true"

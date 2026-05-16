@@ -30,10 +30,40 @@ spec:
       labels:
         app: aa-sspti-gunicorn
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: seed-config
+          image: ghcr.io/vbalexr/aa-sspti-gunicorn:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 61000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              [ -f /config/local.py ] || cp /home/allianceauth/myauth/myauth/settings/local.py /config/local.py
+              [ -f /config/celery.py ] || cp /home/allianceauth/myauth/myauth/celery.py /config/celery.py
+              [ -f /config/urls.py ] || cp /home/allianceauth/myauth/myauth/urls.py /config/urls.py
+              [ -f /config/memory_check.sh ] || (cp /memory_check.sh /config/memory_check.sh && chmod 0755 /config/memory_check.sh)
+          volumeMounts:
+            - name: app-config
+              mountPath: /config
       containers:
         - name: aa-sspti-gunicorn
           image: ghcr.io/vbalexr/aa-sspti-gunicorn:latest
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 61000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           command:
             - gunicorn
             - myauth.wsgi
@@ -50,6 +80,8 @@ spec:
           envFrom:
             - secretRef:
                 name: aa-sspti-secret
+            - configMapRef:
+                name: aa-sspti-env
           volumeMounts:
             - name: app-config
               mountPath: /home/allianceauth/myauth/myauth/settings/local.py

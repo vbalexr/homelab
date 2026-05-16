@@ -1,0 +1,141 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: aa-sspti-gunicorn
+  namespace: sspti
+spec:
+  image: ghcr.io/vbalexr/aa-sspti-gunicorn
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: aa-sspti-gunicorn
+  namespace: sspti
+spec:
+  imageRepositoryRef:
+    name: aa-sspti-gunicorn
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: aa-sspti-beat
+  namespace: sspti
+spec:
+  image: ghcr.io/vbalexr/aa-sspti-beat
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: aa-sspti-beat
+  namespace: sspti
+spec:
+  imageRepositoryRef:
+    name: aa-sspti-beat
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: aa-sspti-worker
+  namespace: sspti
+spec:
+  image: ghcr.io/vbalexr/aa-sspti-worker
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: aa-sspti-worker
+  namespace: sspti
+spec:
+  imageRepositoryRef:
+    name: aa-sspti-worker
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: aa-sspti-worker-services
+  namespace: sspti
+spec:
+  image: ghcr.io/vbalexr/aa-sspti-worker_services
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: aa-sspti-worker-services
+  namespace: sspti
+spec:
+  imageRepositoryRef:
+    name: aa-sspti-worker-services
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: aa-sspti-nginx
+  namespace: sspti
+spec:
+  image: ghcr.io/vbalexr/aa-sspti-nginx
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: aa-sspti-nginx
+  namespace: sspti
+spec:
+  imageRepositoryRef:
+    name: aa-sspti-nginx
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: aa-sspti
+  namespace: sspti
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update aa-sspti images"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/sspti
+    strategy: Setters
