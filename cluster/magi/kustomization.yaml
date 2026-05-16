@@ -7,3 +7,4 @@ resources:
   - ./shared.yaml
   - ./sspti.yaml
   - ./configurations.yaml
+  - ./tunnels.yaml

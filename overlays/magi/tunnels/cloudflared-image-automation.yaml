@@ -1,0 +1,47 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: cloudflared
+  namespace: tunnels
+spec:
+  image: cloudflare/cloudflared
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: cloudflared
+  namespace: tunnels
+spec:
+  imageRepositoryRef:
+    name: cloudflared
+  policy:
+    semver:
+      range: ">=2026.5.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: cloudflared
+  namespace: tunnels
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update cloudflared image"
+    push:
+      branch: main
+  update:
+    path: ./
+    strategy: Setters
