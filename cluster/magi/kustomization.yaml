@@ -8,3 +8,4 @@ resources:
   - ./sspti.yaml
   - ./configurations.yaml
   - ./tunnels.yaml
+  - ./mrakaki.yaml

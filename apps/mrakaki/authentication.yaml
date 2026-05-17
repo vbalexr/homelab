@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mrakaki-authentication
+  labels:
+    app: mrakaki-authentication
+spec:
+  type: ClusterIP
+  selector:
+    app: mrakaki-authentication
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mrakaki-authentication
+  labels:
+    app: mrakaki-authentication
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mrakaki-authentication
+  template:
+    metadata:
+      labels:
+        app: mrakaki-authentication
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: authentication
+          image: mrakaki/dev-containers:mrakaki-eve-auth.0.0.1
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production
+            - name: SPRING_CONFIG_IMPORT
+              value: "configserver:http://configuration:8888"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 768Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 2022
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 2022
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
