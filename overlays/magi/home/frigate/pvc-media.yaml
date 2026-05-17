@@ -8,4 +8,4 @@ spec:
   storageClassName: lh-slow-block
   resources:
     requests:
-      storage: 500Gi
+      storage: 250Gi

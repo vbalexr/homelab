@@ -4,3 +4,25 @@
   path: /spec/template/spec/volumes/0/persistentVolumeClaim
   value:
     claimName: immich-upload-data
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: upload-data-alex
+    persistentVolumeClaim:
+      claimName: immich-upload-data-alex
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: upload-data-ana
+    persistentVolumeClaim:
+      claimName: immich-upload-data-ana
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    name: upload-data-alex
+    mountPath: /data/upload/a6b7f24b-e48f-46eb-a2da-e24299087076
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    name: upload-data-ana
+    mountPath: /data/upload/493d5edb-acb3-457c-ac19-5b97200a8b82
