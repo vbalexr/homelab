@@ -8,7 +8,7 @@ spec:
   storageClassName: lh-fast-block
   resources:
     requests:
-      storage: 100Gi
+      storage: 250Gi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
