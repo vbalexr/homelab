@@ -31,6 +31,13 @@ spec:
             requests:
               cpu: "2"
               memory: 8Gi
+          volumeMounts:
+            - name: mariadb-config
+              mountPath: /etc/mysql/conf.d
+      volumes:
+        - name: mariadb-config
+          configMap:
+            name: mariadb-config
   volumeClaimTemplates:
     - metadata:
         name: mariadb-data
