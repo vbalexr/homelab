@@ -27,7 +27,7 @@ spec:
             - name: universe-update-orders
               image: mrakaki/dev-containers:mrakaki-eve-universe.0.0.5
               imagePullPolicy: IfNotPresent
-              command: ["updateOrders"]
+              args: ["updateOrders"]
               securityContext:
                 allowPrivilegeEscalation: false
                 capabilities:
