@@ -115,6 +115,29 @@ spec:
       order: asc
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: sspti-skynet
+  namespace: sspti
+spec:
+  image: ghcr.io/mrakaki/sspti-skynet
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: sspti-skynet
+  namespace: sspti
+spec:
+  imageRepositoryRef:
+    name: sspti-skynet
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
 metadata:
   name: aa-sspti

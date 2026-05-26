@@ -4,8 +4,11 @@ namespace: sspti
 resources:
   - namespace.yaml
   - ../../../apps/aa-sspti
+  - ../../../apps/sspti-skynet
   - secret.yaml
   - configmap.yaml
+  - sspti-skynet-secret.yaml
+  - sspti-skynet-configmap.yaml
   - aa-sspti-image-automation.yaml
 patches:
   - path: pvc-storageclass-patch.yaml
@@ -20,3 +23,5 @@ images:
     newTag: 20260516-0039 # {"$imagepolicy":"sspti:aa-sspti-worker-services:tag"}
   - name: ghcr.io/vbalexr/aa-sspti-nginx
     newTag: 20260516-0040 # {"$imagepolicy":"sspti:aa-sspti-nginx:tag"}
+  - name: ghcr.io/mrakaki/sspti-skynet
+    newTag: 20260526-2216 # {"$imagepolicy":"sspti:sspti-skynet:tag"}
