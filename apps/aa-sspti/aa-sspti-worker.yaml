@@ -20,7 +20,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: aa-sspti-worker
-          image: ghcr.io/vbalexr/aa-sspti-worker:latest
+          image: ghcr.io/vbalexr/aa-sspti:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 61000

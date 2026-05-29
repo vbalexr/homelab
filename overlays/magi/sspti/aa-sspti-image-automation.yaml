@@ -2,89 +2,20 @@
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
-  name: aa-sspti-gunicorn
+  name: aa-sspti
   namespace: sspti
 spec:
-  image: ghcr.io/vbalexr/aa-sspti-gunicorn
+  image: ghcr.io/vbalexr/aa-sspti
   interval: 5m0s
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
-  name: aa-sspti-gunicorn
+  name: aa-sspti
   namespace: sspti
 spec:
   imageRepositoryRef:
-    name: aa-sspti-gunicorn
-  filterTags:
-    pattern: '^\d{8}-\d{4}$'
-  policy:
-    alphabetical:
-      order: asc
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: aa-sspti-beat
-  namespace: sspti
-spec:
-  image: ghcr.io/vbalexr/aa-sspti-beat
-  interval: 5m0s
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: aa-sspti-beat
-  namespace: sspti
-spec:
-  imageRepositoryRef:
-    name: aa-sspti-beat
-  filterTags:
-    pattern: '^\d{8}-\d{4}$'
-  policy:
-    alphabetical:
-      order: asc
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: aa-sspti-worker
-  namespace: sspti
-spec:
-  image: ghcr.io/vbalexr/aa-sspti-worker
-  interval: 5m0s
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: aa-sspti-worker
-  namespace: sspti
-spec:
-  imageRepositoryRef:
-    name: aa-sspti-worker
-  filterTags:
-    pattern: '^\d{8}-\d{4}$'
-  policy:
-    alphabetical:
-      order: asc
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageRepository
-metadata:
-  name: aa-sspti-worker-services
-  namespace: sspti
-spec:
-  image: ghcr.io/vbalexr/aa-sspti-worker_services
-  interval: 5m0s
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImagePolicy
-metadata:
-  name: aa-sspti-worker-services
-  namespace: sspti
-spec:
-  imageRepositoryRef:
-    name: aa-sspti-worker-services
+    name: aa-sspti
   filterTags:
     pattern: '^\d{8}-\d{4}$'
   policy:

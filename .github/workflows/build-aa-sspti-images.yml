@@ -24,10 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         image_name:
-          - aa-sspti-gunicorn
-          - aa-sspti-beat
-          - aa-sspti-worker
-          - aa-sspti-worker_services
+          - aa-sspti
 
     steps:
       - name: Checkout repository

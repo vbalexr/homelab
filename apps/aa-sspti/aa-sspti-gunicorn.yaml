@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: seed-config
-          image: ghcr.io/vbalexr/aa-sspti-gunicorn:latest
+          image: ghcr.io/vbalexr/aa-sspti:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 61000
@@ -56,7 +56,7 @@ spec:
               mountPath: /config
       containers:
         - name: aa-sspti-gunicorn
-          image: ghcr.io/vbalexr/aa-sspti-gunicorn:latest
+          image: ghcr.io/vbalexr/aa-sspti:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 61000

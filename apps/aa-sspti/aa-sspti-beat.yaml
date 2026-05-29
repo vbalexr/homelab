@@ -20,7 +20,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: aa-sspti-beat
-          image: ghcr.io/vbalexr/aa-sspti-beat:latest
+          image: ghcr.io/vbalexr/aa-sspti:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 61000
