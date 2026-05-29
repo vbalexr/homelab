@@ -13,10 +13,9 @@ resources:
 patches:
   - path: pvc-storageclass-patch.yaml
 images:
-
   - name: ghcr.io/vbalexr/aa-sspti
     newTag: latest # {"$imagepolicy":"sspti:aa-sspti:tag"}
   - name: ghcr.io/vbalexr/aa-sspti-nginx
-    newTag: 20260529-0250 # {"$imagepolicy":"sspti:aa-sspti-nginx:tag"}
+    newTag: 20260529-0258 # {"$imagepolicy":"sspti:aa-sspti-nginx:tag"}
   - name: ghcr.io/mrakaki/sspti-skynet
     newTag: 20260526-2216 # {"$imagepolicy":"sspti:sspti-skynet:tag"}
