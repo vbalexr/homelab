@@ -1,4 +1,4 @@
-ARG AA_DOCKER_TAG=registry.gitlab.com/allianceauth/allianceauth/auth:v4.13.1
+ARG AA_DOCKER_TAG=registry.gitlab.com/allianceauth/allianceauth/auth:v5.1.1
 FROM $AA_DOCKER_TAG
 
 WORKDIR ${AUTH_HOME}
