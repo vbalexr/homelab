@@ -1,5 +1,5 @@
-ARG AA_DOCKER_TAG=registry.gitlab.com/allianceauth/allianceauth/auth:v5.1.1
-FROM $AA_DOCKER_TAG
+ARG AUTH_VERSION
+FROM registry.gitlab.com/allianceauth/allianceauth/auth:${AUTH_VERSION}
 
 WORKDIR ${AUTH_HOME}
 

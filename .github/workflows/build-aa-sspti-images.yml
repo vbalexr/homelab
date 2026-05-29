@@ -12,7 +12,6 @@ on:
 env:
   REGISTRY: ghcr.io
   OWNER: vbalexr
-  AA_DOCKER_TAG: registry.gitlab.com/allianceauth/allianceauth/auth:v4.13.1
 
 jobs:
   build-app-images:
@@ -40,6 +39,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Read auth version
+        id: version
+        run: echo "auth_version=$(cat containers/aa-sspti/VERSION | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
+
       - name: Generate tags
         id: tags
         run: |
@@ -56,7 +59,7 @@ jobs:
             ${{ steps.tags.outputs.image }}:${{ steps.tags.outputs.date_tag }}
             ${{ steps.tags.outputs.image }}:latest
           build-args: |
-            AA_DOCKER_TAG=${{ env.AA_DOCKER_TAG }}
+            AUTH_VERSION=${{ steps.version.outputs.auth_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

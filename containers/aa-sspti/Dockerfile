@@ -1,5 +1,5 @@
 FROM python:3.12-slim
-ARG AUTH_VERSION=v5.0.0a4
+ARG AUTH_VERSION
 ARG AUTH_PACKAGE=allianceauth==${AUTH_VERSION}
 ENV AUTH_USER=allianceauth
 ENV AUTH_GROUP=allianceauth
