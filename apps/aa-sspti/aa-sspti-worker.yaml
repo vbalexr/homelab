@@ -45,7 +45,12 @@ spec:
             - name: app-config
               mountPath: /home/allianceauth/myauth/myauth/urls.py
               subPath: urls.py
+            - name: static-volume
+              mountPath: /var/www/myauth/static
       volumes:
         - name: app-config
           persistentVolumeClaim:
             claimName: aa-sspti-config
+        - name: static-volume
+          persistentVolumeClaim:
+            claimName: aa-sspti-static
