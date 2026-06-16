@@ -16,6 +16,6 @@ images:
   - name: ghcr.io/vbalexr/aa-sspti
     newTag: 20260616-0356 # {"$imagepolicy":"sspti:aa-sspti:tag"}
   - name: ghcr.io/vbalexr/aa-sspti-nginx
-    newTag: 20260616-0357 # {"$imagepolicy":"sspti:aa-sspti-nginx:tag"}
+    newTag: 20260616-1543 # {"$imagepolicy":"sspti:aa-sspti-nginx:tag"}
   - name: ghcr.io/mrakaki/sspti-skynet
     newTag: 20260526-2216 # {"$imagepolicy":"sspti:sspti-skynet:tag"}
