@@ -6,4 +6,4 @@ resources:
   - secret.yaml
 images:
   - name: cloudflare/cloudflared
-    newTag: 2026.6.0 # {"$imagepolicy":"tunnels:cloudflared:tag"}
+    newTag: 2026.6.1 # {"$imagepolicy":"tunnels:cloudflared:tag"}
