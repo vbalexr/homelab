@@ -5,3 +5,4 @@ aa-srp
 allianceauth-corptools
 allianceauth-securegroups
 git+https://github.com/MrAkaki/aa-whatax.git@main
+allianceauth-discordbot

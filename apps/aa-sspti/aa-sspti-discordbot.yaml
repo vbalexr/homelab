@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aa-sspti-discordbot
+  labels:
+    app: aa-sspti-discordbot
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: aa-sspti-discordbot
+  template:
+    metadata:
+      labels:
+        app: aa-sspti-discordbot
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: aa-sspti-discordbot
+          image: ghcr.io/vbalexr/aa-sspti:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 61000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          command: ["python", "manage.py", "run_authbot"]
+          workingDir: /home/allianceauth/myauth/
+          envFrom:
+            - secretRef:
+                name: aa-sspti-secret
+            - configMapRef:
+                name: aa-sspti-env
+          volumeMounts:
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/celery.py
+              subPath: celery.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/urls.py
+              subPath: urls.py
+      volumes:
+        - name: app-config
+          persistentVolumeClaim:
+            claimName: aa-sspti-config

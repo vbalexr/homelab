@@ -45,5 +45,7 @@ app.conf.task_routes = {
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
+app.conf.task_routes = {'aadiscordbot.tasks.*': {'queue': 'aadiscordbot'}}
+
 # Remove result from default log message on task success
 trace.LOG_SUCCESS = "Task %(name)s[%(id)s] succeeded in %(runtime)ss"

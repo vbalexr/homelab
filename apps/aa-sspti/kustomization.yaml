@@ -7,4 +7,5 @@ resources:
   - aa-sspti-beat.yaml
   - aa-sspti-worker.yaml
   - aa-sspti-worker-services.yaml
+  - aa-sspti-discordbot.yaml
   - aa-sspti-nginx.yaml

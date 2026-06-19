@@ -4,7 +4,6 @@ namespace: sspti
 resources:
   - namespace.yaml
   - ../../../apps/aa-sspti
-  - ../../../apps/sspti-skynet
   - secret.yaml
   - configmap.yaml
   - sspti-skynet-secret.yaml
