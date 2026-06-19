@@ -6,8 +6,6 @@ resources:
   - ../../../apps/aa-sspti
   - secret.yaml
   - configmap.yaml
-  - sspti-skynet-secret.yaml
-  - sspti-skynet-configmap.yaml
   - aa-sspti-image-automation.yaml
 patches:
   - path: pvc-storageclass-patch.yaml
