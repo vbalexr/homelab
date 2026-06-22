@@ -6,3 +6,4 @@ allianceauth-corptools
 allianceauth-securegroups
 git+https://github.com/MrAkaki/aa-whatax.git@main
 allianceauth-discordbot
+django-esi>=9.6.0
