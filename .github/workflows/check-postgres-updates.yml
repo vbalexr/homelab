@@ -32,7 +32,8 @@ jobs:
           echo "current_vc_version=${CURRENT_VC_VERSION}" >> $GITHUB_OUTPUT
 
           # Query GitHub API for latest VectorChord release
-          LATEST_VC_VERSION=$(curl -s https://api.github.com/repos/tensorchord/vectorchord/releases/latest \
+          # Repo was renamed tensorchord/vectorchord -> supervc-stack/VectorChord; -L follows future redirects
+          LATEST_VC_VERSION=$(curl -sL https://api.github.com/repos/supervc-stack/VectorChord/releases/latest \
             | jq -r '.tag_name')
 
           echo "latest_vc_version=${LATEST_VC_VERSION}" >> $GITHUB_OUTPUT
@@ -61,7 +62,7 @@ jobs:
           echo "current_pv_version=${CURRENT_PV_VERSION}" >> $GITHUB_OUTPUT
 
           # Query GitHub API for latest pgvector tag (pgvector uses tags, not releases)
-          LATEST_PV_VERSION=$(curl -s https://api.github.com/repos/pgvector/pgvector/tags \
+          LATEST_PV_VERSION=$(curl -sL https://api.github.com/repos/pgvector/pgvector/tags \
             | jq -r '.[0].name' | sed 's/^v//')
 
           echo "latest_pv_version=${LATEST_PV_VERSION}" >> $GITHUB_OUTPUT
