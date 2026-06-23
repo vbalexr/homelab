@@ -101,14 +101,14 @@ jobs:
 
           echo "versions_updated=true" >> $GITHUB_OUTPUT
 
-      - name: Commit and push directly to master
+      - name: Commit and push directly to main
         if: steps.update_versions.outputs.versions_updated == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add containers/postgres/version.txt
           git commit -m "chore(postgres): update container dependency versions [skip ci]"
-          git push origin HEAD:master
+          git push origin HEAD:main
 
       - name: Summary
         run: |
@@ -125,4 +125,4 @@ jobs:
           echo "- Update Available: ${{ steps.vc_check.outputs.vectorchord_update_available }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Push Result" >> $GITHUB_STEP_SUMMARY
-          echo "- Direct push target branch: master" >> $GITHUB_STEP_SUMMARY
+          echo "- Direct push target branch: main" >> $GITHUB_STEP_SUMMARY
