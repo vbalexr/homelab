@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-f4-log-errors
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  f4-log-errors.json: |
+    {
+      "title": "F4 Log Errors by Namespace",
+      "uid": "f4-log-errors",
+      "schemaVersion": 39,
+      "version": 1,
+      "tags": ["monitoring", "logs", "errors"],
+      "timezone": "browser",
+      "refresh": "1m",
+      "time": {"from": "now-1h", "to": "now"},
+      "templating": {
+        "list": [
+          {
+            "name": "lokids",
+            "type": "datasource",
+            "pluginId": "loki",
+            "label": "Loki Datasource",
+            "hide": 0,
+            "refresh": 1,
+            "query": "loki",
+            "current": {}
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Error / Panic / Fatal Log Rate by Namespace",
+          "description": "Rate of log lines matching error|panic|fatal (case-insensitive) per namespace, computed over a 5-minute window. Requires Loki datasource and Alloy pod-log shipping.",
+          "gridPos": {"x": 0, "y": 0, "w": 24, "h": 14},
+          "datasource": {"type": "loki", "uid": "${lokids}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "loki", "uid": "${lokids}"},
+              "expr": "sum by (namespace)(rate({namespace=~\".+\"} |~ \"(?i)error|panic|fatal\" [5m]))",
+              "legendFormat": "{{namespace}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "drawStyle": "line",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": {"mode": "multi"},
+            "legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max", "lastNotNull"]}
+          }
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Namespaces with Errors Right Now",
+          "description": "Count of namespaces currently emitting error-level log lines.",
+          "gridPos": {"x": 0, "y": 14, "w": 6, "h": 4},
+          "datasource": {"type": "loki", "uid": "${lokids}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "loki", "uid": "${lokids}"},
+              "expr": "count(sum by (namespace)(rate({namespace=~\".+\"} |~ \"(?i)error|panic|fatal\" [5m])) > 0)",
+              "legendFormat": "Namespaces with errors"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              },
+              "mappings": [
+                {"type": "value", "options": {"0": {"text": "0 (clean)", "color": "green"}}}
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        }
+      ]
+    }

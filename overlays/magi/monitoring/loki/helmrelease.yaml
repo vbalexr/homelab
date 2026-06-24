@@ -1,0 +1,91 @@
+# Loki in SingleBinary mode (filesystem storage) — right-sized for a 3-node homelab.
+# Promoted from kustomize helmCharts inflation to a Flux HelmRelease.
+# postRenderers re-applies NF3 dual-stack to the chart Services.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: loki
+  namespace: flux-system
+spec:
+  interval: 30m
+  # Pin the release name so the Service is exactly "loki" (Alloy push + Grafana
+  # datasource use http://loki:3100); helm-controller would otherwise name it
+  # monitoring-loki.
+  releaseName: loki
+  targetNamespace: monitoring
+  chart:
+    spec:
+      chart: loki
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      version: 7.0.0
+  values:
+    deploymentMode: SingleBinary
+    singleBinary:
+      replicas: 1
+      persistence:
+        enabled: true
+        storageClass: lh-fast-block
+        accessModes:
+          - ReadWriteOnce
+        size: 10Gi
+    loki:
+      auth_enabled: false
+      commonConfig:
+        replication_factor: 1
+      storage:
+        type: filesystem
+      schemaConfig:
+        configs:
+          - from: "2024-04-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+      limits_config:
+        retention_period: 168h
+      compactor:
+        retention_enabled: true
+        delete_request_store: filesystem
+    # Disable all scalable-mode / distributed components so the chart stays
+    # in SingleBinary mode (no read/write/backend/minio/cache workloads).
+    read:
+      replicas: 0
+    write:
+      replicas: 0
+    backend:
+      replicas: 0
+    gateway:
+      enabled: false
+    minio:
+      enabled: false
+    chunksCache:
+      enabled: false
+    resultsCache:
+      enabled: false
+    lokiCanary:
+      enabled: false
+    test:
+      enabled: false
+    monitoring:
+      selfMonitoring:
+        enabled: false
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Service
+            patch: |-
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: dualstack
+              spec:
+                ipFamilyPolicy: PreferDualStack
+                ipFamilies:
+                  - IPv4
+                  - IPv6

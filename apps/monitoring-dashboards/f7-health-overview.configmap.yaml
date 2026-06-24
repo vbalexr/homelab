@@ -1,0 +1,403 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-f7-health-overview
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  f7-health-overview.json: |
+    {
+      "title": "F7 At-a-Glance Health Overview",
+      "uid": "f7-health-overview",
+      "schemaVersion": 39,
+      "version": 1,
+      "tags": ["monitoring", "overview", "health"],
+      "timezone": "browser",
+      "refresh": "1m",
+      "time": {"from": "now-1h", "to": "now"},
+      "templating": {
+        "list": [
+          {
+            "name": "promds",
+            "type": "datasource",
+            "pluginId": "prometheus",
+            "label": "Prometheus",
+            "hide": 0,
+            "refresh": 1,
+            "query": "prometheus",
+            "current": {}
+          },
+          {
+            "name": "lokids",
+            "type": "datasource",
+            "pluginId": "loki",
+            "label": "Loki",
+            "hide": 0,
+            "refresh": 1,
+            "query": "loki",
+            "current": {}
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "text",
+          "title": "",
+          "gridPos": {"x": 0, "y": 0, "w": 24, "h": 2},
+          "options": {
+            "mode": "markdown",
+            "content": "## Cluster Health — Is Anything Wrong?\nStat panels below pull from F1–F6 signals. Green = healthy. Yellow/Red = investigate."
+          }
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Max Node Temp (°C)",
+          "description": "Peak hwmon temperature across all nodes. R1 caveat: only populated if Talos exposes hwmon sensors.",
+          "gridPos": {"x": 0, "y": 2, "w": 4, "h": 4},
+          "datasource": {"type": "prometheus", "uid": "${promds}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${promds}"},
+              "expr": "max(node_hwmon_temp_celsius) or vector(0)",
+              "instant": true,
+              "legendFormat": "Max Temp"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 60},
+                  {"color": "red", "value": 80}
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Namespaces with Log Errors",
+          "description": "Count of namespaces emitting error/panic/fatal log lines in the last 5 minutes (F4). Zero is ideal.",
+          "gridPos": {"x": 4, "y": 2, "w": 4, "h": 4},
+          "datasource": {"type": "loki", "uid": "${lokids}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "loki", "uid": "${lokids}"},
+              "expr": "count(sum by (namespace)(rate({namespace=~\".+\"} |~ \"(?i)error|panic|fatal\" [5m])) > 0) or vector(0)",
+              "instant": true,
+              "legendFormat": "Error namespaces"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              },
+              "mappings": [
+                {"type": "value", "options": {"0": {"text": "0 (clean)", "color": "green"}}}
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Pods Over Memory Request",
+          "description": "Count of containers currently using more memory than they requested (F5). Zero is ideal.",
+          "gridPos": {"x": 8, "y": 2, "w": 4, "h": 4},
+          "datasource": {"type": "prometheus", "uid": "${promds}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${promds}"},
+              "expr": "count(\n  container_memory_working_set_bytes{container!=\"\"}\n  /\n  on(namespace, pod, container)\n  kube_pod_container_resource_requests{resource=\"memory\", container!=\"\"}\n  > 1\n) or vector(0)",
+              "instant": true,
+              "legendFormat": "Over memory request"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              },
+              "mappings": [
+                {"type": "value", "options": {"0": {"text": "0 (clean)", "color": "green"}}}
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "Pods Over CPU Request",
+          "description": "Count of containers currently using more CPU than they requested (F5). Zero is ideal.",
+          "gridPos": {"x": 12, "y": 2, "w": 4, "h": 4},
+          "datasource": {"type": "prometheus", "uid": "${promds}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${promds}"},
+              "expr": "count(\n  rate(container_cpu_usage_seconds_total{container!=\"\"}[5m])\n  /\n  on(namespace, pod, container)\n  kube_pod_container_resource_requests{resource=\"cpu\", container!=\"\"}\n  > 1\n) or vector(0)",
+              "instant": true,
+              "legendFormat": "Over CPU request"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              },
+              "mappings": [
+                {"type": "value", "options": {"0": {"text": "0 (clean)", "color": "green"}}}
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Containers Without Requests",
+          "description": "Count of containers with no resource requests set at all (F6). Lower is better.",
+          "gridPos": {"x": 16, "y": 2, "w": 4, "h": 4},
+          "datasource": {"type": "prometheus", "uid": "${promds}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${promds}"},
+              "expr": "count(\n  kube_pod_container_info{container!=\"\"}\n  unless on(namespace, pod, container)\n  kube_pod_container_resource_requests{container!=\"\"}\n) or vector(0)",
+              "instant": true,
+              "legendFormat": "No-request containers"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 10}
+                ]
+              },
+              "mappings": [
+                {"type": "value", "options": {"0": {"text": "0 (clean)", "color": "green"}}}
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        },
+        {
+          "id": 7,
+          "type": "stat",
+          "title": "Firing Alerts",
+          "description": "Total number of alerts currently in Firing state across all Prometheus rules.",
+          "gridPos": {"x": 20, "y": 2, "w": 4, "h": 4},
+          "datasource": {"type": "prometheus", "uid": "${promds}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${promds}"},
+              "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)",
+              "instant": true,
+              "legendFormat": "Firing alerts"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              },
+              "mappings": [
+                {"type": "value", "options": {"0": {"text": "0 (clean)", "color": "green"}}}
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Node CPU Usage (all nodes)",
+          "description": "Overall CPU utilization per node from node-exporter (F2 signal).",
+          "gridPos": {"x": 0, "y": 6, "w": 12, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "${promds}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${promds}"},
+              "expr": "1 - avg by (instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+              "legendFormat": "{{instance}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "color": {"mode": "palette-classic"},
+              "custom": {"lineWidth": 2, "fillOpacity": 10},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.7},
+                  {"color": "red", "value": 0.9}
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": {"mode": "multi"},
+            "legend": {"displayMode": "list", "placement": "bottom"}
+          }
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "Node Memory Usage (all nodes)",
+          "description": "Overall memory utilization per node from node-exporter (F3 signal).",
+          "gridPos": {"x": 12, "y": 6, "w": 12, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "${promds}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${promds}"},
+              "expr": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+              "legendFormat": "{{instance}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "color": {"mode": "palette-classic"},
+              "custom": {"lineWidth": 2, "fillOpacity": 10},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 0.7},
+                  {"color": "red", "value": 0.9}
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": {"mode": "multi"},
+            "legend": {"displayMode": "list", "placement": "bottom"}
+          }
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "Log Error Rate (all namespaces)",
+          "description": "Aggregated error log rate across all namespaces over time (F4 signal). Spikes here correlate with the namespace-count stat above.",
+          "gridPos": {"x": 0, "y": 14, "w": 24, "h": 8},
+          "datasource": {"type": "loki", "uid": "${lokids}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "loki", "uid": "${lokids}"},
+              "expr": "sum(rate({namespace=~\".+\"} |~ \"(?i)error|panic|fatal\" [5m]))",
+              "legendFormat": "Total error rate"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": {"mode": "fixed", "fixedColor": "orange"},
+              "custom": {"lineWidth": 2, "fillOpacity": 15}
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": {"mode": "single"},
+            "legend": {"displayMode": "list", "placement": "bottom"}
+          }
+        }
+      ]
+    }

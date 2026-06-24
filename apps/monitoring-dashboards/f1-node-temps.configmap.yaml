@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-f1-node-temps
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  f1-node-temps.json: |
+    {
+      "title": "F1 Node Temperatures",
+      "uid": "f1-node-temps",
+      "schemaVersion": 39,
+      "version": 1,
+      "tags": ["monitoring", "nodes", "temperature"],
+      "timezone": "browser",
+      "refresh": "1m",
+      "time": {"from": "now-1h", "to": "now"},
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "pluginId": "prometheus",
+            "label": "Datasource",
+            "hide": 0,
+            "refresh": 1,
+            "query": "prometheus",
+            "current": {}
+          },
+          {
+            "name": "chip",
+            "type": "query",
+            "label": "Chip",
+            "datasource": {"type": "prometheus", "uid": "${datasource}"},
+            "query": "label_values(node_hwmon_temp_celsius, chip)",
+            "refresh": 2,
+            "sort": 1,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".+",
+            "current": {}
+          },
+          {
+            "name": "sensor",
+            "type": "query",
+            "label": "Sensor",
+            "datasource": {"type": "prometheus", "uid": "${datasource}"},
+            "query": "label_values(node_hwmon_temp_celsius{chip=~\"$chip\"}, sensor)",
+            "refresh": 2,
+            "sort": 1,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".+",
+            "current": {}
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Node Hardware Temperatures",
+          "description": "Reports node_hwmon_temp_celsius from node-exporter. NOTE (R1): this panel only populates if Talos exposes hwmon/coretemp sensors. Verify after metrics begin flowing — if no data appears, hwmon access may need to be enabled in the Talos machine config.",
+          "gridPos": {"x": 0, "y": 0, "w": 24, "h": 12},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "node_hwmon_temp_celsius{chip=~\"$chip\", sensor=~\"$sensor\"}",
+              "legendFormat": "{{instance}} / {{chip}} / {{sensor}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 60},
+                  {"color": "red", "value": 80}
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": {"mode": "multi"},
+            "legend": {"displayMode": "list", "placement": "bottom"}
+          }
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Max Temperature Right Now",
+          "description": "Peak temperature across all exposed hwmon sensors. (R1 caveat: only populated if Talos exposes hwmon.)",
+          "gridPos": {"x": 0, "y": 12, "w": 6, "h": 4},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "max(node_hwmon_temp_celsius{chip=~\"$chip\", sensor=~\"$sensor\"})",
+              "instant": true,
+              "legendFormat": "Max Temp"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 60},
+                  {"color": "red", "value": 80}
+                ]
+              },
+              "mappings": []
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        }
+      ]
+    }

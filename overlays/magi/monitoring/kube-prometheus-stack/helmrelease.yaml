@@ -1,0 +1,172 @@
+# kube-prometheus-stack (Prometheus + Grafana + Alertmanager + node-exporter +
+# kube-state-metrics). Promoted from kustomize helmCharts inflation to a Flux
+# HelmRelease (helm-controller renders the chart in-cluster — Flux's
+# kustomize-controller cannot run helmCharts inflation).
+# - install/upgrade.crds: the chart ships its CRDs in the helm `crds/` dir;
+#   helm-controller installs/updates them (the inflation equivalent was includeCRDs).
+# - postRenderers: re-applies NF3 dual-stack to every chart Service (the Flux
+#   equivalent of the old kustomize Service patch).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: flux-system
+spec:
+  interval: 30m
+  # Pin the release name so chart resources keep their bare names
+  # (e.g. Service kube-prometheus-stack-grafana) — helm-controller would otherwise
+  # prefix with the targetNamespace (monitoring-...), breaking the HTTPRoute backend.
+  releaseName: kube-prometheus-stack
+  targetNamespace: monitoring
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+      version: 87.1.0
+  install:
+    crds: Create
+  upgrade:
+    crds: CreateReplace
+  values:
+    # NF6 — Cilium replaces kube-proxy; disable the phantom ServiceMonitor.
+    kubeProxy:
+      enabled: false
+    defaultRules:
+      create: true
+    grafana:
+      sidecar:
+        dashboards:
+          enabled: true
+          searchNamespace: ALL
+          label: grafana_dashboard
+          labelValue: "1"
+      persistence:
+        enabled: true
+        storageClassName: lh-fast-block
+        accessModes:
+          - ReadWriteOnce
+        size: 5Gi
+      admin:
+        existingSecret: grafana-admin
+        userKey: admin-user
+        passwordKey: admin-password
+      grafana.ini:
+        server:
+          domain: grafana.vbalex.com
+          root_url: https://grafana.vbalex.com
+          serve_from_sub_path: false
+      service:
+        port: 80
+      additionalDataSources:
+        - name: Loki
+          type: loki
+          url: http://loki:3100
+          access: proxy
+          isDefault: false
+    prometheus:
+      prometheusSpec:
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        ruleSelectorNilUsesHelmValues: false
+        scrapeConfigSelectorNilUsesHelmValues: false
+        retention: 15d
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: lh-fast-block
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 20Gi
+    alertmanager:
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: lh-fast-block
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 2Gi
+        # Discord routing is supplied by the AlertmanagerConfig CR (apiURL -> secret),
+        # matched cluster-wide. prometheus-operator can't parse webhook_url_file inline.
+        alertmanagerConfigSelector:
+          matchLabels:
+            alertmanagerConfig: discord
+        alertmanagerConfigMatcherStrategy:
+          type: None
+      config:
+        global:
+          resolve_timeout: 5m
+        route:
+          receiver: "null"
+          group_by:
+            - alertname
+            - namespace
+            - severity
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 4h
+        receivers:
+          - name: "null"
+    # NF6 — Talos control-plane scrape targets (metrics exposed via the Talos
+    # machine-config patch in cluster/magi/talos/config/common.yaml).
+    kubeControllerManager:
+      endpoints:
+        - 10.255.0.1
+        - 10.255.0.2
+        - 10.255.0.3
+      service:
+        enabled: true
+        port: 10257
+        targetPort: 10257
+      serviceMonitor:
+        enabled: true
+        https: true
+        insecureSkipVerify: true
+    kubeScheduler:
+      endpoints:
+        - 10.255.0.1
+        - 10.255.0.2
+        - 10.255.0.3
+      service:
+        enabled: true
+        port: 10259
+        targetPort: 10259
+      serviceMonitor:
+        enabled: true
+        https: true
+        insecureSkipVerify: true
+    kubeEtcd:
+      endpoints:
+        - 10.255.0.1
+        - 10.255.0.2
+        - 10.255.0.3
+      service:
+        enabled: true
+        port: 2381
+        targetPort: 2381
+      serviceMonitor:
+        enabled: true
+        scheme: http
+        insecureSkipVerify: false
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Service
+            patch: |-
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: dualstack
+              spec:
+                ipFamilyPolicy: PreferDualStack
+                ipFamilies:
+                  - IPv4
+                  - IPv6

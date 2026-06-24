@@ -1,0 +1,143 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-f6-pods-no-requests
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  f6-pods-no-requests.json: |
+    {
+      "title": "F6 Pods With No Resource Requests",
+      "uid": "f6-pods-no-requests",
+      "schemaVersion": 39,
+      "version": 1,
+      "tags": ["monitoring", "resources", "pods"],
+      "timezone": "browser",
+      "refresh": "5m",
+      "time": {"from": "now-15m", "to": "now"},
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "pluginId": "prometheus",
+            "label": "Datasource",
+            "hide": 0,
+            "refresh": 1,
+            "query": "prometheus",
+            "current": {}
+          },
+          {
+            "name": "namespace",
+            "type": "query",
+            "label": "Namespace",
+            "datasource": {"type": "prometheus", "uid": "${datasource}"},
+            "query": "label_values(kube_pod_container_info, namespace)",
+            "refresh": 2,
+            "sort": 1,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".+",
+            "current": {}
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Containers With No Resource Requests",
+          "description": "Total count of running containers that have no resource requests set (neither CPU nor memory). Ideally zero.",
+          "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "count(\n  kube_pod_container_info{namespace=~\"$namespace\", container!=\"\"}\n  unless on(namespace, pod, container)\n  kube_pod_container_resource_requests{namespace=~\"$namespace\", container!=\"\"}\n) or vector(0)",
+              "instant": true,
+              "legendFormat": "No-request containers"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 10}
+                ]
+              },
+              "mappings": [
+                {"type": "value", "options": {"0": {"text": "0 (clean)", "color": "green"}}}
+              ]
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "textMode": "auto"
+          }
+        },
+        {
+          "id": 2,
+          "type": "table",
+          "title": "Containers With No Resource Requests (namespace / pod / container)",
+          "description": "Containers present in kube_pod_container_info but absent from kube_pod_container_resource_requests — meaning they have no CPU or memory request configured. Use this list to find workloads that need requests added.",
+          "gridPos": {"x": 0, "y": 4, "w": 24, "h": 16},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "kube_pod_container_info{namespace=~\"$namespace\", container!=\"\"}\n  unless on(namespace, pod, container)\n  kube_pod_container_resource_requests{namespace=~\"$namespace\", container!=\"\"}",
+              "instant": true,
+              "legendFormat": "{{namespace}} / {{pod}} / {{container}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {"displayMode": "auto"}
+            },
+            "overrides": []
+          },
+          "options": {
+            "sortBy": [{"displayName": "namespace", "desc": false}]
+          },
+          "transformations": [
+            {
+              "id": "labelsToFields",
+              "options": {
+                "mode": "columns",
+                "keepLabels": ["namespace", "pod", "container", "image"]
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "includeByName": {
+                  "namespace": true,
+                  "pod": true,
+                  "container": true,
+                  "image": true,
+                  "Value": false
+                },
+                "renameByName": {
+                  "namespace": "Namespace",
+                  "pod": "Pod",
+                  "container": "Container",
+                  "image": "Image"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }

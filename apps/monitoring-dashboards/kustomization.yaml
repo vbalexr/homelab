@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - f1-node-temps.configmap.yaml
+  - f4-log-errors.configmap.yaml
+  - f5-pods-over-requests.configmap.yaml
+  - f6-pods-no-requests.configmap.yaml
+  - f7-health-overview.configmap.yaml

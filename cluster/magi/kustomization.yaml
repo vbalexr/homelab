@@ -9,3 +9,4 @@ resources:
   - ./configurations.yaml
   - ./tunnels.yaml
   - ./mrakaki.yaml
+  - ./monitoring.yaml

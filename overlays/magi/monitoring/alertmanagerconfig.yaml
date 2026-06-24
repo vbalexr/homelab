@@ -1,0 +1,38 @@
+# overlays/magi/monitoring/alertmanagerconfig.yaml
+# Stage 6 (revised) — Discord routing via the AlertmanagerConfig CRD.
+# prometheus-operator parses this natively and pulls the webhook URL from the
+# alertmanager-discord secret (apiURL), so the URL never appears in git (NF7).
+# Selected by the Alertmanager via alertmanagerConfigSelector matchLabels
+# {alertmanagerConfig: discord}; alertmanagerConfigMatcherStrategy: None lets the
+# (matcher-less) route match alerts from every namespace, not just monitoring.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: discord
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: discord
+spec:
+  route:
+    receiver: discord
+    groupBy:
+      - alertname
+      - namespace
+      - severity
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    routes:
+      # Watchdog is a constant heartbeat — silence it so it doesn't flood Discord.
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: Watchdog
+  receivers:
+    - name: discord
+      discordConfigs:
+        - apiURL:
+            name: alertmanager-discord
+            key: webhook-url
+          sendResolved: true
+    - name: "null"

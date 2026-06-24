@@ -1,0 +1,228 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-f5-pods-over-requests
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  f5-pods-over-requests.json: |
+    {
+      "title": "F5 Pods Exceeding Resource Requests",
+      "uid": "f5-pods-over-requests",
+      "schemaVersion": 39,
+      "version": 1,
+      "tags": ["monitoring", "resources", "pods"],
+      "timezone": "browser",
+      "refresh": "1m",
+      "time": {"from": "now-30m", "to": "now"},
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "pluginId": "prometheus",
+            "label": "Datasource",
+            "hide": 0,
+            "refresh": 1,
+            "query": "prometheus",
+            "current": {}
+          },
+          {
+            "name": "namespace",
+            "type": "query",
+            "label": "Namespace",
+            "datasource": {"type": "prometheus", "uid": "${datasource}"},
+            "query": "label_values(kube_pod_container_resource_requests{resource=\"memory\"}, namespace)",
+            "refresh": 2,
+            "sort": 1,
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".+",
+            "current": {}
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Memory Usage / Request Ratio (>1 = over request)",
+          "description": "Ratio of container working-set memory to the requested memory. Values above 1.0 mean the container is using more RAM than it requested. Only shows containers with a memory request set.",
+          "gridPos": {"x": 0, "y": 0, "w": 24, "h": 10},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "(\n  container_memory_working_set_bytes{namespace=~\"$namespace\", container!=\"\"}\n  /\n  on(namespace, pod, container)\n  kube_pod_container_resource_requests{namespace=~\"$namespace\", resource=\"memory\", container!=\"\"}\n) > 1",
+              "legendFormat": "{{namespace}}/{{pod}}/{{container}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2,
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 1.5}
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": {"mode": "multi"},
+            "legend": {"displayMode": "table", "placement": "right", "calcs": ["max", "lastNotNull"]}
+          }
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "CPU Usage / Request Ratio (>1 = over request)",
+          "description": "Ratio of container CPU usage rate to the requested CPU. Values above 1.0 mean the container is using more CPU than it requested. Only shows containers with a CPU request set.",
+          "gridPos": {"x": 0, "y": 10, "w": 24, "h": 10},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "(\n  rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container!=\"\"}[5m])\n  /\n  on(namespace, pod, container)\n  kube_pod_container_resource_requests{namespace=~\"$namespace\", resource=\"cpu\", container!=\"\"}\n) > 1",
+              "legendFormat": "{{namespace}}/{{pod}}/{{container}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2,
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "lineWidth": 2,
+                "fillOpacity": 10
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 1},
+                  {"color": "red", "value": 2}
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": {"mode": "multi"},
+            "legend": {"displayMode": "table", "placement": "right", "calcs": ["max", "lastNotNull"]}
+          }
+        },
+        {
+          "id": 3,
+          "type": "table",
+          "title": "Containers Currently Over Memory Request",
+          "description": "Instant snapshot of containers whose memory usage exceeds their memory request.",
+          "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "(\n  container_memory_working_set_bytes{namespace=~\"$namespace\", container!=\"\"}\n  /\n  on(namespace, pod, container)\n  kube_pod_container_resource_requests{namespace=~\"$namespace\", resource=\"memory\", container!=\"\"}\n) > 1",
+              "instant": true,
+              "legendFormat": "{{namespace}}/{{pod}}/{{container}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2,
+              "custom": {"displayMode": "auto"}
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "Value"},
+                "properties": [
+                  {"id": "displayName", "value": "Usage/Request Ratio"},
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {"color": "yellow", "value": null},
+                        {"color": "red", "value": 1.5}
+                      ]
+                    }
+                  },
+                  {"id": "custom.displayMode", "value": "color-background"}
+                ]
+              }
+            ]
+          },
+          "options": {
+            "sortBy": [{"displayName": "Usage/Request Ratio", "desc": true}]
+          },
+          "transformations": [
+            {"id": "labelsToFields", "options": {"mode": "columns", "keepLabels": ["namespace", "pod", "container"]}},
+            {"id": "organize", "options": {"includeByName": {"namespace": true, "pod": true, "container": true, "Value": true}}}
+          ]
+        },
+        {
+          "id": 4,
+          "type": "table",
+          "title": "Containers Currently Over CPU Request",
+          "description": "Instant snapshot of containers whose CPU usage exceeds their CPU request.",
+          "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "(\n  rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container!=\"\"}[5m])\n  /\n  on(namespace, pod, container)\n  kube_pod_container_resource_requests{namespace=~\"$namespace\", resource=\"cpu\", container!=\"\"}\n) > 1",
+              "instant": true,
+              "legendFormat": "{{namespace}}/{{pod}}/{{container}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 2,
+              "custom": {"displayMode": "auto"}
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "Value"},
+                "properties": [
+                  {"id": "displayName", "value": "CPU Usage/Request Ratio"},
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {"color": "yellow", "value": null},
+                        {"color": "red", "value": 2}
+                      ]
+                    }
+                  },
+                  {"id": "custom.displayMode", "value": "color-background"}
+                ]
+              }
+            ]
+          },
+          "options": {
+            "sortBy": [{"displayName": "CPU Usage/Request Ratio", "desc": true}]
+          },
+          "transformations": [
+            {"id": "labelsToFields", "options": {"mode": "columns", "keepLabels": ["namespace", "pod", "container"]}},
+            {"id": "organize", "options": {"includeByName": {"namespace": true, "pod": true, "container": true, "Value": true}}}
+          ]
+        }
+      ]
+    }

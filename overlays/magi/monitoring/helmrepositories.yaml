@@ -1,0 +1,19 @@
+# Helm chart sources for the monitoring stack (Flux source-controller).
+# Both repos live in flux-system, matching the repo convention for HelmRepositories.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: prometheus-community
+  namespace: flux-system
+spec:
+  interval: 60m
+  url: https://prometheus-community.github.io/helm-charts
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: grafana
+  namespace: flux-system
+spec:
+  interval: 60m
+  url: https://grafana.github.io/helm-charts
