@@ -15,6 +15,18 @@ cluster:
     certSANs:
       - magi.vbalex.com
       - "*.magi.vbalex.com"
+  # Expose control-plane component metrics for Prometheus (monitoring stack):
+  # defaults bind cm/scheduler to 127.0.0.1 and etcd serves no metrics endpoint,
+  # so the kube-prometheus-stack CP ServiceMonitors get "connection refused".
+  controllerManager:
+    extraArgs:
+      bind-address: 0.0.0.0
+  scheduler:
+    extraArgs:
+      bind-address: 0.0.0.0
+  etcd:
+    extraArgs:
+      listen-metrics-urls: http://0.0.0.0:2381
 machine:
   features:
     kubePrism:

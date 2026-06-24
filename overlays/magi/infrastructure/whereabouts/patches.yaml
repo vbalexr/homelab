@@ -1,0 +1,18 @@
+# The upstream whereabouts DaemonSet pins limits.cpu: 100m. The IP-reconcile work
+# bursts above that and gets CFS-throttled (~43%), firing CPUThrottlingHigh.
+# Drop the CPU limit (keep the memory limit + cpu/memory requests) so it can burst
+# freely without throttling — matches this repo's "requests, no CPU limit" convention
+# (see overlays/magi/database/postgres/patches.yaml).
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: whereabouts
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: whereabouts
+          resources:
+            limits:
+              cpu: null
