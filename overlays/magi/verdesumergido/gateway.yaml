@@ -1,13 +1,13 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: monitoring-gateway
-  namespace: monitoring
+  name: verdesumergido-gateway
+  namespace: verdesumergido
 spec:
   gatewayClassName: cilium
   infrastructure:
     labels:
-      pool: private
+      pool: public
   listeners:
     - name: http
       protocol: HTTP
@@ -18,15 +18,11 @@ spec:
     - name: https
       protocol: HTTPS
       port: 443
-      # Omit listener hostname so the HTTP->HTTPS redirect on the :80 listener
-      # renders in Cilium's Envoy config (a pinned HTTPS hostname leaves the
-      # insecure route config empty and the redirect silently no-ops). The
-      # HTTPRoute hostnames + single-domain cert still scope this to grafana.vbalex.com.
       tls:
         mode: Terminate
         certificateRefs:
           - kind: Secret
-            name: monitoring-gateway-tls
+            name: verdesumergido-gateway-tls
       allowedRoutes:
         namespaces:
           from: Same

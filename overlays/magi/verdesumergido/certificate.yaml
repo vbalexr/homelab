@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: verdesumergido-gateway-tls
+  namespace: verdesumergido
+spec:
+  secretName: verdesumergido-gateway-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - vs.vbalex.com

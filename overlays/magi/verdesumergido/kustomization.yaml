@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: verdesumergido
+resources:
+  - namespace.yaml
+  - ghcr-secret.yaml
+  - ../../../apps/verdesumergido
+  - secret.yaml
+  - verdesumergido-image-automation.yaml
+images:
+  - name: ghcr.io/vbalexr/verdesumergido
+    newTag: 20260628-0504 # {"$imagepolicy":"verdesumergido:verdesumergido:tag"}

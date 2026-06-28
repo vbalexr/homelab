@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ./infrastructure.yaml
   - ./databases.yaml
+  - ./verdesumergido.yaml
   - ./home.yaml
   - ./shared.yaml
   - ./sspti.yaml

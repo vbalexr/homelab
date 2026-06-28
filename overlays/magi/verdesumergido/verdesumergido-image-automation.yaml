@@ -1,0 +1,51 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: verdesumergido
+  namespace: verdesumergido
+spec:
+  image: ghcr.io/vbalexr/verdesumergido
+  interval: 5m0s
+  secretRef:
+    name: ghcr-pull
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: verdesumergido
+  namespace: verdesumergido
+spec:
+  imageRepositoryRef:
+    name: verdesumergido
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: verdesumergido
+  namespace: verdesumergido
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update verdesumergido images"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/verdesumergido
+    strategy: Setters
