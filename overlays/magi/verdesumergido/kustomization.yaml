@@ -9,4 +9,4 @@ resources:
   - verdesumergido-image-automation.yaml
 images:
   - name: ghcr.io/vbalexr/verdesumergido
-    newTag: 20260628-0504 # {"$imagepolicy":"verdesumergido:verdesumergido:tag"}
+    newTag: 20260629-2227 # {"$imagepolicy":"verdesumergido:verdesumergido:tag"}
