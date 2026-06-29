@@ -4,9 +4,12 @@ namespace: verdesumergido
 resources:
   - namespace.yaml
   - ghcr-secret.yaml
+  - gateway.yaml
+  - certificate.yaml
   - ../../../apps/verdesumergido
   - secret.yaml
   - verdesumergido-image-automation.yaml
+  - routes
 images:
   - name: ghcr.io/vbalexr/verdesumergido
     newTag: 20260629-2227 # {"$imagepolicy":"verdesumergido:verdesumergido:tag"}
