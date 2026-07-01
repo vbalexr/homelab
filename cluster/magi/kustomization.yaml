@@ -11,3 +11,4 @@ resources:
   - ./tunnels.yaml
   - ./mrakaki.yaml
   - ./monitoring.yaml
+  - ./chilu.yaml

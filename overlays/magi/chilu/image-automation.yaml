@@ -1,0 +1,51 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: chilu-bb
+  namespace: chilu
+spec:
+  image: ghcr.io/thegamerytofficel-blip/buyback
+  interval: 5m0s
+  secretRef:
+    name: ghcr-pull
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: chilu-bb
+  namespace: chilu
+spec:
+  imageRepositoryRef:
+    name: chilu-bb
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: chilu-bb
+  namespace: chilu
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update chilu-bb images"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/chilu
+    strategy: Setters
