@@ -5,7 +5,7 @@ metadata:
   labels:
     app: mrakaki-universe-update-orders
 spec:
-  schedule: "0 * * * *"
+  schedule: "0 */12 * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 0
   failedJobsHistoryLimit: 3
