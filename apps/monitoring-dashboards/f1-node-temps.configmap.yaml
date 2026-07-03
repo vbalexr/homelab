@@ -33,7 +33,7 @@ data:
             "type": "query",
             "label": "Chip",
             "datasource": {"type": "prometheus", "uid": "${datasource}"},
-            "query": "label_values(node_hwmon_temp_celsius{chip!~\"nct6775.*\"}, chip)",
+            "query": "label_values(node_hwmon_temp_celsius{chip!~\".*nct6775.*\"}, chip)",
             "refresh": 2,
             "sort": 1,
             "multi": true,
@@ -46,7 +46,7 @@ data:
             "type": "query",
             "label": "Sensor",
             "datasource": {"type": "prometheus", "uid": "${datasource}"},
-            "query": "label_values(node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\"nct6775.*\"}, sensor)",
+            "query": "label_values(node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\".*nct6775.*\"}, sensor)",
             "refresh": 2,
             "sort": 1,
             "multi": true,
@@ -83,7 +83,7 @@ data:
             {
               "refId": "A",
               "datasource": {"type": "prometheus", "uid": "${datasource}"},
-              "expr": "node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\"nct6775.*\", sensor=~\"$sensor\"}",
+              "expr": "node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\".*nct6775.*\", sensor=~\"$sensor\"}",
               "legendFormat": "{{instance}} / {{chip}} / {{sensor}}"
             }
           ],
@@ -122,7 +122,7 @@ data:
             {
               "refId": "A",
               "datasource": {"type": "prometheus", "uid": "${datasource}"},
-              "expr": "topk(1, node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\"nct6775.*\", sensor=~\"$sensor\"})",
+              "expr": "topk(1, node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\".*nct6775.*\", sensor=~\"$sensor\"})",
               "instant": true,
               "legendFormat": "{{instance}} / {{chip}} / {{sensor}}"
             }
@@ -161,7 +161,7 @@ data:
             {
               "refId": "A",
               "datasource": {"type": "prometheus", "uid": "${datasource}"},
-              "expr": "topk($topn, node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\"nct6775.*\", sensor=~\"$sensor\"})",
+              "expr": "topk($topn, node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\".*nct6775.*\", sensor=~\"$sensor\"})",
               "instant": true,
               "format": "table"
             }
