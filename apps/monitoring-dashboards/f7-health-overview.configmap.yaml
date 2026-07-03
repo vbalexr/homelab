@@ -62,7 +62,7 @@ data:
             {
               "refId": "A",
               "datasource": {"type": "prometheus", "uid": "${promds}"},
-              "expr": "max(node_hwmon_temp_celsius) or vector(0)",
+              "expr": "max(node_hwmon_temp_celsius{chip!~\"nct6775.*\"}) or vector(0)",
               "instant": true,
               "legendFormat": "Max Temp"
             }

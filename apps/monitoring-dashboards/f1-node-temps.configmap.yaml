@@ -33,7 +33,7 @@ data:
             "type": "query",
             "label": "Chip",
             "datasource": {"type": "prometheus", "uid": "${datasource}"},
-            "query": "label_values(node_hwmon_temp_celsius, chip)",
+            "query": "label_values(node_hwmon_temp_celsius{chip!~\"nct6775.*\"}, chip)",
             "refresh": 2,
             "sort": 1,
             "multi": true,
@@ -46,13 +46,28 @@ data:
             "type": "query",
             "label": "Sensor",
             "datasource": {"type": "prometheus", "uid": "${datasource}"},
-            "query": "label_values(node_hwmon_temp_celsius{chip=~\"$chip\"}, sensor)",
+            "query": "label_values(node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\"nct6775.*\"}, sensor)",
             "refresh": 2,
             "sort": 1,
             "multi": true,
             "includeAll": true,
             "allValue": ".+",
             "current": {}
+          },
+          {
+            "name": "topn",
+            "type": "custom",
+            "label": "Top N",
+            "query": "5,10,15,20",
+            "includeAll": false,
+            "multi": false,
+            "current": {"text": "10", "value": "10"},
+            "options": [
+              {"text": "5", "value": "5"},
+              {"text": "10", "value": "10", "selected": true},
+              {"text": "15", "value": "15"},
+              {"text": "20", "value": "20"}
+            ]
           }
         ]
       },
@@ -68,7 +83,7 @@ data:
             {
               "refId": "A",
               "datasource": {"type": "prometheus", "uid": "${datasource}"},
-              "expr": "node_hwmon_temp_celsius{chip=~\"$chip\", sensor=~\"$sensor\"}",
+              "expr": "node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\"nct6775.*\", sensor=~\"$sensor\"}",
               "legendFormat": "{{instance}} / {{chip}} / {{sensor}}"
             }
           ],
@@ -100,16 +115,16 @@ data:
           "id": 2,
           "type": "stat",
           "title": "Max Temperature Right Now",
-          "description": "Peak temperature across all exposed hwmon sensors. (R1 caveat: only populated if Talos exposes hwmon.)",
-          "gridPos": {"x": 0, "y": 12, "w": 6, "h": 4},
+          "description": "Hottest exposed hwmon sensor and its current temperature. (R1 caveat: only populated if Talos exposes hwmon.)",
+          "gridPos": {"x": 0, "y": 12, "w": 8, "h": 4},
           "datasource": {"type": "prometheus", "uid": "${datasource}"},
           "targets": [
             {
               "refId": "A",
               "datasource": {"type": "prometheus", "uid": "${datasource}"},
-              "expr": "max(node_hwmon_temp_celsius{chip=~\"$chip\", sensor=~\"$sensor\"})",
+              "expr": "topk(1, node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\"nct6775.*\", sensor=~\"$sensor\"})",
               "instant": true,
-              "legendFormat": "Max Temp"
+              "legendFormat": "{{instance}} / {{chip}} / {{sensor}}"
             }
           ],
           "fieldConfig": {
@@ -128,11 +143,76 @@ data:
             "overrides": []
           },
           "options": {
-            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": ""},
             "colorMode": "background",
             "graphMode": "area",
             "justifyMode": "auto",
-            "textMode": "auto"
+            "textMode": "value_and_name"
+          }
+        },
+        {
+          "id": 3,
+          "type": "table",
+          "title": "Top $topn Hottest Sensors",
+          "description": "Ranks the currently exposed hwmon sensors by temperature, hottest first.",
+          "gridPos": {"x": 8, "y": 12, "w": 16, "h": 12},
+          "datasource": {"type": "prometheus", "uid": "${datasource}"},
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {"type": "prometheus", "uid": "${datasource}"},
+              "expr": "topk($topn, node_hwmon_temp_celsius{chip=~\"$chip\", chip!~\"nct6775.*\", sensor=~\"$sensor\"})",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {"Time": true, "job": true, "__name__": true, "endpoint": true, "namespace": true, "pod": true, "service": true, "container": true, "prometheus": true},
+                "renameByName": {
+                  "instance": "Node",
+                  "chip": "Chip",
+                  "sensor": "Sensor",
+                  "Value": "Temp"
+                }
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "fields": {},
+                "sort": [{"field": "Temp", "desc": true}]
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {"align": "auto", "filterable": true},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 60},
+                  {"color": "red", "value": 80}
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "Temp"},
+                "properties": [
+                  {"id": "unit", "value": "celsius"},
+                  {"id": "custom.cellOptions", "value": {"type": "color-background", "mode": "gradient"}},
+                  {"id": "custom.width", "value": 120}
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "sortBy": [{"displayName": "Temp", "desc": true}]
           }
         }
       ]
