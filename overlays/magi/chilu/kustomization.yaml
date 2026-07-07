@@ -8,4 +8,4 @@ resources:
   - ../../../apps/chilu-bb
 images:
   - name: ghcr.io/thegamerytofficel-blip/buyback
-    newTag: 20260706-1404 # {"$imagepolicy": "chilu:chilu-bb:tag"}
+    newTag: 20260707-2015 # {"$imagepolicy": "chilu:chilu-bb:tag"}
