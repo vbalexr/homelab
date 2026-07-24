@@ -22,6 +22,8 @@ spec:
         app: verdesumergido
         component: app
     spec:
+      imagePullSecrets:
+        - name: ghcr-pull
       # No non-root pod securityContext here: the stock nginx:alpine image binds
       # :80 and manages its own worker users as root, exactly as the app
       # Dockerfile ships it. The API carries the hardened profile instead.
@@ -39,8 +41,11 @@ spec:
               protocol: TCP
           env:
             # nginx proxies /api to the API service (app/nginx.conf.template).
+            # Must be the FQDN: nginx's `resolver` does raw DNS lookups and does
+            # NOT apply the /etc/resolv.conf search domains, so a bare service
+            # name resolves to NXDOMAIN (Host not found) and the proxy 502s.
             - name: API_URL
-              value: http://verdesumergido-api:3001
+              value: http://verdesumergido-api.verdesumergido.svc.cluster.local:3001
           resources:
             requests:
               cpu: 25m
