@@ -10,4 +10,4 @@ patches:
   - path: pvc-storageclass-patch.yaml
 images:
   - name: ghcr.io/dani-garcia/vaultwarden
-    newTag: 1.36.0 # {"$imagepolicy":"shared:vaultwarden:tag"}
+    newTag: 1.37.0 # {"$imagepolicy":"shared:vaultwarden:tag"}
