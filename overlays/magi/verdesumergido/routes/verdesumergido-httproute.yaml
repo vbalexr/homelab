@@ -10,5 +10,5 @@ spec:
     - vs.vbalex.com
   rules:
     - backendRefs:
-        - name: verdesumergido
+        - name: verdesumergido-app
           port: 80

@@ -11,5 +11,7 @@ resources:
   - verdesumergido-image-automation.yaml
   - routes
 images:
-  - name: ghcr.io/vbalexr/verdesumergido
-    newTag: 20260703-1810 # {"$imagepolicy":"verdesumergido:verdesumergido:tag"}
+  - name: ghcr.io/vbalexr/verdesumergido-api
+    newTag: latest # {"$imagepolicy":"verdesumergido:verdesumergido-api:tag"}
+  - name: ghcr.io/vbalexr/verdesumergido-app
+    newTag: latest # {"$imagepolicy":"verdesumergido:verdesumergido-app:tag"}

@@ -1,9 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: verdesumergido
+  name: verdesumergido-app
   labels:
     app: verdesumergido
+    component: app
 spec:
   replicas: 1
   strategy:
@@ -14,55 +15,52 @@ spec:
   selector:
     matchLabels:
       app: verdesumergido
+      component: app
   template:
     metadata:
       labels:
         app: verdesumergido
+        component: app
     spec:
-      imagePullSecrets:
-        - name: ghcr-pull
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        fsGroup: 1000
-        seccompProfile:
-          type: RuntimeDefault
+      # No non-root pod securityContext here: the stock nginx:alpine image binds
+      # :80 and manages its own worker users as root, exactly as the app
+      # Dockerfile ships it. The API carries the hardened profile instead.
       containers:
-        - name: verdesumergido
-          image: ghcr.io/vbalexr/verdesumergido:20260628-0504
+        - name: app
+          image: ghcr.io/vbalexr/verdesumergido-app:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           ports:
             - name: http
-              containerPort: 3000
+              containerPort: 80
               protocol: TCP
-          envFrom:
-            - secretRef:
-                name: verdesumergido-secret
+          env:
+            # nginx proxies /api to the API service (app/nginx.conf.template).
+            - name: API_URL
+              value: http://verdesumergido-api:3001
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 25m
+              memory: 32Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 200m
+              memory: 128Mi
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: /
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /
               port: http
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3

@@ -2,10 +2,10 @@
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
-  name: verdesumergido
+  name: verdesumergido-api
   namespace: verdesumergido
 spec:
-  image: ghcr.io/vbalexr/verdesumergido
+  image: ghcr.io/vbalexr/verdesumergido-api
   interval: 5m0s
   secretRef:
     name: ghcr-pull
@@ -13,11 +13,36 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
-  name: verdesumergido
+  name: verdesumergido-api
   namespace: verdesumergido
 spec:
   imageRepositoryRef:
-    name: verdesumergido
+    name: verdesumergido-api
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: verdesumergido-app
+  namespace: verdesumergido
+spec:
+  image: ghcr.io/vbalexr/verdesumergido-app
+  interval: 5m0s
+  secretRef:
+    name: ghcr-pull
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: verdesumergido-app
+  namespace: verdesumergido
+spec:
+  imageRepositoryRef:
+    name: verdesumergido-app
   filterTags:
     pattern: '^\d{8}-\d{4}$'
   policy:
