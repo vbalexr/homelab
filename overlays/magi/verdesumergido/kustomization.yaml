@@ -14,4 +14,4 @@ images:
   - name: ghcr.io/vbalexr/verdesumergido-api
     newTag: 20260725-1851 # {"$imagepolicy":"verdesumergido:verdesumergido-api:tag"}
   - name: ghcr.io/vbalexr/verdesumergido-app
-    newTag: 20260725-0029 # {"$imagepolicy":"verdesumergido:verdesumergido-app:tag"}
+    newTag: 20260725-1851 # {"$imagepolicy":"verdesumergido:verdesumergido-app:tag"}
