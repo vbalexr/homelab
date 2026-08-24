@@ -6,6 +6,9 @@ ARG PG_MAJOR_VERSION=18
 ARG PGVECTOR_VERSION=0.8.1
 ARG VECTORCHORD_VERSION=1.1.1
 
+# Provided automatically by buildx; used to pick portable pgvector build flags
+ARG TARGETARCH
+
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -32,8 +35,14 @@ RUN git clone https://github.com/pgvector/pgvector.git /tmp/pgvector && \
     cd /tmp/pgvector && \
     git checkout v${PGVECTOR_VERSION}
 
+# pgvector's Makefile defaults to OPTFLAGS=-march=native, which bakes the CI
+# runner's CPU features (AVX-512) into vector.so and makes backends die with
+# SIGILL on nodes that lack them. Pin a portable baseline on amd64 -- x86-64-v2
+# is also the minimum Immich v3 requires -- and disable it elsewhere, since the
+# Makefile only zeroes OPTFLAGS for Darwin/arm, ppc64 and riscv64, not linux/arm64.
 RUN cd /tmp/pgvector && \
-    make && \
+    if [ "${TARGETARCH}" = "amd64" ]; then OPTFLAGS="-march=x86-64-v2"; else OPTFLAGS=""; fi && \
+    make OPTFLAGS="${OPTFLAGS}" && \
     make install && \
     rm -rf /tmp/pgvector
 
