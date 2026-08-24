@@ -6,7 +6,8 @@ metadata:
     app: immich
 data:
   # Server Configuration
-  IMMICH_VERSION: "release"
+  # Also read by the machine-learning container, which overrides its own 3003
+  # default -- keep in sync with the immich-machine-learning Service targetPort.
   IMMICH_PORT: "2283"
   IMMICH_LOG_LEVEL: "log"
 
@@ -24,10 +25,8 @@ data:
   # REDIS_DBINDEX: from secret
 
   # Machine Learning
-  MACHINE_LEARNING_CLIP_MODEL_NAME: "ViT-B-32::openai"
-  MACHINE_LEARNING_ENABLED: "true"
-  MACHINE_LEARNING_REQUEST_TIMEOUT: "120"
-  MACHINE_LEARNING_URL: "http://immich-machine-learning:3003"
+  # Model name, enablement, URL and timeouts are no longer environment-driven;
+  # they live in the admin UI (system config, stored in the database).
 
   # Server timezone
   TZ: "UTC"

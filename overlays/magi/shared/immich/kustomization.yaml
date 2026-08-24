@@ -22,6 +22,6 @@ patches:
     path: deployment-ml-model-cache-pvc-json-patch.yaml
 images:
   - name: ghcr.io/immich-app/immich-server
-    newTag: v2.7.5 # {"$imagepolicy":"flux-system:immich-server:tag"}
+    newTag: v3.1.0 # {"$imagepolicy":"flux-system:immich-server:tag"}
   - name: ghcr.io/immich-app/immich-machine-learning
-    newTag: v2.7.5 # {"$imagepolicy":"flux-system:immich-machine-learning:tag"}
+    newTag: v3.1.0 # {"$imagepolicy":"flux-system:immich-machine-learning:tag"}
