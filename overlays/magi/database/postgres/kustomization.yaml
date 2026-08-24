@@ -7,6 +7,6 @@ resources:
   - service-lb.yaml
 images:
   - name: ghcr.io/vbalexr/postgres
-    newTag: "20260803.0537" # {"$imagepolicy":"flux-system:postgres:tag"}
+    newTag: "20260824.2247" # {"$imagepolicy":"flux-system:postgres:tag"}
 patches:
   - path: patches.yaml
