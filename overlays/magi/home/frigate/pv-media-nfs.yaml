@@ -1,0 +1,50 @@
+# Frigate media (recordings, clips, exports) on the "ghost" NAS.
+#
+# frigate.db deliberately stays on the Longhorn frigate-config PVC: SQLite
+# over NFS risks corruption, and Frigate documents local storage for it.
+# Only the media tree lives here.
+#
+# The claim keeps the name frigate-media so the deployment needs no patch.
+#
+# WARNING: this 500Gi is advisory. Kubernetes does not enforce capacity on
+# NFS volumes, and Frigate sizes its retention from the free space it sees
+# on the mount - which is the whole /magi pool, not this number. Enforce it
+# on ghost with a ZFS quota on the /magi/frigate dataset, otherwise Frigate
+# can fill the share and starve Immich.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: frigate-media-magi
+spec:
+  capacity:
+    storage: 500Gi # advisory only - see warning above
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: home
+    name: frigate-media
+  mountOptions:
+    - nfsvers=4.2
+    - hard
+    - noatime
+    - nconnect=4
+    - rsize=1048576
+    - wsize=1048576
+  nfs:
+    server: 10.1.0.4 # ghost
+    path: /magi/frigate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: frigate-media
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: frigate-media-magi
+  resources:
+    requests:
+      storage: 500Gi

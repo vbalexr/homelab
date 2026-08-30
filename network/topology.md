@@ -42,6 +42,9 @@ flowchart TD
     SWB -->|"port 5 · STP"| POE
     POE["PoE switch"] --> CAM["CCTV cameras"]
 
+    SWB -->|"port 3 · 1G"| NAS
+    NAS["NAS &quot;Ghost&quot;<br/>NFSv4 export /magi<br/>photo / video bulk storage"]
+
     SWA -->|"ports 6-8 · MLAG"| MAGI
     SWB -->|"ports 6-8 · MLAG"| MAGI
     MAGI["k8s &quot;magi&quot; — 3 nodes<br/>Balthasar · Casper · Melchior<br/>each 2×2.5G LACP (bond0)"]
@@ -80,13 +83,16 @@ flowchart TD
 - Downstream devices attached to **both** cores (that aren't MLAG bonds) rely on
   **STP** to break loops.
 
-### Core switch port map (identical on Core A & Core B)
+### Core switch port map
+
+Identical on Core A & Core B **except port 3**, which is populated on Core B only.
 
 | Port(s) | Connects to | VLANs | Notes |
 |---------|-------------|-------|-------|
 | `1` | OPNsense firewall | trunk (10/15/20/25/500) | LACP uplink; A+B = MLAG bond to `lagg0` |
 | `2` | TP-Link TL-SG116E (16-port) | 15, 20, 25, 500 | KVMs / peripherals + APs downstream; dual-homed (STP) |
-| `3`, `4` | — | — | free / spare |
+| `3` | NAS "Ghost" — **Core B only** | 10 | 1G link, single-homed (no LACP, no STP pair) |
+| `4` | — | — | free / spare |
 | `5` | PoE switch → CCTV cameras | 25 | dual-homed (STP) |
 | `6`–`8` | k8s "magi" nodes (1 per port) | trunk 10, 15, 20, 25 | **MLAG**; each node bonds 2×2.5G (LACP) across both cores |
 | `SFP+1`, `SFP+2` | peer core switch | — | LACP, MLAG peer link |
@@ -155,12 +161,37 @@ Backplane switch port map:
 | `3`, `4` | Casper |
 | `5`, `6` | Melchior |
 
+## Storage — NAS "Ghost"
+
+Bulk storage for photos and video, serving the `magi` cluster over NFS.
+
+| Item | Value |
+|------|-------|
+| VLAN | 10 (servers) |
+| IPv4 | `10.1.0.4/22` |
+| IPv6 | `fd7a:2201:1ab::4` |
+| Uplink | **1 Gb, Core B port 3 — single-homed** |
+| Protocol | **NFSv4 only** (v4.2 negotiated); no v3, no `mountd`, so `showmount -e` does not work |
+| Export | `/magi` (1.8 TiB), client path is the full path — `10.1.0.4:/magi` |
+| Squashing | all clients map to uid `1000` / gid `100`; on-disk ownership does not reflect the client uid |
+
+`/magi/immich` is consumed by the `magi` cluster as a static RWX `PersistentVolume`
+(`immich-media-magi`) mounted at `/data` in `immich-server`, replacing three Longhorn
+PVCs. Talos already ships the `siderolabs/nfs-client` extension, so no CSI driver is
+involved.
+
 ## Notes
 
 - **Performance**: WAN saturates ~940↓ / ~977↑ Mbit/s with ~2.5 ms idle latency
   and negligible bufferbloat.
 - **Suricata** runs inline (netmap) on WAN; on the OPNsense box this is the main
   latency-sensitive component to watch under heavy load.
+- **Ghost is the one single-homed device on the core**: everything else attached to
+  both cores is either an MLAG bond or STP-protected, but Ghost has a single 1G link
+  to Core B. Losing that link or Core B takes the media offline, and because
+  Kubernetes mounts the export `hard`, consumers block rather than error until it
+  returns. Its 1G uplink is also the bandwidth ceiling for all Immich media, despite
+  the nodes having 2×2.5G bonds.
 - **FQ-CoDel shaper** active on WAN (`igc0`): **950↑ / 930↓ Mbit**, FQ-CoDel
   (target 5 ms, ECN). Flattens latency under sustained bulk transfers — upload
   loaded latency ~6 ms (was ~16 ms); ~5–8% peak throughput traded for it.

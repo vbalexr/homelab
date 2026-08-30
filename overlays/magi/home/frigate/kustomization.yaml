@@ -4,7 +4,7 @@ namespace: home
 resources:
   - ../../../../apps/frigate
   - pvc-config.yaml
-  - pvc-media.yaml
+  - pv-media-nfs.yaml
 patches:
   - path: service-dualstack-patch.yaml
   - path: deployment-hw-patch.yaml

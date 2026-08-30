@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: shared
 resources:
   - ../../../../apps/immich
-  - pvc-upload-data.yaml
+  - pv-media-nfs.yaml
   - pvc-model-cache.yaml
   - secret.yaml
 patches:

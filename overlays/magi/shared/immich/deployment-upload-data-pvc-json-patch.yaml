@@ -1,28 +1,16 @@
+# Point immich-server's /data at the single NFS-backed claim on the "ghost" NAS.
+#
+# Previously this mounted three Longhorn PVCs: immich-upload-data at /data with
+# immich-upload-data-{alex,ana} nested inside it at /data/upload/<userId>. Those
+# per-user directories now live inside the one share, so a single volume covers
+# the whole media root and no nested mounts are needed.
+#
+# The base declares one volume named upload-data (an emptyDir placeholder)
+# mounted at /data; these ops swap it for the claim. Paths are index-based, so
+# do not reorder volumes in apps/immich/deployment-server.yaml.
 - op: remove
   path: /spec/template/spec/volumes/0/emptyDir
 - op: add
   path: /spec/template/spec/volumes/0/persistentVolumeClaim
   value:
-    claimName: immich-upload-data
-- op: add
-  path: /spec/template/spec/volumes/-
-  value:
-    name: upload-data-alex
-    persistentVolumeClaim:
-      claimName: immich-upload-data-alex
-- op: add
-  path: /spec/template/spec/volumes/-
-  value:
-    name: upload-data-ana
-    persistentVolumeClaim:
-      claimName: immich-upload-data-ana
-- op: add
-  path: /spec/template/spec/containers/0/volumeMounts/-
-  value:
-    name: upload-data-alex
-    mountPath: /data/upload/a6b7f24b-e48f-46eb-a2da-e24299087076
-- op: add
-  path: /spec/template/spec/containers/0/volumeMounts/-
-  value:
-    name: upload-data-ana
-    mountPath: /data/upload/493d5edb-acb3-457c-ac19-5b97200a8b82
+    claimName: immich-media

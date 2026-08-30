@@ -1,0 +1,50 @@
+# Immich media on the "ghost" NAS (NFSv4.2 export /magi, VLAN 10).
+#
+# Static PV rather than a provisioner: the share is one fixed location, so there
+# is nothing for a dynamic provisioner to do. Talos already ships the
+# siderolabs/nfs-client extension, so no CSI driver is involved.
+#
+# The export squashes every client to uid 1000 / gid 100, so on-disk ownership
+# does not match Immich's uid 999 the way the Longhorn volumes did. Immich still
+# has full access because the server maps it to the owning uid. fsGroup is
+# ignored by the in-tree NFS plugin, so no recursive chown happens on pod start.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-media-magi
+spec:
+  capacity:
+    storage: 2Ti # advisory only; NFS capacity is not enforced
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  # Pre-bound so no other claim can take this volume.
+  claimRef:
+    namespace: shared
+    name: immich-media
+  mountOptions:
+    - nfsvers=4.2
+    - hard
+    - noatime
+    # Parallel TCP flows to hide RTT on small files. Ghost's single 1G uplink is
+    # the ceiling, so more than 4 buys nothing.
+    - nconnect=4
+    - rsize=1048576
+    - wsize=1048576
+  nfs:
+    server: 10.1.0.4 # ghost
+    path: /magi/immich
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-media
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: immich-media-magi
+  resources:
+    requests:
+      storage: 2Ti
