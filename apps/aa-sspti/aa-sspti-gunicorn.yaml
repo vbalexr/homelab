@@ -54,6 +54,32 @@ spec:
           volumeMounts:
             - name: app-config
               mountPath: /config
+        - name: migrate
+          image: ghcr.io/vbalexr/aa-sspti:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 61000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          command: ["python", "manage.py", "migrate", "--noinput"]
+          workingDir: /home/allianceauth/myauth/
+          envFrom:
+            - secretRef:
+                name: aa-sspti-secret
+            - configMapRef:
+                name: aa-sspti-env
+          volumeMounts:
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/celery.py
+              subPath: celery.py
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/urls.py
+              subPath: urls.py
       containers:
         - name: aa-sspti-gunicorn
           image: ghcr.io/vbalexr/aa-sspti:latest
