@@ -87,3 +87,20 @@ DISCORD_APP_ID = os.environ.get("DISCORD_APP_ID", "")
 DISCORD_APP_SECRET = os.environ.get("DISCORD_APP_SECRET", "")
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN", "")
 DISCORD_SYNC_NAMES = _env_bool("DISCORD_SYNC_NAMES", False)
+
+
+def _env_id_list(name: str) -> list:
+    value = os.environ.get(name) or ""
+    return [
+        int(item.strip())
+        for item in value.replace("\n", ",").split(",")
+        if item.strip()
+    ]
+
+
+# aa-discordbot's members/timers/sov cogs read these off django.conf.settings
+# directly instead of its own app_settings, which supplies a default. Leaving
+# them undefined makes those cogs fail to load at import time.
+ADMIN_DISCORD_BOT_CHANNELS = _env_id_list("ADMIN_DISCORD_BOT_CHANNELS")
+SOV_DISCORD_BOT_CHANNELS = _env_id_list("SOV_DISCORD_BOT_CHANNELS")
+ADM_DISCORD_BOT_CHANNELS = _env_id_list("ADM_DISCORD_BOT_CHANNELS")
