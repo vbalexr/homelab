@@ -6,4 +6,3 @@ resources:
   - authentication.yaml
   - buyback.yaml
   - universe.yaml
-  - universe-update-orders.yaml

@@ -21,7 +21,7 @@ metadata:
   labels:
     app: mrakaki-buyback
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: mrakaki-buyback
