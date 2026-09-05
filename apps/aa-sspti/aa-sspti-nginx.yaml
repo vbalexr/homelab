@@ -21,7 +21,7 @@ metadata:
   labels:
     app: aa-sspti-nginx
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: aa-sspti-nginx
