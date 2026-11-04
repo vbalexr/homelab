@@ -2,7 +2,7 @@
 
 Three nodes (Balthasar, Casper, Melchior), all control plane and worker, full HA, rebuilt from the files in
 this repo. Hardware facts: `hardware.md`. Image definition: `schematic.yaml`. Cilium BGP resources:
-`../cilium/`. Addressing: `../../../network/ipam.md`. Design and evidence: `../../../network/talos-bgp.md`,
+`../../../overlays/magi/infrastructure/cilium/`. Addressing: `../../../network/ipam.md`. Design and evidence: `../../../network/talos-bgp.md`,
 `../README.md`.
 
 ## Images
@@ -109,7 +109,8 @@ The veth pair, VRF and the Talos `workload` BGP instance are already in `config/
 PodCIDRs to it; Talos imports them into the mesh:
 
 ```sh
-kubectl apply -f ../cilium/bgp-pods.yaml
+# the BGP resources are applied by Flux (overlays/magi/infrastructure/cilium); to apply them by hand before Flux runs:
+kubectl apply -k ../../../overlays/magi/infrastructure/cilium
 cilium-cli bgp peers                              # talos-workload established, 1 prefix advertised per family
 talosctl -n 10.1.0.11 get bgppeerstatus           # fabric/* and workload/* ESTABLISHED
 ```
@@ -205,7 +206,7 @@ Everything below was needed to make the build work; none of it is obvious from t
 - `bpf.hostLegacyRouting=true` is the Cilium-on-Talos recommendation; `ipam.mode=kubernetes`,
   `k8sServiceHost=localhost` / `k8sServicePort=7445` (KubePrism), no cgroup mount and no `SYS_MODULE` are the
   Talos prerequisites.
-- `bgpControlPlane` must be enabled before applying `../cilium/bgp-pods.yaml`.
+- `bgpControlPlane` must be enabled before the BGP resources in `overlays/magi/infrastructure/cilium` are applied.
 - Last-resort path over the uplink: each node's `bond-up` carries static routes (metric 2000) to the other two nodes'
   `lo` addresses and PodCIDRs via their `10.1.0.x` / `fd7a:2201:1ab::x` addresses. The BGP mesh routes (kernel metric
   0, IPv6 1024) win while any DAC path exists; when both DACs of a node are down the statics take over and pod, etcd

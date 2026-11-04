@@ -1,0 +1,53 @@
+# LoadBalancer IPs to Victim and Demiurg. Short timers: the sessions share an L2 segment, so a dead node is only noticed
+# by the hold timer (matching 3s/9s on the routers).
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: loadbalancer-ips
+  labels:
+    bgp.magi/advertisement: loadbalancer-ips
+spec:
+  advertisements:
+    - advertisementType: Service
+      service:
+        addresses:
+          - LoadBalancerIP
+      selector:
+        # every Service; only LoadBalancer Services with an address from the pool have anything to advertise
+        matchExpressions:
+          - key: bgp.magi/never
+            operator: NotIn
+            values:
+              - "true"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
+metadata:
+  name: router-v4
+spec:
+  timers:
+    holdTimeSeconds: 9
+    keepAliveTimeSeconds: 3
+    connectRetryTimeSeconds: 5
+  families:
+    - afi: ipv4
+      safi: unicast
+      advertisements:
+        matchLabels:
+          bgp.magi/advertisement: loadbalancer-ips
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
+metadata:
+  name: router-v6
+spec:
+  timers:
+    holdTimeSeconds: 9
+    keepAliveTimeSeconds: 3
+    connectRetryTimeSeconds: 5
+  families:
+    - afi: ipv6
+      safi: unicast
+      advertisements:
+        matchLabels:
+          bgp.magi/advertisement: loadbalancer-ips
