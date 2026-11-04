@@ -4,4 +4,5 @@ resources:
   - ./flux-system
   - ./infrastructure.yaml
   - ./configurations.yaml
-  - ./apps.yaml
+  - ./databases.yaml
+  - ./shared.yaml

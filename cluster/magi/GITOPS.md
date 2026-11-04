@@ -8,15 +8,17 @@ installed by hand (see `talos/README.md`).
 
 | Path | Content |
 |---|---|
-| `cluster/magi/kustomization.yaml` | Root of the sync path: `flux-system/`, `infrastructure.yaml`, `apps.yaml` |
+| `cluster/magi/kustomization.yaml` | Root of the sync path: `flux-system/` and one file per layer |
 | `cluster/magi/flux-system/` | Written by `flux bootstrap` (controllers and the sync definition). Do not edit |
 | `cluster/magi/infrastructure.yaml` | Flux `Kustomization` for `overlays/magi/infrastructure` (cluster services, CRDs, storage) |
-| `cluster/magi/apps.yaml` | Flux `Kustomization` for `overlays/magi/apps`; `dependsOn: infrastructure` |
-| `overlays/magi/<layer>/` | What each layer deploys. Add one folder per component and list it in the layer's `kustomization.yaml` |
+| `cluster/magi/configurations.yaml` | `overlays/magi/configurations` (cert-manager issuers); `dependsOn: infrastructure` |
+| `cluster/magi/databases.yaml` | `overlays/magi/database` (namespace `database`: postgres, mariadb); `dependsOn: configurations` |
+| `cluster/magi/<group>.yaml` | One application group each (`shared`, ...), `dependsOn: databases` |
+| `overlays/magi/<layer or group>/` | What each deploys. A group has its own namespace, Gateway (fixed LB address), Certificate, routes and one folder per app, listed in its `kustomization.yaml` |
 | `.sops.yaml` | Encrypts `data`/`stringData` of any YAML under `overlays/magi/` for the cluster age key |
 | `.hooks/check-sops-encrypted.py`, `.gitleaks.toml`, `.pre-commit-config.yaml` | Block commits of plaintext Secrets or key material |
 
-Both layers use `decryption.provider: sops` with the `sops-age` secret in `flux-system`. A new layer is a new
+Every layer uses `decryption.provider: sops` with the `sops-age` secret in `flux-system`. A new layer is a new
 `cluster/magi/<name>.yaml` plus an entry in `cluster/magi/kustomization.yaml`.
 
 ## Set up (once)
