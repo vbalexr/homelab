@@ -166,6 +166,16 @@ Everything below was needed to make the build work; none of it is obvious from t
   existing member (`MemberUpdate` is not called), so a node with new addresses can't rejoin. Apply the new
   configs to all nodes, run the EPHEMERAL reset on each, then bootstrap once.
 
+**Longhorn storage**
+- **Data disk:** each node's 1 TB NVMe is a `UserVolumeConfig` named `longhorn` (xfs, by serial, `minSize` is required)
+  in the node files, mounted at `/var/mnt/longhorn`; the Longhorn `defaultDataPath` is that path.
+- **Kubelet mount:** the kubelet only sees `/var/mnt/longhorn` through an `extraMounts` bind (`rshared`). The 1.14
+  `KubeletConfig` document has no `extraMounts` field and conflicts with `machine.kubelet`, so `common.yaml` deletes
+  the generated `KubeletConfig` and sets the legacy `machine.kubelet` instead, repeating the `image` and
+  `defaultRuntimeSeccompProfileEnabled: true` the deleted document carried. Applies without a reboot.
+- **Storage network:** none. Longhorn traffic is pod-to-pod, and remote PodCIDRs are routed over the 10G DAC mesh (BGP,
+  metric 0) with the `bond-up` statics (metric 2000) as the 2.5G fallback, so it already prefers 10G.
+
 **Uplink bond**
 - `bond-up` over `enp5s0` + `enp4s0` (802.3ad, `lacpRate: fast`, `layer3+4`, `miimon 100`, `updelay`/`downdelay 200`)
   must match the switch bonds. Addresses and the default routes (`10.1.0.1`, `fd7a:2201:1ab::1`) live on the

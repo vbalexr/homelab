@@ -2,7 +2,7 @@ extends: default
 
 # Flux emits this manifest; indentation does not match repo style rules.
 ignore: |
-  cluster/magi/flux-system/gotk-components.yaml
+  cluster/magi/flux-system/
 
 rules:
   comments-indentation: disable
