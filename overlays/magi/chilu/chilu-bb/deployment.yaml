@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chilu-bb
+  namespace: chilu
+  labels:
+    app: chilu-bb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chilu-bb
+  template:
+    metadata:
+      labels:
+        app: chilu-bb
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: chilu-bb
+          image: ghcr.io/thegamerytofficel-blip/buyback@sha256:aa9d4b885981caa1399fc047dde01b4df3b8aafc1f5945bad3917db3d3019b01
+          env:
+            - name: TZ
+              value: UTC
+          ports:
+            - name: http
+              containerPort: 80
+          # nginx master starts as root and drops to the nginx user
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+              add: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
