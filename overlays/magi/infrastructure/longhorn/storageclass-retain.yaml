@@ -1,0 +1,15 @@
+# Databases and other data that must survive an accidental PVC deletion: the volume is kept (PV Released) instead of
+# being deleted with the claim. Three replicas, one kept on the node that runs the pod.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-retain
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: "3"
+  staleReplicaTimeout: "30"
+  dataLocality: best-effort
+  fsType: ext4
