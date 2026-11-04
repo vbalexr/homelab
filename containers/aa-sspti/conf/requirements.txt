@@ -7,3 +7,5 @@ allianceauth-securegroups
 git+https://github.com/MrAkaki/aa-whatax.git@a4a60ae5e2a79667fba6a456a566a9f7dda05d97
 allianceauth-discordbot
 django-esi
+gunicorn
+zstandard
