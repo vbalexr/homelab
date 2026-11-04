@@ -152,6 +152,10 @@ Pinned addresses (`lbipam.cilium.io/ips` annotation on the Service):
 
 | IP                                | Service                | Port | Description                                  |
 |-----------------------------------|------------------------|------|------------------------------------------------|
-| 10.1.1.10, fd7a:2201:1ac::10      | shared/shared-gateway  | 80, 443 | Gateway for the shared apps (vault.vbalex.com)  |
+| 10.1.1.10, fd7a:2201:1ac::10      | shared/shared-gateway  | 80, 443 | Gateway for the shared apps (vault, photos, netbox)|
+| 10.1.1.11, fd7a:2201:1ac::11      | home/home-gateway      | 80, 443 | Gateway for the home apps                       |
+| 10.1.1.12, fd7a:2201:1ac::12      | sspti/sspti-gateway    | 80, 443 | Gateway for aa-sspti                            |
+| 10.1.1.13, fd7a:2201:1ac::13      | mrakaki/mrakaki-gateway | 80, 443 | Gateway for the mrakaki apps                   |
+| 10.1.1.14, fd7a:2201:1ac::14      | chilu/chilu-gateway    | 80, 443 | Gateway for chilu-bb                            |
 | 10.1.1.20, fd7a:2201:1ac::20      | database/postgres      | 5432 | PostgreSQL (externalTrafficPolicy Local)       |
 | 10.1.1.21, fd7a:2201:1ac::21      | database/mariadb       | 3306 | MariaDB (externalTrafficPolicy Local)          |

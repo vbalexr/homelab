@@ -10,3 +10,5 @@ spec:
     name: letsencrypt-prod
   dnsNames:
     - vault.vbalex.com
+    - photos.vbalex.com
+    - netbox.vbalex.com

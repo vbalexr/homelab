@@ -6,3 +6,7 @@ resources:
   - ./configurations.yaml
   - ./databases.yaml
   - ./shared.yaml
+  - ./home.yaml
+  - ./sspti.yaml
+  - ./mrakaki.yaml
+  - ./chilu.yaml
