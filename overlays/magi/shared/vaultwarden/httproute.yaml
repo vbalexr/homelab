@@ -5,9 +5,8 @@ metadata:
   namespace: shared
 spec:
   parentRefs:
-    - name: magi
-      namespace: gateway
-      sectionName: vault-vbalex-com
+    - name: shared-gateway
+      sectionName: https
   hostnames:
     - vault.vbalex.com
   rules:
@@ -22,8 +21,7 @@ metadata:
   namespace: shared
 spec:
   parentRefs:
-    - name: magi
-      namespace: gateway
+    - name: shared-gateway
       sectionName: http
   hostnames:
     - vault.vbalex.com

@@ -152,5 +152,6 @@ Pinned addresses (`lbipam.cilium.io/ips` annotation on the Service):
 
 | IP                                | Service                | Port | Description                                  |
 |-----------------------------------|------------------------|------|------------------------------------------------|
+| 10.1.1.10, fd7a:2201:1ac::10      | shared/shared-gateway  | 80, 443 | Gateway for the shared apps (vault.vbalex.com)  |
 | 10.1.1.20, fd7a:2201:1ac::20      | database/postgres      | 5432 | PostgreSQL (externalTrafficPolicy Local)       |
 | 10.1.1.21, fd7a:2201:1ac::21      | database/mariadb       | 3306 | MariaDB (externalTrafficPolicy Local)          |
