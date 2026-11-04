@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - secret.yaml
+  - secret-mcp.yaml
+  - secret-valkey.yaml
+  - pvc.yaml
+  - netbox.yaml
+  - mcp.yaml
+  - httproute.yaml
+configMapGenerator:
+  - name: netbox-config
+    files:
+      - files/config/configuration.py
+      - files/config/extra.py
+      - files/config/logging.py
+      - files/config/plugins.py
+  - name: netbox-mcp-patches
+    files:
+      - files/mcp/server.py
+      - files/mcp/netbox_client.py

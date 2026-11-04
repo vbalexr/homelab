@@ -1,0 +1,40 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: netbox
+  namespace: shared
+spec:
+  parentRefs:
+    - name: shared-gateway
+      sectionName: https
+  hostnames:
+    - netbox.vbalex.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mcp
+      backendRefs:
+        - name: netbox-mcp
+          port: 8000
+    - backendRefs:
+        - name: netbox
+          port: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: netbox-redirect
+  namespace: shared
+spec:
+  parentRefs:
+    - name: shared-gateway
+      sectionName: http
+  hostnames:
+    - netbox.vbalex.com
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301

@@ -1,0 +1,145 @@
+# NetBox and its rqworker share the media/reports/scripts volume (ReadWriteOnce), so they run as two containers of one pod.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbox
+  namespace: shared
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: netbox
+  template:
+    metadata:
+      labels:
+        app: netbox
+    spec:
+      containers:
+        - name: netbox
+          image: docker.io/netboxcommunity/netbox:v4.7-5.1.0
+          ports:
+            - name: http
+              containerPort: 8080
+          env: &env
+            - name: DB_HOST
+              value: postgres.database.svc.cluster.local
+            - name: DB_NAME
+              value: netbox
+            - name: DB_USER
+              value: netbox
+            - name: REDIS_HOST
+              value: valkey.database.svc.cluster.local
+            - name: REDIS_DATABASE
+              value: "2"
+            - name: REDIS_CACHE_HOST
+              value: valkey.database.svc.cluster.local
+            - name: REDIS_CACHE_DATABASE
+              value: "3"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: valkey-credentials
+                  key: VALKEY_PASSWORD
+            - name: REDIS_CACHE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: valkey-credentials
+                  key: VALKEY_PASSWORD
+            - name: SKIP_SUPERUSER
+              value: "false"
+            - name: ALLOWED_HOSTS
+              value: "*"
+            - name: CORS_ORIGIN_ALLOW_ALL
+              value: "True"
+            - name: GRAPHQL_ENABLED
+              value: "true"
+            - name: METRICS_ENABLED
+              value: "false"
+            - name: WEBHOOKS_ENABLED
+              value: "true"
+            - name: MEDIA_ROOT
+              value: /opt/netbox/netbox/media
+          envFrom:
+            - secretRef:
+                name: netbox-env
+          resources:
+            requests:
+              cpu: 200m
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+              add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+          startupProbe:
+            httpGet:
+              path: /login/
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /login/
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /login/
+              port: http
+            periodSeconds: 20
+            failureThreshold: 6
+          volumeMounts: &mounts
+            - name: config
+              mountPath: /etc/netbox/config
+              readOnly: true
+            - name: data
+              mountPath: /opt/netbox/netbox/media
+              subPath: media
+            - name: data
+              mountPath: /opt/netbox/netbox/reports
+              subPath: reports
+            - name: data
+              mountPath: /opt/netbox/netbox/scripts
+              subPath: scripts
+        - name: worker
+          image: docker.io/netboxcommunity/netbox:v4.7-5.1.0
+          command: ["/opt/netbox/venv/bin/python", "/opt/netbox/netbox/manage.py", "rqworker"]
+          env: *env
+          envFrom:
+            - secretRef:
+                name: netbox-env
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts: *mounts
+      volumes:
+        - name: config
+          configMap:
+            name: netbox-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: netbox-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netbox
+  namespace: shared
+spec:
+  selector:
+    app: netbox
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
