@@ -1,11 +1,10 @@
-# Replicas stay 0 until cutover: the Zigbee bridge (172.16.20.10) accepts one client, which is the podman container until then.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: zigbee2mqtt
   namespace: home
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
