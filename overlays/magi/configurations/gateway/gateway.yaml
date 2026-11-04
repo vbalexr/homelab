@@ -20,3 +20,14 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: vault-vbalex-com
+      protocol: HTTPS
+      port: 443
+      hostname: vault.vbalex.com
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: vault-vbalex-com-tls
+      allowedRoutes:
+        namespaces:
+          from: All
