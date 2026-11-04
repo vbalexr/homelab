@@ -320,6 +320,11 @@ Then save and apply. The rendered `/usr/local/etc/frr/frr.conf` contains `router
   on Victim (`pkg create -o <dir> os-frr frr10 frr10-pythontools c-ares libssh libunwind libyang3 net-snmp protobuf-c
   protobuf abseil jsoncpp rtrlib`), copy them over `ssh` (no sftp on Demiurg) and `pkg add -f` them in dependency
   order, then `service configd start`.
+* Client VLANs reach the LoadBalancer pool only where a rule allows it. HOME passes TCP 80 and 443 to `10.1.1.0/24` and
+  `fd7a:2201:1ac::/64` (four rules per router, "HOME to MAGI LB ..."), the same on Victim and Demiurg. Add a rule per
+  client VLAN and service port as services move (for example IoT to the mosquitto address).
+* Hosts on VLAN 10 that are not cluster nodes (for example 10.1.0.25) must not use the pool addresses: the nodes reply
+  directly, the routers see one direction of the flow, and the connection stalls after about 64 KB.
 * Not configured yet: a Null0/blackhole route for the two pool prefixes.
 
 ---
