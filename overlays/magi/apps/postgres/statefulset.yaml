@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: database
+spec:
+  serviceName: postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: postgres
+          image: ghcr.io/vbalexr/postgres:20260824.2247
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 250m
+              memory: 768Mi
+            limits:
+              memory: 3Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, postgres]
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, postgres]
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          startupProbe:
+            exec:
+              command: [pg_isready, -U, postgres]
+            periodSeconds: 5
+            failureThreshold: 60
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: config
+              mountPath: /etc/postgresql/conf.d
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: config
+          configMap:
+            name: postgres-config
+            items:
+              - key: postgresql.conf
+                path: postgresql.conf
+        - name: initdb
+          configMap:
+            name: postgres-config
+            defaultMode: 0555
+            items:
+              - key: 00-include-conf.sh
+                path: 00-include-conf.sh
+              - key: 01-init-extensions.sql
+                path: 01-init-extensions.sql
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 512Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 10Gi
