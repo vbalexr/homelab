@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esphome
+  namespace: home
+spec:
+  replicas: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: esphome
+  template:
+    metadata:
+      labels:
+        app: esphome
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: esphome
+          image: ghcr.io/esphome/esphome:2026.9.1@sha256:776a845d508909bf426d2ee7bdd81796361ebe6a7f091807ce1d6d0b48985413
+          args: ["dashboard", "/config"]
+          env:
+            - name: TZ
+              value: UTC
+          ports:
+            - name: http
+              containerPort: 6052
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 3Gi
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 20
+            failureThreshold: 6
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: pio
+              mountPath: /root/.platformio
+            - name: ccache
+              mountPath: /root/.cache/ccache
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: esphome-config
+        - name: pio
+          persistentVolumeClaim:
+            claimName: esphome-pio
+        - name: ccache
+          persistentVolumeClaim:
+            claimName: esphome-ccache
