@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-headless
+  namespace: database
+spec:
+  clusterIP: None
+  selector:
+    app: mariadb
+  ports:
+    - name: mariadb
+      port: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: database
+  annotations:
+    lbipam.cilium.io/ips: "10.1.1.21,fd7a:2201:1ac::21"
+spec:
+  type: LoadBalancer
+  ipFamilyPolicy: PreferDualStack
+  externalTrafficPolicy: Local
+  selector:
+    app: mariadb
+  ports:
+    - name: mariadb
+      port: 3306
+      targetPort: mariadb
