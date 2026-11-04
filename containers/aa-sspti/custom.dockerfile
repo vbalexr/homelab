@@ -1,0 +1,13 @@
+ARG AUTH_VERSION
+FROM registry.gitlab.com/allianceauth/allianceauth/auth:${AUTH_VERSION}
+
+WORKDIR ${AUTH_HOME}
+
+COPY /conf/requirements.txt requirements.txt
+COPY /conf/constraints.txt constraints.txt
+RUN pip install -c constraints.txt -r requirements.txt
+
+COPY /conf/local.py /home/allianceauth/myauth/myauth/settings/local.py
+COPY /conf/celery.py /home/allianceauth/myauth/myauth/celery.py
+COPY /conf/urls.py /home/allianceauth/myauth/myauth/urls.py
+COPY --chmod=0755 /conf/memory_check.sh /memory_check.sh
