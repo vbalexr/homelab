@@ -1,0 +1,54 @@
+# Spring Cloud Config server: serves the application settings from a private git repo (the SSH key is baked into the image).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: configuration
+  namespace: mrakaki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: configuration
+  template:
+    metadata:
+      labels:
+        app: configuration
+    spec:
+      containers:
+        - name: configuration
+          image: docker.io/mrakaki/dev-containers:mrakaki-eve-config.0.0.2
+          ports:
+            - containerPort: 8888
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8888
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8888
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 768Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: configuration
+  namespace: mrakaki
+spec:
+  selector:
+    app: configuration
+  ports:
+    - port: 8888
+      targetPort: 8888

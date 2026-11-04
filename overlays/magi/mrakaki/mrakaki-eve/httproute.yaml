@@ -1,0 +1,50 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mrakaki-auth
+  namespace: mrakaki
+spec:
+  parentRefs:
+    - name: mrakaki-gateway
+      sectionName: https
+  hostnames:
+    - auth.mrakaki.com
+  rules:
+    - backendRefs:
+        - name: mrakaki-authentication
+          port: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mrakaki-buyback
+  namespace: mrakaki
+spec:
+  parentRefs:
+    - name: mrakaki-gateway
+      sectionName: https
+  hostnames:
+    - buyback.mrakaki.com
+  rules:
+    - backendRefs:
+        - name: mrakaki-buyback
+          port: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mrakaki-redirect
+  namespace: mrakaki
+spec:
+  parentRefs:
+    - name: mrakaki-gateway
+      sectionName: http
+  hostnames:
+    - auth.mrakaki.com
+    - buyback.mrakaki.com
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301

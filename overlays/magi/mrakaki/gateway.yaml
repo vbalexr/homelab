@@ -1,0 +1,30 @@
+# Entry point for the apps in this namespace (routes attach from the same namespace only). The Cilium controller creates the
+# LoadBalancer Service, pinned to a fixed pool address that is advertised to the routers over BGP.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: mrakaki-gateway
+  namespace: mrakaki
+spec:
+  gatewayClassName: cilium
+  infrastructure:
+    annotations:
+      lbipam.cilium.io/ips: "10.1.1.13,fd7a:2201:1ac::13"
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: mrakaki-gateway-tls
+      allowedRoutes:
+        namespaces:
+          from: Same

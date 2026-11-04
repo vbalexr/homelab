@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mrakaki-gateway-tls
+  namespace: mrakaki
+spec:
+  secretName: mrakaki-gateway-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - auth.mrakaki.com
+    - buyback.mrakaki.com
