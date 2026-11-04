@@ -1,0 +1,48 @@
+# The photo library stays on the NAS (10.1.0.15:/mnt/Vault/immich). The export must allow the node uplink addresses 10.1.0.11-13.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-library
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - nfsvers=4.1
+    - hard
+    - noatime
+    - rsize=1048576
+    - wsize=1048576
+  nfs:
+    server: 10.1.0.15
+    path: /mnt/Vault/immich
+  claimRef:
+    namespace: shared
+    name: immich-library
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-library
+  namespace: shared
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: immich-library
+  resources:
+    requests:
+      storage: 1Ti
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-ml-cache
+  namespace: shared
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-retain
+  resources:
+    requests:
+      storage: 5Gi
