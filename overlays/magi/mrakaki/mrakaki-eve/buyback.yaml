@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mrakaki-buyback
+  namespace: mrakaki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mrakaki-buyback
+  template:
+    metadata:
+      labels:
+        app: mrakaki-buyback
+    spec:
+      containers:
+        - name: mrakaki-buyback
+          image: docker.io/mrakaki/dev-containers:mrakaki-eve-buyback.0.0.3
+          command:
+            - bash
+            - -c
+            - |
+              until curl -sf http://configuration:8888/actuator/health >/dev/null \
+                && curl -sf http://mrakaki-authentication:8080/.well-known/openid-configuration >/dev/null \
+                && curl -sf https://auth.mrakaki.com/.well-known/openid-configuration >/dev/null; do
+                echo "waiting for config server + auth issuer..."; sleep 3
+              done
+              exec java -jar app.jar
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production
+            - name: SPRING_CONFIG_IMPORT
+              value: "configserver:http://configuration:8888"
+          ports:
+            - containerPort: 8080
+          startupProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 90
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mrakaki-buyback
+  namespace: mrakaki
+spec:
+  selector:
+    app: mrakaki-buyback
+  ports:
+    - port: 8080
+      targetPort: 8080
