@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aa-sspti-worker-services
+  namespace: sspti
+  labels:
+    app: aa-sspti-worker-services
+spec:
+  replicas: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: aa-sspti-worker-services
+  template:
+    metadata:
+      labels:
+        app: aa-sspti-worker-services
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: aa-sspti-worker-services
+          image: ghcr.io/vbalexr/aa-sspti:20261104-2329@sha256:1b2e0e6e164bec828335de35da9042bd1846312b2fb0f1c599c7ece6ea17a816
+          command: ["sh", "-c"]
+          args:
+            - pip install --no-cache-dir django-health-check==4.8.0 && exec celery -A myauth worker --pool=threads --concurrency=1 -Q services -n worker_services_%n
+          workingDir: /home/allianceauth/myauth/
+          envFrom:
+            - configMapRef:
+                name: aa-sspti-env
+            - secretRef:
+                name: aa-sspti-secret
+          securityContext:
+            runAsUser: 61000
+            runAsGroup: 61000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/settings/local.py
+              subPath: local.py
+              readOnly: true
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/celery.py
+              subPath: celery.py
+              readOnly: true
+            - name: app-config
+              mountPath: /home/allianceauth/myauth/myauth/urls.py
+              subPath: urls.py
+              readOnly: true
+      volumes:
+        - name: app-config
+          configMap:
+            name: aa-sspti-config
