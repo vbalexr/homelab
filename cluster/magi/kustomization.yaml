@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
   - ./flux-system
   - ./infrastructure.yaml
+  - ./configurations.yaml
   - ./apps.yaml

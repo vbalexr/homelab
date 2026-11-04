@@ -18,4 +18,4 @@ spec:
     secretRef:
       name: sops-age
   dependsOn:
-    - name: infrastructure
+    - name: configurations
