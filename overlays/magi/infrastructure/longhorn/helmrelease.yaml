@@ -1,0 +1,27 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: longhorn
+      version: 1.13.0
+      sourceRef:
+        kind: HelmRepository
+        name: longhorn
+  install:
+    remediation:
+      retries: 3
+  values:
+    defaultSettings:
+      # The longhorn UserVolume on the 1 TB NVMe of each node (cluster/magi/talos/config).
+      defaultDataPath: /var/mnt/longhorn
+      defaultReplicaCount: 3
+    persistence:
+      defaultClass: true
+      defaultClassReplicaCount: 3
+    # Storage traffic stays on the pod network: pod CIDRs are routed over the 10G DAC mesh (BGP, metric 0) with the
+    # bond-up statics (metric 2000) as the 2.5G fallback, so no dedicated storage network is configured.

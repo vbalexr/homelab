@@ -10,6 +10,18 @@ provisioning:
   diskSelector:
     match: disk.serial == "2M322L1CBHHE"
 ---
+# 1 TB data disk for Longhorn, selected by serial (device names swap between boots). Mounted at /var/mnt/longhorn.
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: longhorn
+provisioning:
+  diskSelector:
+    match: disk.serial == "50026B72836AC7FD"
+  minSize: 900GB
+  grow: true
+filesystem:
+  type: xfs
+---
 # Node identity: advertised into BGP as /32 and /128, used as router ID and as the etcd/kubelet address.
 apiVersion: v1alpha1
 kind: LinkConfig
