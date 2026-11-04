@@ -1,0 +1,7 @@
+# Reproduces localhost/aa-sspti:20261022-aa5.5.0-whatax-a4a60ae.
+# Base: the published ghcr.io/vbalexr/aa-sspti:20260901-2002 (linux/amd64, pinned by digest).
+# constraints.txt is `pip freeze` of the running image, so every dependency resolves to the same version.
+FROM ghcr.io/vbalexr/aa-sspti@sha256:639b472971a95322de83928db98899dc11e55d69b7f33df9b5c9643728048145
+COPY constraints.txt /tmp/constraints.txt
+RUN pip install --no-cache-dir -c /tmp/constraints.txt allianceauth==5.5.0 django-esi==10.0.0 aa-structures==4.1.0 django-eveuniverse==2.2.0 \
+ && pip install --no-cache-dir --no-deps --force-reinstall git+https://github.com/MrAkaki/aa-whatax.git@a4a60ae5e2a79667fba6a456a566a9f7dda05d97
