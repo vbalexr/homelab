@@ -1,0 +1,6 @@
+creation_rules:
+  - path_regex: '(^|.*[\\/])overlays[\\/]magi[\\/].*\.ya?ml$'
+    age: >-
+      age10slfc52ay0ecew34p9xf7hrefmv2tsy0k8av92g48tp2fy044yasfczuuy
+    encrypted_regex: ^(data|stringData)$
+    mac_only_encrypted: true

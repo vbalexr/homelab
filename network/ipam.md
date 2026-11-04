@@ -147,4 +147,3 @@ nodes' `lo` addresses and PodCIDRs via their uplink addresses; they are used onl
 BGP-advertised `/32` / `/128` host routes originated by Cilium on the MAGI nodes and learned by
 Victim and Demiurg. Addresses are allocated dynamically by Cilium LB IPAM, so individual IPs are not tracked
 here.
-
