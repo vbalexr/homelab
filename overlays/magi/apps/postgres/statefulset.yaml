@@ -27,6 +27,8 @@ spec:
       containers:
         - name: postgres
           image: ghcr.io/vbalexr/postgres:20260824.2247
+          # also needed on the command line: the init scripts run against a temporary server that ignores include_dir
+          args: ["-c", "shared_preload_libraries=vector,vchord"]
           ports:
             - name: postgres
               containerPort: 5432
