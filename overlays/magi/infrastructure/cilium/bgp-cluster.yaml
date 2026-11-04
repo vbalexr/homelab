@@ -1,0 +1,37 @@
+# One BGP instance per node (AS 65021) with two kinds of peer: the local Talos `workload` instance (PodCIDRs, see
+# bgp-pods.yaml) and the routers Victim and Demiurg (LoadBalancer IPs only, see bgp-routers.yaml). The routers are peered
+# on their own addresses, never the CARP VIP.
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: talos-workload
+spec:
+  bgpInstances:
+    - name: talos-workload
+      localASN: 65021
+      peers:
+        - name: talos-workload
+          peerASN: 65031
+          peerAddress: "fda1:b2c3:d4e5:1::1"
+          peerConfigRef:
+            name: talos-workload
+        - name: victim-v4
+          peerASN: 65000
+          peerAddress: 10.1.0.2
+          peerConfigRef:
+            name: router-v4
+        - name: victim-v6
+          peerASN: 65000
+          peerAddress: "fd7a:2201:1ab::2"
+          peerConfigRef:
+            name: router-v6
+        - name: demiurg-v4
+          peerASN: 65000
+          peerAddress: 10.1.0.3
+          peerConfigRef:
+            name: router-v4
+        - name: demiurg-v6
+          peerASN: 65000
+          peerAddress: "fd7a:2201:1ab::3"
+          peerConfigRef:
+            name: router-v6

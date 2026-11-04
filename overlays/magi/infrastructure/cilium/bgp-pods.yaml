@@ -29,18 +29,3 @@ spec:
       advertisements:
         matchLabels:
           bgp.magi/advertisement: pod-cidr
----
-apiVersion: cilium.io/v2
-kind: CiliumBGPClusterConfig
-metadata:
-  name: talos-workload
-spec:
-  bgpInstances:
-    - name: talos-workload
-      localASN: 65021
-      peers:
-        - name: talos-workload
-          peerASN: 65031
-          peerAddress: "fda1:b2c3:d4e5:1::1"
-          peerConfigRef:
-            name: talos-workload

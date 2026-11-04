@@ -1,0 +1,11 @@
+# Routed only: these addresses exist as BGP host routes toward the nodes (network/ipam.md), not on any interface.
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: magi
+spec:
+  blocks:
+    - start: 10.1.1.1
+      stop: 10.1.1.254
+    - start: "fd7a:2201:1ac::1"
+      stop: "fd7a:2201:1ac::ff"

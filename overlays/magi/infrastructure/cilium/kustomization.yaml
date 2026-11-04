@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - bgp-pods.yaml
+  - bgp-cluster.yaml
+  - bgp-routers.yaml
+  - load-balancer-ip-pool.yaml

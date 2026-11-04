@@ -113,7 +113,7 @@ third node transits.
 
 Deployed config: `cluster/magi/talos/config/common.yaml` and `<node>.yml` (hostname, install disk, `lo`, `bond-up`
 uplink, mesh links, `fabric` and `workload` instances, the veth/VRF pair). Cilium's BGP resources are in
-`cluster/magi/cilium/bgp-pods.yaml`.
+`overlays/magi/infrastructure/cilium/` (`bgp-pods.yaml`, `bgp-cluster.yaml`, `bgp-routers.yaml`, `load-balancer-ip-pool.yaml`), applied by Flux.
 
 * **Mesh sessions are IPv6-only**, one per peer over the `/127`. IPv4 prefixes (node `/32`s, pod IPv4 CIDRs)
   ride them with IPv6 next hops, which Linux accepts. With an IPv4 session per peer as well, an IPv6 prefix
