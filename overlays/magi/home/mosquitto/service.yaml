@@ -1,0 +1,21 @@
+# Pinned pool address so IoT and Home clients (and mqtt.vbalex.com) can reach the broker.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto
+  namespace: home
+  annotations:
+    lbipam.cilium.io/ips: "10.1.1.23,fd7a:2201:1ac::23"
+spec:
+  type: LoadBalancer
+  ipFamilyPolicy: PreferDualStack
+  externalTrafficPolicy: Local
+  selector:
+    app: mosquitto
+  ports:
+    - name: mqtt
+      port: 1883
+      targetPort: mqtt
+    - name: websocket
+      port: 9001
+      targetPort: websocket
