@@ -1,0 +1,11 @@
+extends: default
+
+# Flux emits this manifest; indentation does not match repo style rules.
+ignore: |
+  cluster/magi/flux-system/gotk-components.yaml
+
+rules:
+  comments-indentation: disable
+  document-start: disable
+  line-length: disable
+  truthy: disable

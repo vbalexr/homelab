@@ -208,4 +208,3 @@ Everything below was needed to make the build work; none of it is obvious from t
 - `talosctl etcd members` hangs while etcd isn't running (before bootstrap); don't use it to test for that.
   `talosctl bootstrap` refuses with "etcd data directory is not empty" if it already ran, which is safe.
 - `talosctl reset` and `reboot` don't accept `--insecure`; power-cycle by hand in maintenance mode.
- 

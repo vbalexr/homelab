@@ -1,0 +1,19 @@
+# Private keys and SOPS age keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+.sops.age
+*.age
+
+# Plaintext secrets and decrypted copies
+.env
+.env.*
+*.dec.yaml
+*.dec.yml
+*.plaintext.yaml
+*.plaintext.yml
+
+# Talos / cluster credentials
+**/generated/
