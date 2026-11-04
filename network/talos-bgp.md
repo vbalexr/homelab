@@ -269,31 +269,57 @@ The IPv6 family is configured the same way over IPv6 neighbors (`fd7a:2201:1ab::
 
 Open items:
 
-* Victim and Demiurg (OPNsense 26.7.7) run `os-frr` with the §7 policy, deployed by `network/opnsense/frr-bgp-setup.php` (see below).
+* Victim and Demiurg (OPNsense 26.7.7) run `os-frr` with the §7 policy, configured as in §10a.
 * Cilium version to pair with Talos 1.14 and the `transport.sourceInterface` requirement.
 
 ---
 
 ## 10a. Router configuration as deployed
 
-Victim and Demiurg each run FRR (`os-frr`) as AS 65000 with router IDs `10.1.0.2` / `10.1.0.3`, peering every node's
-static uplink address over IPv4 and IPv6 (12 sessions in total, hold 9 s / keepalive 3 s). The two routers are
-configured independently (no HA config sync) and render the same `frr.conf`.
+Victim and Demiurg each run FRR (`os-frr`) as AS 65000, peering every node's static uplink address over IPv4 and IPv6
+(12 sessions in total, hold 9 s / keepalive 3 s). The two routers are configured independently (no HA config sync) with the
+same settings; only the router ID differs. Configure each in the OPNsense GUI:
 
-* Policy: inbound route-maps `MAGI-IN4` / `MAGI-IN6` accept only `/32` in `10.1.1.0/24` and `/128` in
-  `fd7a:2201:1ac::/64`; outbound `MAGI-OUT` denies everything; `maximum-paths 3`.
-* `network/opnsense/frr-bgp-setup.php <router-id> <1|2|3>` creates it through the OPNsense models (phase 1 prefix
-  lists, 2 route-maps, 3 neighbors and enable); run it on the router with `php`, then
-  `configctl template reload OPNsense/Quagga && configctl quagga restart`. Relations only resolve against saved
-  config, hence three phases.
-* The plugin's automatic "Pass BGP" rule is turned off (`fwrules=0`): it opens TCP/179 on every interface, WAN
+**Routing → General**
+* Enable routing; turn **off** "Enable CARP Failover" so the sessions stay up on both routers.
+* Turn **off** the automatic firewall rules: the "Pass BGP" rule they create opens TCP/179 on every interface, WAN
   included. The existing LAB "pass any" rules already allow the nodes to reach the routers.
-* "Run when CARP is backup" is irrelevant: `enablecarp=0`, so the sessions stay up on both routers.
-* Demiurg has no IPv4 default route, so `pkg install` cannot reach the repository from it; the plugin was installed
-  from packages created on Victim (`pkg create`, then `pkg add` in dependency order) and `configd` started again.
+
+**Routing → BGP → General**
+* Enable BGP, AS number `65000`, router ID `10.1.0.2` (Victim) / `10.1.0.3` (Demiurg), maximum paths `3`, log neighbor changes.
+
+**Prefix lists**
+
+| Name | Version | Seq | Action | Network |
+|---|---|---|---|---|
+| `MAGI-LB4` | IPv4 | 10 | permit | `10.1.1.0/24 ge 32 le 32` |
+| `MAGI-LB6` | IPv6 | 10 | permit | `fd7a:2201:1ac::/64 ge 128 le 128` |
+
+**Route maps**
+
+| Name | Action | ID | Match |
+|---|---|---|---|
+| `MAGI-IN4` | permit | 10 | prefix list `MAGI-LB4` |
+| `MAGI-IN6` | permit | 10 | prefix list `MAGI-LB6` |
+| `MAGI-OUT` | deny | 10 | none |
+
+**Neighbors** (six, all remote AS `65021`, keepalive `3`, hold `9`, route map out `MAGI-OUT`)
+
+| Address | Node | Route map in | Update source |
+|---|---|---|---|
+| `10.1.0.11` / `.12` / `.13` | Balthasar / Casper / Melchior | `MAGI-IN4` | LAB |
+| `fd7a:2201:1ab::11` / `::12` / `::13` | Balthasar / Casper / Melchior | `MAGI-IN6` | none |
+
+Then save and apply. The rendered `/usr/local/etc/frr/frr.conf` contains `router bgp 65000`, the six `neighbor` blocks,
+`maximum-paths 3` in both address families, the two prefix lists and the three route maps.
+
+* Check: `vtysh -c 'show bgp summary'` on each router shows six established sessions; `cilium-cli bgp peers` on the cluster.
 * Each node pins the source address of its router sessions (`CiliumBGPNodeConfigOverride`): the uplink also holds a
   SLAAC address that the kernel prefers, and the routers only accept the static ones.
-* Check: `vtysh -c 'show bgp summary'` on the routers, `cilium-cli bgp peers` on the cluster.
+* Demiurg has no IPv4 default route, so `pkg install os-frr` cannot reach the repository from it. Create the packages
+  on Victim (`pkg create -o <dir> os-frr frr10 frr10-pythontools c-ares libssh libunwind libyang3 net-snmp protobuf-c
+  protobuf abseil jsoncpp rtrlib`), copy them over `ssh` (no sftp on Demiurg) and `pkg add -f` them in dependency
+  order, then `service configd start`.
 * Not configured yet: a Null0/blackhole route for the two pool prefixes.
 
 ---
