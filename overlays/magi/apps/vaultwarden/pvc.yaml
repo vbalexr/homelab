@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vaultwarden-data
+  namespace: shared
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn-retain
+  resources:
+    requests:
+      storage: 2Gi
