@@ -1,0 +1,52 @@
+# The uplink also holds a SLAAC address (from the routers' RAs) that the kernel prefers as source, but the routers only
+# accept sessions from the static addresses in network/ipam.md. Pin the source address of the router sessions per node.
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: balthasar
+spec:
+  bgpInstances:
+    - name: talos-workload
+      peers:
+        - name: victim-v4
+          localAddress: 10.1.0.11
+        - name: demiurg-v4
+          localAddress: 10.1.0.11
+        - name: victim-v6
+          localAddress: "fd7a:2201:1ab::11"
+        - name: demiurg-v6
+          localAddress: "fd7a:2201:1ab::11"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: casper
+spec:
+  bgpInstances:
+    - name: talos-workload
+      peers:
+        - name: victim-v4
+          localAddress: 10.1.0.12
+        - name: demiurg-v4
+          localAddress: 10.1.0.12
+        - name: victim-v6
+          localAddress: "fd7a:2201:1ab::12"
+        - name: demiurg-v6
+          localAddress: "fd7a:2201:1ab::12"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: melchior
+spec:
+  bgpInstances:
+    - name: talos-workload
+      peers:
+        - name: victim-v4
+          localAddress: 10.1.0.13
+        - name: demiurg-v4
+          localAddress: 10.1.0.13
+        - name: victim-v6
+          localAddress: "fd7a:2201:1ab::13"
+        - name: demiurg-v6
+          localAddress: "fd7a:2201:1ab::13"

@@ -4,4 +4,5 @@ resources:
   - bgp-pods.yaml
   - bgp-cluster.yaml
   - bgp-routers.yaml
+  - bgp-node-overrides.yaml
   - load-balancer-ip-pool.yaml
