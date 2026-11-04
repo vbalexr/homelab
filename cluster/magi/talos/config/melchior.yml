@@ -1,0 +1,122 @@
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: melchior
+auto:
+  $patch: delete
+---
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+provisioning:
+  diskSelector:
+    match: disk.serial == "2N182L15CJGA"
+---
+# Node identity: advertised into BGP as /32 and /128, used as router ID and as the etcd/kubelet address.
+apiVersion: v1alpha1
+kind: LinkConfig
+name: lo
+addresses:
+  - address: 10.1.3.13/32
+  - address: fd7a:2201:1ad::13/128
+---
+# Uplink: LACP bond to Aura/Mare (MLAG ids 201-203 on the switches), untagged VLAN 10.
+apiVersion: v1alpha1
+kind: BondConfig
+name: bond-up
+links:
+  - enp5s0
+  - enp4s0
+bondMode: 802.3ad
+xmitHashPolicy: layer3+4
+lacpRate: fast
+miimon: 100
+updelay: 200
+downdelay: 200
+addresses:
+  - address: 10.1.0.13/24
+  - address: fd7a:2201:1ab::13/64
+routes:
+  - gateway: 10.1.0.1
+  # metric 100: the routers' RA default route has metric 1024, an equal one collides (EEXIST) and stalls route updates
+  - gateway: fd7a:2201:1ab::1
+    metric: 100
+  # Last resort when both DACs are down: peer identities and PodCIDRs via the peer's uplink address. Metric 2000 loses to the
+  # BGP mesh routes (kernel metric 0 / 1024 for IPv6). PodCIDRs must match `kubectl get nodes -o custom-columns=N:.metadata.name,C:.spec.podCIDRs`.
+  - destination: "10.1.3.11/32"
+    gateway: "10.1.0.11"
+    metric: 2000
+  - destination: "10.244.1.0/24"
+    gateway: "10.1.0.11"
+    metric: 2000
+  - destination: "fd7a:2201:1ad::11/128"
+    gateway: "fd7a:2201:1ab::11"
+    metric: 2000
+  - destination: "fd7a:2201:1ae:1::/64"
+    gateway: "fd7a:2201:1ab::11"
+    metric: 2000
+  - destination: "10.1.3.12/32"
+    gateway: "10.1.0.12"
+    metric: 2000
+  - destination: "10.244.0.0/24"
+    gateway: "10.1.0.12"
+    metric: 2000
+  - destination: "fd7a:2201:1ad::12/128"
+    gateway: "fd7a:2201:1ab::12"
+    metric: 2000
+  - destination: "fd7a:2201:1ae::/64"
+    gateway: "fd7a:2201:1ab::12"
+    metric: 2000
+---
+# Mesh: direct DAC to Casper.
+apiVersion: v1alpha1
+kind: LinkConfig
+name: eno1
+mtu: 1500
+addresses:
+  - address: 10.1.3.5/31
+  - address: fd7a:2201:1ad::5/127
+---
+# Mesh: direct DAC to Balthasar.
+apiVersion: v1alpha1
+kind: LinkConfig
+name: eno2
+mtu: 1500
+addresses:
+  - address: 10.1.3.3/31
+  - address: fd7a:2201:1ad::3/127
+---
+apiVersion: v1alpha1
+kind: BGPInstanceConfig
+name: fabric
+localASN: 65013
+routerID: 10.1.3.13
+routeSource: 10.1.3.13
+advertise:
+  - lo
+multipath: true
+importRoutes:
+  - bgpInstance: workload
+    prefixes:
+      - 10.244.0.0/16
+      - "fd7a:2201:1ae::/56"
+# IPv6-only sessions: a v6 prefix learned over a v4 session gets an IPv4 next hop the kernel rejects.
+# BFD over IPv6 does not come up in Talos 1.14.4, so failover relies on the short hold time.
+neighbors:
+  - address: "fd7a:2201:1ad::2"   # Balthasar
+    peerASN: 65011
+    holdTime: 9s
+  - address: "fd7a:2201:1ad::4"   # Casper
+    peerASN: 65012
+    holdTime: 9s
+---
+# Receives each node's PodCIDRs from Cilium; never installs routes. `fabric` imports them for the mesh.
+apiVersion: v1alpha1
+kind: BGPInstanceConfig
+name: workload
+vrf: vrf-workload
+localASN: 65031
+routerID: 10.1.3.13
+installRoutes: false
+neighbors:
+  - address: "fda1:b2c3:d4e5:1::"
+    peerASN: 65021
+    passive: true
