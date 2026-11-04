@@ -1,0 +1,80 @@
+# The two patched modules are mounted over the image's own, as on the podman host. The image runs as appuser (1000).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netbox-mcp
+  namespace: shared
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netbox-mcp
+  template:
+    metadata:
+      labels:
+        app: netbox-mcp
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: netbox-mcp
+          image: docker.io/skuldgerry/netbox-mcp@sha256:aca9222fcdc6d28299689eeef4305fce40e00373aa771f9a2e4a1b46147ce53d
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: NETBOX_URL
+              value: http://netbox:8080/
+            - name: TRANSPORT
+              value: http
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: "8000"
+          envFrom:
+            - secretRef:
+                name: netbox-mcp-env
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+          volumeMounts:
+            - name: patches
+              mountPath: /app/src/netbox_mcp_server/server.py
+              subPath: server.py
+              readOnly: true
+            - name: patches
+              mountPath: /app/src/netbox_mcp_server/netbox_client.py
+              subPath: netbox_client.py
+              readOnly: true
+      volumes:
+        - name: patches
+          configMap:
+            name: netbox-mcp-patches
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netbox-mcp
+  namespace: shared
+spec:
+  selector:
+    app: netbox-mcp
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
