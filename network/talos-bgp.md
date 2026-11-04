@@ -269,8 +269,32 @@ The IPv6 family is configured the same way over IPv6 neighbors (`fd7a:2201:1ab::
 
 Open items:
 
-* Victim and Demiurg run OPNsense 26.7.7; configure §7 with the `os-frr` plugin (installed on Victim only, not running).
+* Victim and Demiurg (OPNsense 26.7.7) run `os-frr` with the §7 policy, deployed by `network/opnsense/frr-bgp-setup.php` (see below).
 * Cilium version to pair with Talos 1.14 and the `transport.sourceInterface` requirement.
+
+---
+
+## 10a. Router configuration as deployed
+
+Victim and Demiurg each run FRR (`os-frr`) as AS 65000 with router IDs `10.1.0.2` / `10.1.0.3`, peering every node's
+static uplink address over IPv4 and IPv6 (12 sessions in total, hold 9 s / keepalive 3 s). The two routers are
+configured independently (no HA config sync) and render the same `frr.conf`.
+
+* Policy: inbound route-maps `MAGI-IN4` / `MAGI-IN6` accept only `/32` in `10.1.1.0/24` and `/128` in
+  `fd7a:2201:1ac::/64`; outbound `MAGI-OUT` denies everything; `maximum-paths 3`.
+* `network/opnsense/frr-bgp-setup.php <router-id> <1|2|3>` creates it through the OPNsense models (phase 1 prefix
+  lists, 2 route-maps, 3 neighbors and enable); run it on the router with `php`, then
+  `configctl template reload OPNsense/Quagga && configctl quagga restart`. Relations only resolve against saved
+  config, hence three phases.
+* The plugin's automatic "Pass BGP" rule is turned off (`fwrules=0`): it opens TCP/179 on every interface, WAN
+  included. The existing LAB "pass any" rules already allow the nodes to reach the routers.
+* "Run when CARP is backup" is irrelevant: `enablecarp=0`, so the sessions stay up on both routers.
+* Demiurg has no IPv4 default route, so `pkg install` cannot reach the repository from it; the plugin was installed
+  from packages created on Victim (`pkg create`, then `pkg add` in dependency order) and `configd` started again.
+* Each node pins the source address of its router sessions (`CiliumBGPNodeConfigOverride`): the uplink also holds a
+  SLAAC address that the kernel prefers, and the routers only accept the static ones.
+* Check: `vtysh -c 'show bgp summary'` on the routers, `cilium-cli bgp peers` on the cluster.
+* Not configured yet: a Null0/blackhole route for the two pool prefixes.
 
 ---
 
