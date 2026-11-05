@@ -6,3 +6,6 @@ resources:
   - deployment.yaml
   - service.yaml
   - httproute.yaml
+images:
+  - name: ghcr.io/dani-garcia/vaultwarden
+    newTag: 1.37.2 # {"$imagepolicy":"flux-system:vaultwarden:tag"}

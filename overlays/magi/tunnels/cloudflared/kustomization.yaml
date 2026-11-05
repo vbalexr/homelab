@@ -3,3 +3,6 @@ kind: Kustomization
 resources:
   - secret.yaml
   - deployment.yaml
+images:
+  - name: docker.io/cloudflare/cloudflared
+    newTag: 2026.8.3 # {"$imagepolicy":"flux-system:cloudflared:tag"}

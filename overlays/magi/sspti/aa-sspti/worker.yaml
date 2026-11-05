@@ -25,7 +25,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: aa-sspti-worker
-          image: ghcr.io/vbalexr/aa-sspti:20261104-2329@sha256:1b2e0e6e164bec828335de35da9042bd1846312b2fb0f1c599c7ece6ea17a816
+          image: ghcr.io/vbalexr/aa-sspti
           command: ["sh", "-c"]
           args:
             - pip install --no-cache-dir django-health-check==4.8.0 && exec celery -A myauth worker --pool=threads --concurrency=5 -n worker_%n

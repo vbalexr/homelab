@@ -1,0 +1,115 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: immich-server
+  namespace: flux-system
+spec:
+  image: ghcr.io/immich-app/immich-server
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: immich-server
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: immich-server
+  policy:
+    semver:
+      range: ">=3.0.0 <4.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: immich-machine-learning
+  namespace: flux-system
+spec:
+  image: ghcr.io/immich-app/immich-machine-learning
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: immich-machine-learning
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: immich-machine-learning
+  policy:
+    semver:
+      range: ">=3.0.0 <4.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: immich
+  namespace: flux-system
+spec:
+  suspend: true
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update immich images to latest tag"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/shared/immich
+    strategy: Setters
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: vaultwarden
+  namespace: flux-system
+spec:
+  image: ghcr.io/dani-garcia/vaultwarden
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: vaultwarden
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: vaultwarden
+  policy:
+    semver:
+      range: ">=1.36.0 <2.0.0"
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: vaultwarden
+  namespace: flux-system
+spec:
+  suspend: true
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update vaultwarden image to latest tag"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/shared/vaultwarden
+    strategy: Setters

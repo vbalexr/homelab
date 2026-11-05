@@ -22,7 +22,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: chilu-bb
-          image: ghcr.io/thegamerytofficel-blip/buyback@sha256:aa9d4b885981caa1399fc047dde01b4df3b8aafc1f5945bad3917db3d3019b01
+          image: ghcr.io/thegamerytofficel-blip/buyback
           env:
             - name: TZ
               value: UTC
