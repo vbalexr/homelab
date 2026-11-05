@@ -1,0 +1,104 @@
+# Two instances for Technitium cluster mode. RollingUpdate replaces one pod at a time (technitium-1, then technitium-0) and
+# waits for it to be ready (and minReadySeconds) before touching the other, so one resolver always answers.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: technitium
+  namespace: dns
+spec:
+  serviceName: technitium-headless
+  replicas: 2
+  minReadySeconds: 30
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: technitium
+  template:
+    metadata:
+      labels:
+        app: technitium
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        fsGroup: 1654
+        seccompProfile:
+          type: RuntimeDefault
+        sysctls:
+          # lets the non-root process bind port 53
+          - name: net.ipv4.ip_unprivileged_port_start
+            value: "0"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: technitium
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: technitium
+          image: docker.io/technitium/dns-server
+          ports:
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+            - name: web
+              containerPort: 5380
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: DNS_SERVER_DOMAIN
+              value: $(POD_NAME).technitium-headless.dns.svc.cluster.local
+            - name: DNS_SERVER_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: technitium-credentials
+                  key: DNS_SERVER_ADMIN_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          startupProbe:
+            httpGet:
+              path: /
+              port: web
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            tcpSocket:
+              port: dns-tcp
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: web
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          volumeMounts:
+            - name: data
+              mountPath: /etc/dns
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: longhorn-retain
+        resources:
+          requests:
+            storage: 2Gi

@@ -1,0 +1,21 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: technitium
+  namespace: flux-system
+spec:
+  image: docker.io/technitium/dns-server
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: technitium
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: technitium
+  policy:
+    semver:
+      range: ">=15.6.2 <16.0.0"
