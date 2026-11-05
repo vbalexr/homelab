@@ -1,0 +1,52 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: immich
+  namespace: flux-system
+spec:
+  suspend: true
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update immich images to latest tag"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/shared/immich
+    strategy: Setters
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: vaultwarden
+  namespace: flux-system
+spec:
+  suspend: true
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update vaultwarden image to latest tag"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/shared/vaultwarden
+    strategy: Setters

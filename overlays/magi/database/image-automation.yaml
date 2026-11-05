@@ -24,29 +24,3 @@ spec:
   policy:
     alphabetical:
       order: asc
----
-apiVersion: image.toolkit.fluxcd.io/v1
-kind: ImageUpdateAutomation
-metadata:
-  name: postgres
-  namespace: flux-system
-spec:
-  suspend: true
-  interval: 5m0s
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-  git:
-    checkout:
-      ref:
-        branch: main
-    commit:
-      author:
-        email: fluxcdbot@users.noreply.github.com
-        name: fluxcdbot
-      messageTemplate: "chore(images): update postgres image to latest tag"
-    push:
-      branch: main
-  update:
-    path: ./overlays/magi/database/postgres
-    strategy: Setters

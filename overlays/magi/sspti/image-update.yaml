@@ -1,0 +1,26 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: aa-sspti
+  namespace: flux-system
+spec:
+  suspend: true
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update aa-sspti images to latest tag"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/sspti/aa-sspti
+    strategy: Setters
