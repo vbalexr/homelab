@@ -25,4 +25,4 @@ images:
   - name: ghcr.io/vbalexr/aa-sspti
     newTag: 20261104-2329 # {"$imagepolicy":"flux-system:aa-sspti:tag"}
   - name: ghcr.io/vbalexr/aa-sspti-nginx
-    newTag: 20260901-2003 # {"$imagepolicy":"flux-system:aa-sspti-nginx:tag"}
+    newTag: 20261104-2330 # {"$imagepolicy":"flux-system:aa-sspti-nginx:tag"}
