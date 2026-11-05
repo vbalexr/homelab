@@ -10,3 +10,4 @@ resources:
   - ./sspti.yaml
   - ./mrakaki.yaml
   - ./chilu.yaml
+  - ./gameservers.yaml
