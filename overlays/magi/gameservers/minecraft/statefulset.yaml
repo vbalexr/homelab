@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minecraft
+  namespace: gameservers
+spec:
+  serviceName: minecraft
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minecraft
+  template:
+    metadata:
+      labels:
+        app: minecraft
+    spec:
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: minecraft
+          image: docker.io/itzg/minecraft-server:java25@sha256:5cf064b103ea7470c8ec6d90ad9a602863fea8fb5dfd4e3a0224a19d55e9e50d
+          env:
+            - {name: EULA, value: "TRUE"}
+            - {name: TYPE, value: PAPER}
+            - {name: VERSION, value: "26.3"}
+            - {name: PAPERBUILD, value: "194"}
+            - {name: MEMORY, value: 4G}
+            - {name: DIFFICULTY, value: easy}
+            - {name: MOTD, value: VaCe Server}
+            - {name: TZ, value: UTC}
+            - name: PLUGINS
+              value: |
+                https://download.geysermc.org/v2/projects/geyser/versions/2.12.0/builds/1258/downloads/spigot
+                https://download.geysermc.org/v2/projects/floodgate/versions/2.2.5/builds/141/downloads/spigot
+                https://cdn.modrinth.com/data/9eGKb6K1/versions/EJth3OAr/voicechat-bukkit-2.6.24.jar
+          ports:
+            - {name: java, containerPort: 25565, protocol: TCP}
+            - {name: bedrock, containerPort: 19132, protocol: UDP}
+            - {name: voicechat, containerPort: 24454, protocol: UDP}
+          resources:
+            requests:
+              cpu: "1"
+              memory: 6Gi
+            limits:
+              memory: 6Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          startupProbe:
+            exec:
+              command: [mc-health]
+            periodSeconds: 10
+            failureThreshold: 60
+          livenessProbe:
+            exec:
+              command: [mc-health]
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command: [mc-health]
+            periodSeconds: 15
+            timeoutSeconds: 10
+          volumeMounts:
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minecraft-data
