@@ -8,6 +8,6 @@ resources:
   - httproute.yaml
 images:
   - name: ghcr.io/immich-app/immich-server
-    newTag: v3.1.0 # {"$imagepolicy":"flux-system:immich-server:tag"}
+    newTag: v3.3.6 # {"$imagepolicy":"flux-system:immich-server:tag"}
   - name: ghcr.io/immich-app/immich-machine-learning
-    newTag: v3.1.0 # {"$imagepolicy":"flux-system:immich-machine-learning:tag"}
+    newTag: v3.3.6 # {"$imagepolicy":"flux-system:immich-machine-learning:tag"}
