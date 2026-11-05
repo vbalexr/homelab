@@ -9,3 +9,4 @@ resources:
   - immich
   - frigate
   - image-automation.yaml
+  - image-update.yaml

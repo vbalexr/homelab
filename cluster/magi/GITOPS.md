@@ -73,7 +73,8 @@ All other images stay pinned by hand.
   `newTag: <tag> # {"$imagepolicy":"flux-system:<policy>:tag"}`. The automation rewrites that value and pushes
   `chore(images): update <app> ...` to `main` as `fluxcdbot` (the `flux-system` deploy key is read-write).
 - Policies: postgres, aa-sspti, aa-sspti-nginx and chilu-bb take the newest `YYYYMMDD-HHMM` (postgres `YYYYMMDD.HHMM`) tag;
-  immich (server and machine-learning move together) follows semver `>=3.0.0 <4.0.0`; vaultwarden `>=1.36.0 <2.0.0`;
+  immich (server and machine-learning move together) follows semver `>=3.0.0 <4.0.0`, so it takes 3.x.x releases only and waits at
+  a 4.x release, which usually needs migrations (raise the range by hand when ready); vaultwarden `>=1.36.0 <2.0.0`;
   cloudflared `>=2026.5.0`.
 - The `check-postgres-updates` GitHub workflow (Mondays 02:00 UTC) builds new postgres tags; the policy then rolls them out automatically.
 - `image-update.yaml` is listed in the group `kustomization.yaml` only while its automation is active. A `suspend: true`

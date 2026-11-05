@@ -4,6 +4,7 @@ resources:
   - namespace.yaml
   - secret-image-pull.yaml
   - image-automation.yaml
+  - image-update.yaml
   - postgres
   - mariadb
   - valkey
