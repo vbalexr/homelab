@@ -8,4 +8,4 @@ resources:
   - statefulset.yaml
 images:
   - name: ghcr.io/vbalexr/postgres
-    newTag: "20260824.2247" # {"$imagepolicy":"flux-system:postgres:tag"}
+    newTag: "20261104.2323" # {"$imagepolicy":"flux-system:postgres:tag"}
