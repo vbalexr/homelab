@@ -1,0 +1,28 @@
+# Java (TCP 25565), Bedrock via Geyser (UDP 19132) and Simple Voice Chat (UDP 24454).
+# Local policy keeps the real client address for logs, bans and the voice chat.
+apiVersion: v1
+kind: Service
+metadata:
+  name: minecraft
+  namespace: gameservers
+  annotations:
+    lbipam.cilium.io/ips: "10.1.1.15,fd7a:2201:1ac::15"
+spec:
+  type: LoadBalancer
+  ipFamilyPolicy: PreferDualStack
+  externalTrafficPolicy: Local
+  selector:
+    app: minecraft
+  ports:
+    - name: java
+      protocol: TCP
+      port: 25565
+      targetPort: java
+    - name: bedrock
+      protocol: UDP
+      port: 19132
+      targetPort: bedrock
+    - name: voicechat
+      protocol: UDP
+      port: 24454
+      targetPort: voicechat
