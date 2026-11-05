@@ -161,3 +161,5 @@ Pinned addresses (`lbipam.cilium.io/ips` annotation on the Service):
 | 10.1.1.20, fd7a:2201:1ac::20      | database/postgres      | 5432 | PostgreSQL (externalTrafficPolicy Local)       |
 | 10.1.1.21, fd7a:2201:1ac::21      | database/mariadb       | 3306 | MariaDB (externalTrafficPolicy Local)          |
 | 10.1.1.23, fd7a:2201:1ac::23      | home/mosquitto         | 1883, 9001 | Mosquitto MQTT and WebSocket (externalTrafficPolicy Local) |
+| 10.1.1.30, fd7a:2201:1ac::30      | dns/technitium-0       | 53/udp, 53/tcp | Technitium DNS resolver 1 (externalTrafficPolicy Local) |
+| 10.1.1.31, fd7a:2201:1ac::31      | dns/technitium-1       | 53/udp, 53/tcp | Technitium DNS resolver 2 (externalTrafficPolicy Local) |
