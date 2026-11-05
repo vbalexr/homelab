@@ -6,3 +6,8 @@ resources:
   - server.yaml
   - machine-learning.yaml
   - httproute.yaml
+images:
+  - name: ghcr.io/immich-app/immich-server
+    newTag: v3.1.0 # {"$imagepolicy":"flux-system:immich-server:tag"}
+  - name: ghcr.io/immich-app/immich-machine-learning
+    newTag: v3.1.0 # {"$imagepolicy":"flux-system:immich-machine-learning:tag"}

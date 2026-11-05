@@ -5,3 +5,6 @@ resources:
   - deployment.yaml
   - service.yaml
   - httproute.yaml
+images:
+  - name: ghcr.io/thegamerytofficel-blip/buyback
+    newTag: 20261103-0912 # {"$imagepolicy":"flux-system:chilu-bb:tag"}

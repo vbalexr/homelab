@@ -8,3 +8,4 @@ resources:
   - netbox
   - immich
   - frigate
+  - image-automation.yaml

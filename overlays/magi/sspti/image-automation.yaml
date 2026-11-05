@@ -1,0 +1,76 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: aa-sspti
+  namespace: flux-system
+spec:
+  image: ghcr.io/vbalexr/aa-sspti
+  interval: 5m0s
+  secretRef:
+    name: ghcr-pull-sspti
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: aa-sspti
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: aa-sspti
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: aa-sspti-nginx
+  namespace: flux-system
+spec:
+  image: ghcr.io/vbalexr/aa-sspti-nginx
+  interval: 5m0s
+  secretRef:
+    name: ghcr-pull-sspti
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: aa-sspti-nginx
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: aa-sspti-nginx
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: aa-sspti
+  namespace: flux-system
+spec:
+  suspend: true
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update aa-sspti images to latest tag"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/sspti/aa-sspti
+    strategy: Setters

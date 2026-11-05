@@ -26,7 +26,7 @@ spec:
       initContainers:
         # static files are generated into a volume shared with nginx
         - name: collectstatic
-          image: ghcr.io/vbalexr/aa-sspti:20261104-2329@sha256:1b2e0e6e164bec828335de35da9042bd1846312b2fb0f1c599c7ece6ea17a816
+          image: ghcr.io/vbalexr/aa-sspti
           command: ["sh", "-c"]
           args:
             - pip install --no-cache-dir django-health-check==4.8.0 && python manage.py collectstatic --noinput
@@ -65,7 +65,7 @@ spec:
               mountPath: /var/www/myauth/static
       containers:
         - name: gunicorn
-          image: ghcr.io/vbalexr/aa-sspti:20261104-2329@sha256:1b2e0e6e164bec828335de35da9042bd1846312b2fb0f1c599c7ece6ea17a816
+          image: ghcr.io/vbalexr/aa-sspti
           command: ["sh", "-c"]
           args:
             - pip install --no-cache-dir django-health-check==4.8.0 && exec gunicorn myauth.wsgi --bind=0.0.0.0:8000 --workers=3 --timeout=120 --max-requests=500 --max-requests-jitter=50
@@ -106,7 +106,7 @@ spec:
             - name: static
               mountPath: /var/www/myauth/static
         - name: nginx
-          image: ghcr.io/vbalexr/aa-sspti-nginx:20260901-2003@sha256:0faf820fd60b6f4dca54bc70d2ba7765c0076e657363cd27ae1290f8801425bf
+          image: ghcr.io/vbalexr/aa-sspti-nginx
           securityContext:
             runAsUser: 101
             allowPrivilegeEscalation: false
