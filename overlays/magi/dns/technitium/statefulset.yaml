@@ -93,6 +93,11 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /etc/dns
+            - name: logs
+              mountPath: /var/log/technitium
+      volumes:
+        - name: logs
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: data
