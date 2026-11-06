@@ -1,0 +1,77 @@
+# Prometheus, Alertmanager, Grafana, node-exporter and kube-state-metrics. All data sits on Longhorn (three replicas over
+# the 10G mesh): Prometheus needs block storage with real fsync, so no NFS.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: monitoring
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: 92.11.0
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+  values:
+    prometheus:
+      prometheusSpec:
+        retention: 30d
+        retentionSize: 40GB
+        # Pick up every ServiceMonitor/PodMonitor/rule in the cluster, not only the ones from this release.
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        ruleSelectorNilUsesHelmValues: false
+        probeSelectorNilUsesHelmValues: false
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn-retain
+              accessModes: [ReadWriteOnce]
+              resources:
+                requests:
+                  storage: 50Gi
+    alertmanager:
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn-retain
+              accessModes: [ReadWriteOnce]
+              resources:
+                requests:
+                  storage: 2Gi
+    grafana:
+      persistence:
+        enabled: true
+        type: pvc
+        storageClassName: longhorn-retain
+        size: 5Gi
+      grafana.ini:
+        server:
+          # Served at admin.vbalex.com/grafana (see httproute.yaml).
+          root_url: https://admin.vbalex.com/grafana/
+          serve_from_sub_path: true
+      additionalDataSources:
+        - name: Loki
+          type: loki
+          uid: loki
+          url: http://loki.monitoring.svc:3100
+          access: proxy
+    # Talos runs these as static pods bound to localhost or without the usual scrape endpoints; scraping them only
+    # produces down targets and false alerts.
+    kubeEtcd:
+      enabled: false
+    kubeControllerManager:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+    kubeProxy:
+      enabled: false
