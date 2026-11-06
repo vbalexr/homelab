@@ -6,11 +6,8 @@ resources:
   - certificate.yaml
   - service.yaml
   - statefulset.yaml
+  - httproute.yaml
 configMapGenerator:
-  - name: technitium-proxy
-    namespace: dns
-    files:
-      - default.conf=proxy.conf
   - name: technitium-cluster-sync
     namespace: dns
     files:

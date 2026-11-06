@@ -1,0 +1,98 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: technitium-admin-redirect
+  namespace: dns
+spec:
+  parentRefs:
+    - name: admin-gateway
+      namespace: admin
+      sectionName: http
+  hostnames:
+    - admin.vbalex.com
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+---
+# admin.vbalex.com/dns0 -> console of technitium-0. The console uses relative URLs, so the bare path redirects to the
+# trailing-slash form and the prefix is stripped before it reaches the pod.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: technitium-0-admin
+  namespace: dns
+spec:
+  parentRefs:
+    - name: admin-gateway
+      namespace: admin
+      sectionName: https
+  hostnames:
+    - admin.vbalex.com
+  rules:
+    - matches:
+        - path:
+            type: Exact
+            value: /dns0
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /dns0/
+            statusCode: 301
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /dns0/
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: technitium-node-0
+          port: 5380
+---
+# admin.vbalex.com/dns1 -> console of technitium-1. The console uses relative URLs, so the bare path redirects to the
+# trailing-slash form and the prefix is stripped before it reaches the pod.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: technitium-1-admin
+  namespace: dns
+spec:
+  parentRefs:
+    - name: admin-gateway
+      namespace: admin
+      sectionName: https
+  hostnames:
+    - admin.vbalex.com
+  rules:
+    - matches:
+        - path:
+            type: Exact
+            value: /dns1
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /dns1/
+            statusCode: 301
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /dns1/
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: technitium-node-1
+          port: 5380
