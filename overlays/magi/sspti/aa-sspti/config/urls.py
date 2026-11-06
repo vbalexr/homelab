@@ -8,7 +8,8 @@ class OverallHealthCheckView(HealthCheckView):
     checks = (
         "health_check.checks.Cache",
         "health_check.checks.Database",
-        "health_check.checks.DNS",
+        # The default hostname is the pod name, which cluster DNS does not publish; resolve the Service instead.
+        ("health_check.checks.DNS", {"hostname": "aa-sspti-web.sspti.svc.cluster.local"}),
         "health_check.checks.Storage",
     )
 
