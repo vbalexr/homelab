@@ -52,6 +52,22 @@ spec:
       protocol: TCP
       port: 53
       targetPort: dns-tcp
+    - name: dot
+      protocol: TCP
+      port: 853
+      targetPort: dot
+    - name: doq
+      protocol: UDP
+      port: 853
+      targetPort: doq
+    - name: doh
+      protocol: TCP
+      port: 443
+      targetPort: doh
+    - name: doh3
+      protocol: UDP
+      port: 443
+      targetPort: doh3
 ---
 apiVersion: v1
 kind: Service
@@ -75,6 +91,22 @@ spec:
       protocol: TCP
       port: 53
       targetPort: dns-tcp
+    - name: dot
+      protocol: TCP
+      port: 853
+      targetPort: dot
+    - name: doq
+      protocol: UDP
+      port: 853
+      targetPort: doq
+    - name: doh
+      protocol: TCP
+      port: 443
+      targetPort: doh
+    - name: doh3
+      protocol: UDP
+      port: 443
+      targetPort: doh3
 ---
 # Stable in-cluster address of one instance (pod IPs change on restart) that the cluster nodes register and reach each
 # other on: zone transfers on 53 and the cluster API on 53443. Not exposed outside the cluster.
