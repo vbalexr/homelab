@@ -72,7 +72,8 @@ spec:
                 - ALL
           volumeMounts:
             - name: state
-              mountPath: /var/lib/tailscale
+              # one level up: tailscaled creates and chmods its own state directory, which it cannot do on a mount point
+              mountPath: /var/lib
             - name: tmp
               mountPath: /tmp
           resources:
