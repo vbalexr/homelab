@@ -49,6 +49,18 @@ spec:
             - name: dns-tcp
               containerPort: 53
               protocol: TCP
+            - name: dot
+              containerPort: 853
+              protocol: TCP
+            - name: doq
+              containerPort: 853
+              protocol: UDP
+            - name: doh
+              containerPort: 443
+              protocol: TCP
+            - name: doh3
+              containerPort: 443
+              protocol: UDP
             - name: web
               containerPort: 5380
             - name: web-tls
@@ -97,6 +109,9 @@ spec:
               mountPath: /etc/dns
             - name: logs
               mountPath: /var/log/technitium
+            - name: tls
+              mountPath: /etc/dns-tls
+              readOnly: true
         # Re-registers the pod IP with the Technitium cluster after restarts (see cluster-sync.sh). Same image, so it follows
         # the image automation, and it only talks to its own pod.
         - name: cluster-sync
@@ -134,6 +149,10 @@ spec:
       volumes:
         - name: logs
           emptyDir: {}
+        - name: tls
+          secret:
+            secretName: technitium-tls
+            optional: true
         - name: scripts
           configMap:
             name: technitium-cluster-sync

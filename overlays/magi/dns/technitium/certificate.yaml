@@ -1,0 +1,21 @@
+# Served by the DNS-over-TLS, -HTTPS and -QUIC listeners of both instances (the cluster API keeps its own self-signed
+# certificate, which the nodes authenticate with DANE). The pkcs12 keystore is what Technitium loads from /etc/dns-tls.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: technitium-tls
+  namespace: dns
+spec:
+  secretName: technitium-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - dns0.vbalex.com
+    - dns1.vbalex.com
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        name: technitium-tls-password
+        key: password
