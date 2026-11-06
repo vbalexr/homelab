@@ -10,7 +10,7 @@ this repo. Hardware facts: `hardware.md`. Image definition: `schematic.yaml`. Ci
 | Item | Value |
 |---|---|
 | Talos | v1.14.4 |
-| Schematic ID | `36cd6536eaec8ba802be2d38974108359069cedba8857302f69792b26b87c010` |
+| Schematic ID | `f9355a00f82a90f7dda4b0548c181fc96a2bdc14fd5eea61542b90562ed339ae` |
 | SecureBoot ISO | `https://factory.talos.dev/image/<schematic>/v1.14.4/metal-amd64-secureboot.iso` |
 | Plain ISO | `https://factory.talos.dev/image/<schematic>/v1.14.4/metal-amd64.iso` |
 | Installer (config `install image`) | `factory.talos.dev/metal-installer-secureboot/<schematic>:v1.14.4` |
@@ -41,17 +41,21 @@ talosctl gen secrets -o generated/secrets.yaml
 talosctl gen config magi https://10.1.0.10:6443 --with-secrets generated/secrets.yaml \
   --output-types controlplane,talosconfig --output-dir generated --with-docs=false --with-examples=false
 
+# once: password of the NUT user `observer` on the NUT server 10.1.0.20 (see "UPS shutdown"), from its /etc/nut/upsd.users
+ssh root@10.1.0.20 'grep -A3 "^\[observer\]" /media/root-ro/etc/nut/upsd.users' | sed -n 's/.*password = //p' | tr -d '\n' > generated/nut-password
+sed "s/__NUT_PASSWORD__/$(cat generated/nut-password)/" config/nut-client.yaml > generated/nut-client.yaml
+
 # per node (balthasar, casper, melchior)
 talosctl machineconfig patch generated/controlplane.yaml \
-  --patch @config/common.yaml --patch @config/balthasar.yml -o generated/balthasar.yaml
+  --patch @config/common.yaml --patch @generated/nut-client.yaml --patch @config/balthasar.yml -o generated/balthasar.yaml
 talosctl validate --config generated/balthasar.yaml --mode metal
 
 talosctl machineconfig patch generated/controlplane.yaml \
-  --patch @config/common.yaml --patch @config/casper.yml -o generated/casper.yaml
+  --patch @config/common.yaml --patch @generated/nut-client.yaml --patch @config/casper.yml -o generated/casper.yaml
 talosctl validate --config generated/casper.yaml --mode metal
 
 talosctl machineconfig patch generated/controlplane.yaml \
-  --patch @config/common.yaml --patch @config/melchior.yml -o generated/melchior.yaml
+  --patch @config/common.yaml --patch @generated/nut-client.yaml --patch @config/melchior.yml -o generated/melchior.yaml
 talosctl validate --config generated/melchior.yaml --mode metal
 ```
 
@@ -136,6 +140,23 @@ talosctl -e 10.1.0.11 -n 10.1.3.13 get links
 
 # clear etcd and Kubernetes state but keep the OS install and config (then bootstrap again)
 talosctl reset --graceful=false --reboot --system-labels-to-wipe EPHEMERAL -n 10.1.0.11 -e 10.1.0.11 --wait=false
+```
+
+## UPS shutdown
+
+The NUT server (`root@10.1.0.20`, UPS `forza`, Forza FX2200) is the primary. Each node runs the `siderolabs/nut-client`
+extension (in the schematic) as a NUT secondary: `config/nut-client.yaml` -> `generated/nut-client.yaml` holds the `upsmon.conf`
+with `SHUTDOWNCMD "/sbin/poweroff"` (machined's graceful shutdown). On a forced shutdown (FSD) all three nodes power off and
+the primary shuts down after they disconnect.
+
+FSD happens only when the UPS reports low battery; there is no on-battery timer, because a shutdown before the battery is
+empty means the UPS never cuts and restores power, so the cluster would not start again.
+The nodes log in as the server's existing `observer` user (`upsmon secondary`, password = `generated/nut-password`).
+
+```sh
+talosctl -n 10.1.0.11,10.1.0.12,10.1.0.13 -e 10.1.0.10 service ext-nut-client
+talosctl -n 10.1.0.11 -e 10.1.0.11 logs ext-nut-client
+ssh root@10.1.0.20 'upsc forza@localhost ups.status; upsmon -c fsd'   # the second command powers everything off
 ```
 
 ## Tuning and gotchas

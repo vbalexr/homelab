@@ -80,7 +80,7 @@ link: bond-up
 apiVersion: v1alpha1
 kind: UnattendedInstallConfig
 installer:
-  image: factory.talos.dev/metal-installer-secureboot/36cd6536eaec8ba802be2d38974108359069cedba8857302f69792b26b87c010:v1.14.4
+  image: factory.talos.dev/metal-installer-secureboot/f9355a00f82a90f7dda4b0548c181fc96a2bdc14fd5eea61542b90562ed339ae:v1.14.4
 provisioning:
   wipe: true
 ---

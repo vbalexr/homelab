@@ -1,0 +1,13 @@
+# Applied to all three nodes as an extra patch; __NUT_PASSWORD__ is replaced when rendering into
+# generated/nut-client.yaml (the password lives only there, see README.md).
+# upsmon (siderolabs/nut-client extension) follows the NUT server 10.1.0.20 as the existing `observer` user. On a forced shutdown
+# (low battery) it runs /sbin/poweroff, which is machined's
+# graceful shutdown.
+apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: nut-client
+configFiles:
+  - content: |-
+      MONITOR forza@10.1.0.20 1 observer __NUT_PASSWORD__ secondary
+      SHUTDOWNCMD "/sbin/poweroff"
+    mountPath: /usr/local/etc/nut/upsmon.conf
