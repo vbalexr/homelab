@@ -1,16 +1,19 @@
 # Tailscale subnet router: both replicas advertise the LoadBalancer pool (network/ipam.md) to the tailnet, so tailnet
 # devices reach the resolvers, gateways and databases behind the routers; Tailscale fails over between the two. Runs in
 # userspace networking (no TUN device, no NET_ADMIN), so the pods stay within the restricted Pod Security profile.
-# Each pod registers as an ephemeral node under its own name and drops out of the tailnet when it is deleted.
+# State lives in a Secret per pod (tailscale-0, tailscale-1): a restarted pod is the same tailnet node, so the auth key
+# is only used on the first start and its expiry does not matter afterwards.
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: tailscale
   namespace: tailscale
   labels:
     app: tailscale
 spec:
+  serviceName: tailscale
   replicas: 2
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       app: tailscale
@@ -19,6 +22,7 @@ spec:
       labels:
         app: tailscale
     spec:
+      serviceAccountName: tailscale
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -37,10 +41,18 @@ spec:
         - name: tailscale
           image: docker.io/tailscale/tailscale
           env:
-            - name: TS_HOSTNAME
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: TS_HOSTNAME
+              value: $(POD_NAME)
+            - name: TS_KUBE_SECRET
+              value: $(POD_NAME)
             - name: TS_AUTHKEY
               valueFrom:
                 secretKeyRef:
@@ -50,11 +62,6 @@ spec:
               value: "true"
             - name: TS_ROUTES
               value: 10.1.1.0/24,fd7a:2201:1ac::/64
-            # empty: keep state in TS_STATE_DIR instead of the default Kubernetes Secret, which both replicas would share
-            - name: TS_KUBE_SECRET
-              value: ""
-            - name: TS_STATE_DIR
-              value: /var/lib/tailscale
             - name: TS_SOCKET
               value: /tmp/tailscaled.sock
             - name: TS_ENABLE_HEALTH_CHECK
@@ -71,8 +78,8 @@ spec:
               drop:
                 - ALL
           volumeMounts:
-            - name: state
-              # one level up: tailscaled creates and chmods its own state directory, which it cannot do on a mount point
+            - name: var-lib
+              # one level up: tailscaled creates and chmods its own directory (logs, caches), which it cannot do on a mount point
               mountPath: /var/lib
             - name: tmp
               mountPath: /tmp
@@ -95,7 +102,7 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
       volumes:
-        - name: state
+        - name: var-lib
           emptyDir: {}
         - name: tmp
           emptyDir: {}
