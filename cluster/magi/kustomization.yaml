@@ -12,4 +12,5 @@ resources:
   - ./chilu.yaml
   - ./gameservers.yaml
   - ./tunnels.yaml
+  - ./admin.yaml
   - ./dns.yaml

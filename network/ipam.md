@@ -158,6 +158,7 @@ Pinned addresses (`lbipam.cilium.io/ips` annotation on the Service):
 | 10.1.1.13, fd7a:2201:1ac::13      | mrakaki/mrakaki-gateway | 80, 443 | Gateway for the mrakaki apps                   |
 | 10.1.1.14, fd7a:2201:1ac::14      | chilu/chilu-gateway    | 80       | Gateway for chilu-bb                            |
 | 10.1.1.15, fd7a:2201:1ac::15      | gameservers/minecraft  | 25565/tcp, 19132/udp, 24454/udp | Minecraft Paper (Java), Geyser (Bedrock) and voice chat (externalTrafficPolicy Local) |
+| 10.1.1.16, fd7a:2201:1ac::16      | admin/admin-gateway    | 80, 443 | Gateway for the admin consoles (admin.vbalex.com/dns0, /dns1) |
 | 10.1.1.20, fd7a:2201:1ac::20      | database/postgres      | 5432 | PostgreSQL (externalTrafficPolicy Local)       |
 | 10.1.1.21, fd7a:2201:1ac::21      | database/mariadb       | 3306 | MariaDB (externalTrafficPolicy Local)          |
 | 10.1.1.23, fd7a:2201:1ac::23      | home/mosquitto         | 1883, 9001 | Mosquitto MQTT and WebSocket (externalTrafficPolicy Local) |

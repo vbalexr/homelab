@@ -13,12 +13,11 @@ Two instances (`technitium-0`, `technitium-1`) of `docker.io/technitium/dns-serv
 
 `externalTrafficPolicy: Local`, so each address is advertised over BGP only from the node running that pod.
 
-443 is served by the `proxy` container (nginx-unprivileged, `proxy.conf`, certificate from `technitium-tls`, reloaded every 6 h to
-pick up renewals): `https://dns0.vbalex.com/admin/` (and `dns1`) is the admin console, and everything else goes to Technitium's
-cleartext DNS-over-HTTP listener on `127.0.0.1:80` (DoH is wire format at `/dns-query`, GET and POST; the `application/dns-json`
-form redirects to the help page). Technitium's own DoH-over-TLS is disabled (`enableDnsOverHttps=false`,
-`enableDnsOverHttp=true`, `dnsReverseProxyNetworkACL=127.0.0.1,::1` on both nodes) so the proxy can own 443. The console uses
-relative URLs, which is why it works under `/admin/`. The cluster API (53443) is not exposed. Nothing listens for DoH over HTTP/3.
+443 is Technitium's own DNS-over-HTTPS (wire format at `/dns-query`, GET and POST; the `application/dns-json` form redirects
+to the help page). Nothing listens for DoH over HTTP/3. The admin consoles are not on these addresses: they are published by
+`admin-gateway` (`overlays/magi/admin`, `10.1.1.16` / `fd7a:2201:1ac::16`) as `https://admin.vbalex.com/dns0/` and
+`https://admin.vbalex.com/dns1/` (`httproute.yaml`; the console uses relative URLs, so the bare path redirects to the
+trailing-slash form and the prefix is stripped). The cluster API (53443) is not exposed.
 
 `dns0`/`dns1` resolve to those addresses in Technitium (one primary zone per name, in the cluster catalog) and as host overrides
 (A and AAAA) in the OPNsense Unbound overrides on Victim, synced to Demiurg.
@@ -70,14 +69,13 @@ Set on both nodes after the certificate exists:
 ```sh
 curl localhost:5380/api/settings/set -d token=$T -d dnsTlsCertificatePath=/etc/dns-tls/keystore.p12 \
   --data-urlencode dnsTlsCertificatePassword=$(kubectl -n dns get secret technitium-tls-password -o jsonpath='{.data.password}' | base64 -d) \
-  -d enableDnsOverTls=true -d enableDnsOverQuic=true \
-  -d enableDnsOverHttps=false -d enableDnsOverHttp=true -d dnsOverHttpPort=80 -d dnsReverseProxyNetworkACL=127.0.0.1,::1
+  -d enableDnsOverTls=true -d enableDnsOverHttps=true -d enableDnsOverQuic=true
 ```
 
 ## Overrides
 
 Mirrors the OPNsense Unbound host overrides so VLANs using these resolvers see the same split-horizon answers: one primary zone
 per name with an A record (assistant, mqtt, cameras, photos, minecraft, vault, ai, esphome, netbox `.vbalex.com`;
-`auth.suspectsquadron.co.uk`, `auth.mrakaki.com`, `buyback.mrakaki.com`) plus `dns0`/`dns1` with A and AAAA, and a conditional
+`auth.suspectsquadron.co.uk`, `auth.mrakaki.com`, `buyback.mrakaki.com`) plus `dns0`/`dns1` and `admin` (the gateway address) with A and AAAA, and a conditional
 forwarder zone `juahu.com` to the router (`10.1.0.1`) for the DHCP hostnames. A zone per name overrides only that name; the
 rest of the parent domain still resolves publicly.

@@ -1,0 +1,37 @@
+# Admin consoles of the cluster services under one name (admin.vbalex.com/<service>). The Cilium controller creates the
+# LoadBalancer Service, pinned to a fixed pool address that is advertised to the routers over BGP, so the firewall can limit who
+# reaches the consoles. Routes attach from any namespace labelled admin-portal=true and live next to the service they expose.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: admin-gateway
+  namespace: admin
+spec:
+  gatewayClassName: cilium
+  infrastructure:
+    annotations:
+      lbipam.cilium.io/ips: "10.1.1.16,fd7a:2201:1ac::16"
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              admin-portal: "true"
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: admin-gateway-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              admin-portal: "true"
