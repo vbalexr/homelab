@@ -55,9 +55,6 @@ spec:
             - name: doq
               containerPort: 853
               protocol: UDP
-            - name: doh
-              containerPort: 443
-              protocol: TCP
             - name: web
               containerPort: 5380
             - name: web-tls
@@ -109,6 +106,41 @@ spec:
             - name: tls
               mountPath: /etc/dns-tls
               readOnly: true
+        # TLS front on 443 for DNS-over-HTTPS and the admin console (see proxy.conf). The reload picks up renewed certificates.
+        - name: proxy
+          image: docker.io/nginxinc/nginx-unprivileged:1.31.7-alpine
+          command:
+            - /bin/sh
+            - -c
+            - '(while sleep 21600; do nginx -s reload; done) & exec nginx -g "daemon off;"'
+          ports:
+            - name: doh
+              containerPort: 443
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          livenessProbe:
+            tcpSocket:
+              port: doh
+            periodSeconds: 20
+          volumeMounts:
+            - name: tls
+              mountPath: /etc/dns-tls
+              readOnly: true
+            - name: proxy-conf
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+            - name: proxy-tmp
+              mountPath: /tmp
         # Re-registers the pod IP with the Technitium cluster after restarts (see cluster-sync.sh). Same image, so it follows
         # the image automation, and it only talks to its own pod.
         - name: cluster-sync
@@ -150,6 +182,11 @@ spec:
           secret:
             secretName: technitium-tls
             optional: true
+        - name: proxy-conf
+          configMap:
+            name: technitium-proxy
+        - name: proxy-tmp
+          emptyDir: {}
         - name: scripts
           configMap:
             name: technitium-cluster-sync
