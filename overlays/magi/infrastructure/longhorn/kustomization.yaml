@@ -5,4 +5,5 @@ resources:
   - helmrepository.yaml
   - helmrelease.yaml
   - storageclass-retain.yaml
+  - backuptarget.yaml
   - recurringjob-backup.yaml
