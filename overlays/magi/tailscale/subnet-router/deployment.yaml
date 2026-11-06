@@ -49,6 +49,9 @@ spec:
               value: "true"
             - name: TS_ROUTES
               value: 10.1.1.0/24,fd7a:2201:1ac::/64
+            # empty: keep state in TS_STATE_DIR instead of the default Kubernetes Secret, which both replicas would share
+            - name: TS_KUBE_SECRET
+              value: ""
             - name: TS_STATE_DIR
               value: /var/lib/tailscale
             - name: TS_SOCKET
