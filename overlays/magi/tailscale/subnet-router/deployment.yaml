@@ -1,0 +1,96 @@
+# Tailscale subnet router: both replicas advertise the LoadBalancer pool (network/ipam.md) to the tailnet, so tailnet
+# devices reach the resolvers, gateways and databases behind the routers; Tailscale fails over between the two. Runs in
+# userspace networking (no TUN device, no NET_ADMIN), so the pods stay within the restricted Pod Security profile.
+# Each pod registers as an ephemeral node under its own name and drops out of the tailnet when it is deleted.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tailscale
+  namespace: tailscale
+  labels:
+    app: tailscale
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tailscale
+  template:
+    metadata:
+      labels:
+        app: tailscale
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: tailscale
+      containers:
+        - name: tailscale
+          image: docker.io/tailscale/tailscale
+          env:
+            - name: TS_HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: tailscale-auth
+                  key: authkey
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_ROUTES
+              value: 10.1.1.0/24,fd7a:2201:1ac::/64
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_SOCKET
+              value: /tmp/tailscaled.sock
+            - name: TS_ENABLE_HEALTH_CHECK
+              value: "true"
+            - name: TS_LOCAL_ADDR_PORT
+              value: 0.0.0.0:9002
+          ports:
+            - name: health
+              containerPort: 9002
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/tailscale
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: state
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
