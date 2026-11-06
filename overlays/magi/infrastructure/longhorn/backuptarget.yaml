@@ -1,0 +1,11 @@
+# Backups go to the NAS; the export must allow the node uplink addresses 10.1.0.11-13. The chart's backupTarget default
+# only seeds the target on first install, so the default BackupTarget is managed here.
+apiVersion: longhorn.io/v1beta2
+kind: BackupTarget
+metadata:
+  name: default
+  namespace: longhorn-system
+spec:
+  backupTargetURL: nfs://10.1.0.15:/mnt/Vault/backups
+  credentialSecret: ""
+  pollInterval: 5m0s

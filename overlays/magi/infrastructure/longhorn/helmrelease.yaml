@@ -20,8 +20,6 @@ spec:
       # The longhorn UserVolume on the 1 TB NVMe of each node (cluster/magi/talos/config).
       defaultDataPath: /var/mnt/longhorn
       defaultReplicaCount: 3
-      # Backups go to the NAS; the export must allow the node uplink addresses 10.1.0.11-13.
-      backupTarget: nfs://10.1.0.15:/mnt/Vault/backups
     persistence:
       defaultClass: true
       defaultClassReplicaCount: 3
