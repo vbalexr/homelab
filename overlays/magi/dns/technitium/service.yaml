@@ -64,10 +64,6 @@ spec:
       protocol: TCP
       port: 443
       targetPort: doh
-    - name: doh3
-      protocol: UDP
-      port: 443
-      targetPort: doh3
 ---
 apiVersion: v1
 kind: Service
@@ -103,10 +99,6 @@ spec:
       protocol: TCP
       port: 443
       targetPort: doh
-    - name: doh3
-      protocol: UDP
-      port: 443
-      targetPort: doh3
 ---
 # Stable in-cluster address of one instance (pod IPs change on restart) that the cluster nodes register and reach each
 # other on: zone transfers on 53 and the cluster API on 53443. Not exposed outside the cluster.

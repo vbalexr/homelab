@@ -58,9 +58,6 @@ spec:
             - name: doh
               containerPort: 443
               protocol: TCP
-            - name: doh3
-              containerPort: 443
-              protocol: UDP
             - name: web
               containerPort: 5380
             - name: web-tls
