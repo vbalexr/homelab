@@ -97,9 +97,46 @@ spec:
               mountPath: /etc/dns
             - name: logs
               mountPath: /var/log/technitium
+        # Re-registers the pod IP with the Technitium cluster after restarts (see cluster-sync.sh). Same image, so it follows
+        # the image automation, and it only talks to its own pod.
+        - name: cluster-sync
+          image: docker.io/technitium/dns-server
+          command: [/bin/bash, /scripts/cluster-sync.sh]
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: DNS_SERVER_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: technitium-credentials
+                  key: DNS_SERVER_ADMIN_PASSWORD
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
       volumes:
         - name: logs
           emptyDir: {}
+        - name: scripts
+          configMap:
+            name: technitium-cluster-sync
   volumeClaimTemplates:
     - metadata:
         name: data

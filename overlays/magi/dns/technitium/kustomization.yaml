@@ -4,6 +4,11 @@ resources:
   - secret.yaml
   - service.yaml
   - statefulset.yaml
+configMapGenerator:
+  - name: technitium-cluster-sync
+    namespace: dns
+    files:
+      - cluster-sync.sh
 images:
   - name: docker.io/technitium/dns-server
     newTag: 15.6.2 # {"$imagepolicy":"flux-system:technitium:tag"}
