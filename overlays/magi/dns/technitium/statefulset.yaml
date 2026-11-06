@@ -51,13 +51,15 @@ spec:
               protocol: TCP
             - name: web
               containerPort: 5380
+            - name: web-tls
+              containerPort: 53443
           env:
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
             - name: DNS_SERVER_DOMAIN
-              value: $(POD_NAME).technitium-headless.dns.svc.cluster.local
+              value: $(POD_NAME).dns.vbalex.com
             - name: DNS_SERVER_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
