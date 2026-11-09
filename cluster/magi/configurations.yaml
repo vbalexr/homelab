@@ -17,5 +17,10 @@ spec:
     provider: sops
     secretRef:
       name: sops-age
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: acme-email
+        optional: true
   dependsOn:
     - name: infrastructure

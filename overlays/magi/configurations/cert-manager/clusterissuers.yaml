@@ -1,3 +1,5 @@
+# The ACME contact address comes from the SOPS secret `acme-email` (flux-system, key ACME_EMAIL) through Flux postBuild substitution;
+# without the secret it is empty, which Let's Encrypt accepts.
 # DNS-01 through Cloudflare, the method Caddy used. Staging first when testing a new hostname (no rate limits).
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -6,7 +8,7 @@ metadata:
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: 9837719+vbalexr@users.noreply.github.com
+    email: ${ACME_EMAIL:=}
     privateKeySecretRef:
       name: letsencrypt-staging-account
     solvers:
@@ -23,7 +25,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: 9837719+vbalexr@users.noreply.github.com
+    email: ${ACME_EMAIL:=}
     privateKeySecretRef:
       name: letsencrypt-prod-account
     solvers:
