@@ -4,3 +4,12 @@ resources:
   - pvc.yaml
   - statefulset.yaml
   - service.yaml
+# Player guide and client mod pack served by the "guide" sidecar. No name hash: the mounted volume picks up edits without restarting the server.
+configMapGenerator:
+  - name: minecraft-guide
+    namespace: gameservers
+    files:
+      - guide/index.html
+      - guide/VaCe-Server-26.3.mrpack
+    options:
+      disableNameSuffixHash: true

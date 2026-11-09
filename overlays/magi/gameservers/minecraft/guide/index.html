@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VaCe Server</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --text: #1d2321; --muted: #5b6662; --line: #dedbd2;
+    --accent: #3f7d4e; --accent-soft: #e4efe6; --code: #eeece6;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141816; --card: #1c211f; --text: #e6ebe8; --muted: #9aa6a1; --line: #2e3532;
+      --accent: #7cc48e; --accent-soft: #1f3326; --code: #262d2a;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 2.5rem 1rem 4rem;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+  h1 { font-size: 2rem; margin: 0 0 .25rem; letter-spacing: -.01em; }
+  h2 { font-size: 1.25rem; margin: 2.5rem 0 .75rem; }
+  h3 { font-size: 1.05rem; margin: 1.5rem 0 .5rem; }
+  p, li { color: var(--text); }
+  .lead { color: var(--muted); margin: 0 0 2rem; }
+  a { color: var(--accent); }
+  code {
+    font: .92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--code); padding: .1em .35em; border-radius: 4px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.1rem; }
+  .card .label { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .card .value { font: 600 1.1rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top: .2rem; word-break: break-all; }
+  .note { background: var(--accent-soft); border-radius: 10px; padding: .8rem 1rem; margin: 1rem 0; }
+  ol, ul { padding-left: 1.3rem; }
+  li { margin: .3rem 0; }
+  .mods { width: 100%; border-collapse: collapse; margin: .5rem 0; }
+  .mods th, .mods td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .mods th { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+  .tabs { display: flex; flex-wrap: wrap; gap: .25rem; border-bottom: 1px solid var(--line); margin-top: 1rem; }
+  .tabs button {
+    font: inherit; font-size: .95rem; color: var(--muted); background: none; border: 0; cursor: pointer;
+    padding: .6rem .9rem; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .panel { padding-top: .5rem; }
+  .button {
+    display: inline-block; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600;
+    padding: .6rem 1rem; border-radius: 8px;
+  }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>VaCe Server</h1>
+  <p class="lead">Survival in peaceful mode on Paper 26.3. Java and Bedrock players can join, and Java players get proximity voice chat.</p>
+
+  <div class="grid">
+    <div class="card"><div class="label">Address</div><div class="value">minecraft.vbalex.com</div></div>
+    <div class="card"><div class="label">Java port</div><div class="value">25565</div></div>
+    <div class="card"><div class="label">Bedrock port</div><div class="value">19132</div></div>
+    <div class="card"><div class="label">Game version</div><div class="value">Java 26.3</div></div>
+  </div>
+
+  <h2>Join from Java Edition</h2>
+  <p>Vanilla Minecraft 26.3 can join without any mods. For better FPS and voice chat, use the mod setup below.</p>
+  <ol>
+    <li>Open Minecraft and go to <strong>Multiplayer → Add Server</strong>.</li>
+    <li>Server address: <code>minecraft.vbalex.com</code> (25565 is the default port, so you don't need to type it).</li>
+    <li>Click <strong>Done</strong>, then <strong>Join Server</strong>.</li>
+  </ol>
+
+  <h2>Recommended mods (performance and voice chat)</h2>
+  <p>These are client-side <a href="https://fabricmc.net/">Fabric</a> mods. They raise FPS, cut memory use and add voice chat.
+     Choose one of the three ways to install them. The server pack is the quickest.</p>
+
+  <div class="tabs" role="tablist" aria-label="Installation method">
+    <button role="tab" id="tab-pack" aria-controls="panel-pack" aria-selected="true">Server pack</button>
+    <button role="tab" id="tab-app" aria-controls="panel-app" aria-selected="false" tabindex="-1">Modrinth App, by hand</button>
+    <button role="tab" id="tab-manual" aria-controls="panel-manual" aria-selected="false" tabindex="-1">Manual install</button>
+  </div>
+
+  <section class="panel" role="tabpanel" id="panel-pack" aria-labelledby="tab-pack">
+    <p>One file with every mod already chosen, and the server already in your multiplayer list.</p>
+    <p><a class="button" href="VaCe-Server-26.3.mrpack" download>Download VaCe-Server-26.3.mrpack</a></p>
+    <h3>What's in the pack</h3>
+    <p>Minecraft <strong>26.3</strong> with Fabric Loader <strong>0.20.1</strong>, plus:</p>
+    <div class="table-wrap">
+    <table class="mods">
+      <thead><tr><th>Mod</th><th>Version</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://modrinth.com/mod/fabric-api">Fabric API</a></td><td>0.165.2</td><td>Required by most Fabric mods</td></tr>
+        <tr><td><a href="https://modrinth.com/mod/sodium">Sodium</a></td><td>0.9.3 beta 4</td><td>Much faster rendering and higher FPS</td></tr>
+        <tr><td><a href="https://modrinth.com/mod/lithium">Lithium</a></td><td>0.26.3</td><td>Faster game logic</td></tr>
+        <tr><td><a href="https://modrinth.com/mod/ferrite-core">FerriteCore</a></td><td>9.0.0</td><td>Lower memory use</td></tr>
+        <tr><td><a href="https://modrinth.com/mod/entityculling">EntityCulling</a></td><td>1.11.3</td><td>Skips drawing mobs and block entities you can't see</td></tr>
+        <tr><td><a href="https://modrinth.com/mod/immediatelyfast">ImmediatelyFast</a></td><td>1.17.1</td><td>Faster drawing of text, HUD and maps</td></tr>
+        <tr><td><a href="https://modrinth.com/plugin/simple-voice-chat">Simple Voice Chat</a></td><td>2.6.27</td><td>Proximity voice chat (matches the server)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>It also adds <strong>VaCe Server</strong> (<code>minecraft.vbalex.com</code>) to your multiplayer list.</p>
+    <h3>How to install it</h3>
+    <ol>
+      <li>Install the <a href="https://modrinth.com/app">Modrinth App</a> and sign in with your Microsoft account.</li>
+      <li>Download the pack with the button above.</li>
+      <li>In the Modrinth App, click <strong>+</strong> (Create instance), then <strong>Import from file</strong>, and pick the
+          <code>.mrpack</code> file. You can also drag the file onto the app window.</li>
+      <li>Wait for the mods to download, click <strong>Play</strong>, then go to <strong>Multiplayer</strong>. The
+          <strong>VaCe Server</strong> is already on your list.</li>
+    </ol>
+    <p>Prism Launcher can also import the pack: <strong>Add Instance → Import</strong> and select the file.</p>
+  </section>
+
+  <section class="panel" role="tabpanel" id="panel-app" aria-labelledby="tab-app" hidden>
+    <p>Pick the mods yourself in the Modrinth App. It downloads each one and keeps it up to date.</p>
+    <ol>
+      <li>Install the <a href="https://modrinth.com/app">Modrinth App</a> and sign in with your Microsoft account.</li>
+      <li>Click <strong>+</strong> (Create instance). Choose loader <strong>Fabric</strong> and game version <strong>26.3</strong>.</li>
+      <li>Open the instance, go to <strong>Content → Add content</strong>, and install each mod in the table below.
+          Click the mod's name in the app to install it.</li>
+      <li>Click <strong>Play</strong> and add the server: <strong>Multiplayer → Add Server</strong>, address
+          <code>minecraft.vbalex.com</code>.</li>
+    </ol>
+    <p>If you already like a modpack, such as <a href="https://modrinth.com/modpack/fabulously-optimized">Fabulously Optimized</a>,
+       you can install it instead and just add <strong>Simple Voice Chat</strong> to it.</p>
+    <div class="table-wrap">
+  <table class="mods">
+    <thead><tr><th>Mod</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://modrinth.com/mod/fabric-api">Fabric API</a></td><td>Required by most Fabric mods</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/sodium">Sodium</a></td><td>Much faster rendering and higher FPS</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/lithium">Lithium</a></td><td>Faster game logic</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/ferrite-core">FerriteCore</a></td><td>Lower memory use</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/entityculling">EntityCulling</a></td><td>Skips drawing mobs and block entities you can't see</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/immediatelyfast">ImmediatelyFast</a></td><td>Faster drawing of text, HUD and maps</td></tr>
+      <tr><td><a href="https://modrinth.com/plugin/simple-voice-chat">Simple Voice Chat</a></td><td>Proximity voice chat (the server has it installed)</td></tr>
+    </tbody>
+  </table>
+  </div>
+    <p>Optional: <a href="https://modrinth.com/mod/iris">Iris</a> adds shader support on top of Sodium.</p>
+  </section>
+
+  <section class="panel" role="tabpanel" id="panel-manual" aria-labelledby="tab-manual" hidden>
+    <p>Use the official Minecraft Launcher and copy the mod files in yourself.</p>
+    <ol>
+      <li>Run the official launcher once with version <strong>26.3</strong>, then close it.</li>
+      <li>Download the <a href="https://fabricmc.net/use/installer/">Fabric installer</a>, run it, choose
+          <strong>Client</strong> and Minecraft version <strong>26.3</strong>, and click <strong>Install</strong>.</li>
+      <li>For each mod in the table below, open its page, go to <strong>Versions</strong>, filter by
+          <strong>Fabric</strong> and <strong>26.3</strong>, and download the <code>.jar</code> file.</li>
+      <li>Put all the <code>.jar</code> files into your <code>mods</code> folder (create it if it doesn't exist):
+        <ul>
+          <li>Windows: <code>%appdata%\.minecraft\mods</code></li>
+          <li>macOS: <code>~/Library/Application Support/minecraft/mods</code></li>
+          <li>Linux: <code>~/.minecraft/mods</code></li>
+        </ul>
+      </li>
+      <li>In the launcher, pick the <strong>fabric-loader-26.3</strong> profile, click <strong>Play</strong>, and add the
+          server: <strong>Multiplayer → Add Server</strong>, address <code>minecraft.vbalex.com</code>.</li>
+    </ol>
+    <div class="table-wrap">
+  <table class="mods">
+    <thead><tr><th>Mod</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://modrinth.com/mod/fabric-api">Fabric API</a></td><td>Required by most Fabric mods</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/sodium">Sodium</a></td><td>Much faster rendering and higher FPS</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/lithium">Lithium</a></td><td>Faster game logic</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/ferrite-core">FerriteCore</a></td><td>Lower memory use</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/entityculling">EntityCulling</a></td><td>Skips drawing mobs and block entities you can't see</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/immediatelyfast">ImmediatelyFast</a></td><td>Faster drawing of text, HUD and maps</td></tr>
+      <tr><td><a href="https://modrinth.com/plugin/simple-voice-chat">Simple Voice Chat</a></td><td>Proximity voice chat (the server has it installed)</td></tr>
+    </tbody>
+  </table>
+  </div>
+    <p>Optional: <a href="https://modrinth.com/mod/iris">Iris</a> adds shader support on top of Sodium.</p>
+  </section>
+
+  <h3>Using voice chat</h3>
+  <ul>
+    <li>Press <code>V</code> in game to open the voice chat menu, where you pick your microphone and push-to-talk or voice activation.</li>
+    <li>The default push-to-talk key is <code>Caps Lock</code>. You can change it under <strong>Options → Controls</strong>.</li>
+    <li>Players hear you only when they are close to you in the game. In the same menu you can create groups for talking at any distance.</li>
+    <li>If the menu says voice chat is not connected, check that your firewall allows UDP traffic to port <code>24454</code>.</li>
+  </ul>
+
+  <h2>Join from Bedrock Edition (phone, console, Windows)</h2>
+  <ol>
+    <li>Go to <strong>Play → Servers → Add Server</strong>.</li>
+    <li>Server address: <code>minecraft.vbalex.com</code>, port: <code>19132</code>.</li>
+    <li>Save and join. Your name in the game will start with a dot, like <code>.YourName</code>.</li>
+  </ol>
+  <div class="note">Voice chat and Java mods don't work on Bedrock. Everything else, including building, chat and survival, works the same.</div>
+
+  <h2>Server rules and info</h2>
+  <ul>
+    <li>Survival in peaceful mode: no hostile mobs, and your health and hunger refill.</li>
+    <li>Admin: <strong>MrAkaki</strong>. Ask in chat if you need help.</li>
+  </ul>
+
+  <footer>VaCe Server · Paper 26.3 with Geyser, Floodgate and Simple Voice Chat</footer>
+</main>
+<script>
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  function select(tab) {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on);
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { const n = tabs[(i + d + tabs.length) % tabs.length]; select(n); n.focus(); }
+    });
+  });
+</script>
+</body>
+</html>
