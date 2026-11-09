@@ -1,7 +1,7 @@
 # MAGI — Talos native BGP + Cilium: findings and where they came from
 
 Researched **2026-10-23**, revised **2026-10-24** for the scoped design. This file records **what was established and which source established it**, so
-the design decisions in [`network/talos-bgp.md`](../../network/talos-bgp.md) can be re-checked or
+the design decisions in [`network/README.md`](../../network/README.md) can be re-checked or
 challenged. Design YAML lives there; this file is the evidence log.
 
 Target topology: 3 MAGI nodes joined by a **direct DAC mesh** with Cilium in **native routing** mode and
@@ -95,7 +95,7 @@ The mesh has no router in its path, so path selection is automatic:
 | A peer's prefixes arrive directly with a 1-hop AS-path and via the third node with 2 hops; the direct DAC path wins while up | #10 (AS-path length dominates) |
 | A dead next-hop is **not** installed, so the kernel holds no stale pod route | #7 (`learnedRoutes()` skips invalid/unspecified next-hops) |
 | With the direct link down, the pair reaches each other **through the third node** only if that node re-advertises what it learned | #12 — **inferred, not yet proven**; requires distinct ASNs (#24) |
-| There are no ties to resolve: no talks-to-router path exists in the mesh instance, so the lack of prepend/local-pref (#12, `BuildPeer()`) does not matter | #10, design in `network/talos-bgp.md` |
+| There are no ties to resolve: no talks-to-router path exists in the mesh instance, so the lack of prepend/local-pref (#12, `BuildPeer()`) does not matter | #10, design in `network/README.md` |
 | A node never hairpins through a peer to reach a prefix it hosts itself: local > learned, and Talos never installs its own prefixes | #10, #7 |
 | Pod CIDRs reach the mesh only via Cilium → VRF `workload` instance → `importRoutes` (Cilium neither installs received routes nor can Talos originate a non-link prefix, unless #4 holds) | #28, #29, #19, #4 |
 | LB IPs reach Victim/Demiurg via Cilium's BGP Control Plane, whose advertisement is selected per peer; routers are filtered on their side because Talos/Cilium offer no inbound policy | #28, #40 |
@@ -126,7 +126,7 @@ The mesh has no router in its path, so path selection is automatic:
 | Health-aware advertisement | #42: nothing withdraws a node's advertisement when a service on it fails; only link, session or node loss does. |
 | `ipam.mode: cluster-pool` vs the Talos guide's `kubernetes` prerequisite | Guide mandates `kubernetes`; chart default is `cluster-pool` (#31). Compatibility of cluster-pool with Talos 1.14 was not verified. |
 | Cilium version to pair with Talos 1.14 | Sidero's guide renders 1.18.0; Cilium's current release is 1.20.4; Talos 1.14 supports Kubernetes 1.33–1.37. No compatibility matrix was found. |
-| `network/diagram.md` accuracy | A snapshot of NetBox, which is the source of truth. The switch port map (routers on `ether1`/`ether2`, WAN on `ether3`, Mausoleum on `ether4`, MAGI nodes on `ether5`–`ether7`) comes from the live Aura/Mare config and from NetBox, where the ports are named `portN`. |
+| Network description accuracy | A snapshot of NetBox, which is the source of truth. The switch port map (routers on `ether1`/`ether2`, WAN on `ether3`, Mausoleum on `ether4`, MAGI nodes on `ether5`–`ether7`) comes from the live Aura/Mare config and from NetBox, where the ports are named `portN`. |
 
 ---
 
@@ -188,5 +188,4 @@ The mesh has no router in its path, so path selection is automatic:
 
 ## 7. Related notes in this repo
 
-- [`network/talos-bgp.md`](../../network/talos-bgp.md) — the design write-up (two BGP planes, addressing/ASN plan, per-node Talos config, Cilium resources, router filter spec, failure matrix, validation plan).
-- [`network/diagram.md`](../../network/diagram.md) — NetBox snapshot.
+- [`network/README.md`](../../network/README.md) — the high-level network and BGP design.

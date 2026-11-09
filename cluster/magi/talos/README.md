@@ -2,7 +2,7 @@
 
 Three nodes (Balthasar, Casper, Melchior), all control plane and worker, full HA, rebuilt from the files in
 this repo. Hardware facts: `hardware.md`. Image definition: `schematic.yaml`. Cilium BGP resources:
-`../../../overlays/magi/infrastructure/cilium/`. Addressing: NetBox. Design and evidence: `../../../network/talos-bgp.md`,
+`../../../overlays/magi/infrastructure/cilium/`. Addressing: NetBox. Design and evidence: `../../../network/README.md`,
 `../README.md`.
 
 ## Images
