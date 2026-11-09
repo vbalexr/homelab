@@ -26,7 +26,7 @@ Every layer uses `decryption.provider: sops` with the `sops-age` secret in `flux
 Tools: `sudo pacman -S sops age pre-commit`, and the `flux` CLI.
 
 ```sh
-# 1. age key for the cluster. Back it up to /mnt/ShareDrive/Secrets/; it is git-ignored and unrecoverable.
+# 1. age key for the cluster. Keep an offline backup; it is git-ignored and unrecoverable.
 age-keygen -o cluster/magi/.sops.age && chmod 600 cluster/magi/.sops.age
 grep '^# public key:' cluster/magi/.sops.age        # put this value in .sops.yaml as the `age:` recipient
 

@@ -1,15 +1,14 @@
 # immich
 
 Deployments `immich-server` (`ghcr.io/immich-app/immich-server:v3.1.0`, port 2283) and `immich-machine-learning` (same tag, 3003) in
-namespace `shared`, both running as 1000:100. Public name `photos.vbalex.com` through `shared-gateway` (10.1.1.10); the route has no
-request timeout so large uploads are not cut.
+namespace `shared`, both running as 1000:100. Published through `shared-gateway`; the route has no request timeout so large uploads are not cut.
 
-- **Library:** the NAS export `10.1.0.15:/mnt/Vault/immich` (about 800 GB) is mounted as PV/PVC `immich-library` (NFS 4.1, Retain) on `/data`. It is not
-  copied into the cluster. The export must allow the node uplink addresses 10.1.0.11-13.
+- **Library:** the NAS NFS export is mounted as PV/PVC `immich-library` (NFS 4.1, Retain) on `/data`. It is not
+  copied into the cluster. The export must allow the node uplink addresses.
 - **Models:** PVC `immich-ml-cache` (5Gi, `longhorn-retain`); an empty cache is refilled by the first smart-search job.
 - **Database:** `shared_immich` (role `shared_immich`, extensions `vector` and `vchord`) on `postgres.database.svc.cluster.local`.
 - **Queue:** Valkey `valkey.database.svc.cluster.local` db 0. Passwords are in the SOPS secret `immich-env` (`DB_PASSWORD`, `REDIS_PASSWORD`).
-- Never run the cluster copy and a podman Immich against the same library or database.
+- Never run two Immich instances against the same library or database.
 
 ## Restore a database dump
 

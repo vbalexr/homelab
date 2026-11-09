@@ -1,6 +1,6 @@
 # sspti
 
-AllianceAuth for `auth.suspectsquadron.co.uk`, served by `sspti-gateway` (`10.1.1.12` / `fd7a:2201:1ac::12`, certificate `sspti-gateway-tls`).
+AllianceAuth, served by `sspti-gateway` (certificate `sspti-gateway-tls`).
 
 - **Image:** `ghcr.io/vbalexr/aa-sspti` (pinned by digest), built by the `Build aa-sspti Images` workflow from `containers/aa-sspti`.
   `conf/constraints.txt` is the `pip freeze` of the image and pins every Python dependency. The package is private: pods use the `ghcr-pull` Secret.

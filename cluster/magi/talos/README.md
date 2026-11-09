@@ -2,8 +2,7 @@
 
 Three nodes (Balthasar, Casper, Melchior), all control plane and worker, full HA, rebuilt from the files in
 this repo. Hardware facts: `hardware.md`. Image definition: `schematic.yaml`. Cilium BGP resources:
-`../../../overlays/magi/infrastructure/cilium/`. Addressing: NetBox. Design and evidence: `../../../network/README.md`,
-`../README.md`.
+`../../../overlays/magi/infrastructure/cilium/`. Addressing: NetBox. Design: `../../../network/README.md`.
 
 ## Images
 
@@ -41,8 +40,7 @@ talosctl gen secrets -o generated/secrets.yaml
 talosctl gen config magi https://10.1.0.10:6443 --with-secrets generated/secrets.yaml \
   --output-types controlplane,talosconfig --output-dir generated --with-docs=false --with-examples=false
 
-# once: password of the NUT user `observer` on the NUT server 10.1.0.20 (see "UPS shutdown"), from its /etc/nut/upsd.users
-ssh root@10.1.0.20 'grep -A3 "^\[observer\]" /media/root-ro/etc/nut/upsd.users' | sed -n 's/.*password = //p' | tr -d '\n' > generated/nut-password
+# once: password of the NUT user `observer` on the NUT server (see "UPS shutdown"), taken from its upsd.users, into generated/nut-password
 sed "s/__NUT_PASSWORD__/$(cat generated/nut-password)/" config/nut-client.yaml > generated/nut-client.yaml
 
 # per node (balthasar, casper, melchior)
@@ -144,7 +142,7 @@ talosctl reset --graceful=false --reboot --system-labels-to-wipe EPHEMERAL -n 10
 
 ## UPS shutdown
 
-The NUT server (`root@10.1.0.20`, UPS `forza`, Forza FX2200) is the primary. Each node runs the `siderolabs/nut-client`
+The NUT server is the primary. Each node runs the `siderolabs/nut-client`
 extension (in the schematic) as a NUT secondary: `config/nut-client.yaml` -> `generated/nut-client.yaml` holds the `upsmon.conf`
 with `SHUTDOWNCMD "/sbin/poweroff"` (machined's graceful shutdown). On a forced shutdown (FSD) all three nodes power off and
 the primary shuts down after they disconnect.
@@ -156,7 +154,7 @@ The nodes log in as the server's existing `observer` user (`upsmon secondary`, p
 ```sh
 talosctl -n 10.1.0.11,10.1.0.12,10.1.0.13 -e 10.1.0.10 service ext-nut-client
 talosctl -n 10.1.0.11 -e 10.1.0.11 logs ext-nut-client
-ssh root@10.1.0.20 'upsc forza@localhost ups.status; upsmon -c fsd'   # the second command powers everything off
+# on the NUT server: upsc <ups>@localhost ups.status; upsmon -c fsd   (the second command powers everything off)
 ```
 
 ## Tuning and gotchas
