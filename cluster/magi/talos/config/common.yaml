@@ -30,9 +30,13 @@ $patch: delete
 ---
 apiVersion: v1alpha1
 kind: ResolverConfig
+# The CARP VIP first, then both firewalls' own addresses: a firewall whose userland hangs while it still holds the VIP
+# (CARP keeps seeing its advertisements) no longer takes the cluster's external DNS down.
 nameservers:
   - address: 10.1.0.1
   - address: fd7a:2201:1ab::1
+  - address: 10.1.0.2
+  - address: 10.1.0.3
 ---
 apiVersion: v1alpha1
 kind: TimeSyncConfig
