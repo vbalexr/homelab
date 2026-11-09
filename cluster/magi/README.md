@@ -126,7 +126,7 @@ The mesh has no router in its path, so path selection is automatic:
 | Health-aware advertisement | #42: nothing withdraws a node's advertisement when a service on it fails; only link, session or node loss does. |
 | `ipam.mode: cluster-pool` vs the Talos guide's `kubernetes` prerequisite | Guide mandates `kubernetes`; chart default is `cluster-pool` (#31). Compatibility of cluster-pool with Talos 1.14 was not verified. |
 | Cilium version to pair with Talos 1.14 | Sidero's guide renders 1.18.0; Cilium's current release is 1.20.4; Talos 1.14 supports Kubernetes 1.33–1.37. No compatibility matrix was found. |
-| `network/diagram.md` / `network/ipam.md` accuracy | Both are snapshots of NetBox, which is the source of truth. The switch port map (routers on `ether1`/`ether2`, WAN on `ether3`, Mausoleum on `ether4`, MAGI nodes on `ether5`–`ether7`) comes from the live Aura/Mare config and from NetBox, where the ports are named `portN`. |
+| `network/diagram.md` accuracy | A snapshot of NetBox, which is the source of truth. The switch port map (routers on `ether1`/`ether2`, WAN on `ether3`, Mausoleum on `ether4`, MAGI nodes on `ether5`–`ether7`) comes from the live Aura/Mare config and from NetBox, where the ports are named `portN`. |
 
 ---
 
@@ -189,4 +189,4 @@ The mesh has no router in its path, so path selection is automatic:
 ## 7. Related notes in this repo
 
 - [`network/talos-bgp.md`](../../network/talos-bgp.md) — the design write-up (two BGP planes, addressing/ASN plan, per-node Talos config, Cilium resources, router filter spec, failure matrix, validation plan).
-- [`network/diagram.md`](../../network/diagram.md), [`network/ipam.md`](../../network/ipam.md) — NetBox snapshots.
+- [`network/diagram.md`](../../network/diagram.md) — NetBox snapshot.

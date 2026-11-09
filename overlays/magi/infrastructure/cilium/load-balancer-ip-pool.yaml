@@ -1,4 +1,4 @@
-# Routed only: these addresses exist as BGP host routes toward the nodes (network/ipam.md), not on any interface.
+# Routed only: these addresses exist as BGP host routes toward the nodes, not on any interface.
 apiVersion: cilium.io/v2
 kind: CiliumLoadBalancerIPPool
 metadata:

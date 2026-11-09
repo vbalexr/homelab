@@ -1,5 +1,5 @@
 # The uplink also holds a SLAAC address (from the routers' RAs) that the kernel prefers as source, but the routers only
-# accept sessions from the static addresses in network/ipam.md. Pin the source address of the router sessions per node.
+# accept sessions from the static addresses (NetBox). Pin the source address of the router sessions per node.
 apiVersion: cilium.io/v2
 kind: CiliumBGPNodeConfigOverride
 metadata:

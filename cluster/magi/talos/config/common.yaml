@@ -1,5 +1,5 @@
 # Applied to all three MAGI nodes (control plane + worker). Node-specific documents are in <node>.yml.
-# Address plan: network/ipam.md. Design: network/talos-bgp.md.
+# Design: network/talos-bgp.md.
 #
 # The base config (cluster name, endpoint, secrets) comes from `talosctl gen config`; this file is
 # the patch applied on top of it (see README.md).

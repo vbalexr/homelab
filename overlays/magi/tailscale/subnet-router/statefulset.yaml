@@ -1,4 +1,4 @@
-# Tailscale subnet router: both replicas advertise the LoadBalancer pool (network/ipam.md) to the tailnet, so tailnet
+# Tailscale subnet router: both replicas advertise the LoadBalancer pool to the tailnet, so tailnet
 # devices reach the resolvers, gateways and databases behind the routers; Tailscale fails over between the two. Runs in
 # userspace networking (no TUN device, no NET_ADMIN), so the pods stay within the restricted Pod Security profile.
 # State lives in a Secret per pod (tailscale-0, tailscale-1): a restarted pod is the same tailnet node, so the auth key
