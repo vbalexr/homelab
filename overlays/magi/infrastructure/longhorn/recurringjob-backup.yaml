@@ -1,4 +1,4 @@
-# Daily backup of every volume (the default group) to the NAS backup target, keeping a week.
+# Daily backup of every volume (the default group) to the NAS backup target, keeping 15 days of daily backups.
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -8,7 +8,7 @@ spec:
   name: daily-backup
   task: backup
   cron: "0 3 * * *"
-  retain: 7
+  retain: 15
   concurrency: 2
   groups:
     - default
