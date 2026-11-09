@@ -31,5 +31,5 @@ routers are unreachable.
 - **LoadBalancer Services** use `externalTrafficPolicy: Local` where the real client address matters, so each address is advertised
   only from the node running the pod.
 
-The deployed configuration is in `cluster/magi/talos/config/` (Talos) and `overlays/magi/infrastructure/cilium/` (Cilium), applied
+The router-side configuration needed to rebuild the peering is in [routers.md](routers.md). The deployed configuration is in `cluster/magi/talos/config/` (Talos) and `overlays/magi/infrastructure/cilium/` (Cilium), applied
 by Flux.
