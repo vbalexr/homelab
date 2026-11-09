@@ -37,11 +37,13 @@ spec:
             - name: MARIADB_ROOT_HOST
               value: "%"
           resources:
+            # Measured over 3 days: working set 8.3 to 8.55Gi (the 7G buffer pool holds most of the ~7.7Gi dataset), CPU
+            # 70m average and 360m peak. Request equals limit, so the pod is Guaranteed for memory.
             requests:
-              cpu: 250m
-              memory: 8Gi
+              cpu: 100m
+              memory: 9Gi
             limits:
-              memory: 10Gi
+              memory: 9Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

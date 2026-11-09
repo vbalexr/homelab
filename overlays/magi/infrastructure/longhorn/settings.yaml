@@ -1,0 +1,8 @@
+# Every stateful app runs one replica on an RWO volume. When a node goes down, Longhorn force-deletes the StatefulSet and
+# Deployment pods on it so they reschedule and the volumes reattach on a healthy node instead of waiting for manual action.
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: node-down-pod-deletion-policy
+  namespace: longhorn-system
+value: delete-both-statefulset-and-deployment-pod

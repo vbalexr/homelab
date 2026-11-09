@@ -20,6 +20,8 @@ spec:
       # The longhorn UserVolume on the 1 TB NVMe of each node (cluster/magi/talos/config).
       defaultDataPath: /var/mnt/longhorn
       defaultReplicaCount: 3
+      # Chart defaultSettings only apply on first install; settings.yaml keeps the running cluster in line.
+      nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
     persistence:
       defaultClass: true
       defaultClassReplicaCount: 3
