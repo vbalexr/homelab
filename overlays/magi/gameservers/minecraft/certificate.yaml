@@ -1,0 +1,13 @@
+# TLS for the player guide (nginx sidecar). DNS-01 through Cloudflare, so nothing inbound is needed.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minecraft-tls
+  namespace: gameservers
+spec:
+  secretName: minecraft-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - minecraft.vbalex.com

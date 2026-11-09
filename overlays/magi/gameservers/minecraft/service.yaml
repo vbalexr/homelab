@@ -1,4 +1,4 @@
-# Player guide (TCP 80), Java (TCP 25565), Bedrock via Geyser (UDP 19132) and Simple Voice Chat (UDP 24454).
+# Player guide (TCP 80 redirects to TCP 443), Java (TCP 25565), Bedrock via Geyser (UDP 19132) and Simple Voice Chat (UDP 24454).
 # Local policy keeps the real client address for logs, bans and the voice chat.
 apiVersion: v1
 kind: Service
@@ -18,6 +18,10 @@ spec:
       protocol: TCP
       port: 80
       targetPort: http
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: https
     - name: java
       protocol: TCP
       port: 25565

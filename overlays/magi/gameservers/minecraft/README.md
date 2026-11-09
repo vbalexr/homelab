@@ -12,7 +12,7 @@ Paper 26.3 (build 194) with Geyser, Floodgate and Simple Voice Chat, image `itzg
   The page also serves `VaCe-Server-26.3.mrpack`, a Modrinth pack (Fabric API, Sodium, Lithium, FerriteCore, EntityCulling,
   ImmediatelyFast, Simple Voice Chat, with the server in the multiplayer list). After a Minecraft version bump, set `MC_VERSION`
   and rerun `python3 build-mrpack.py` in `guide/` (also update the file name in `kustomization.yaml` and the page).
-- Service `minecraft` (LoadBalancer 10.1.1.15, fd7a:2201:1ac::15, `minecraft.vbalex.com`): TCP 80 (guide), TCP 25565 (Java),
+- Service `minecraft` (LoadBalancer 10.1.1.15, fd7a:2201:1ac::15, `minecraft.vbalex.com`): TCP 80 (redirects to HTTPS), TCP 443 (guide, certificate `minecraft-tls` from cert-manager, nginx reloads it on renewal), TCP 25565 (Java),
   UDP 19132 (Bedrock/Geyser), UDP 24454 (voice chat).
 - `externalTrafficPolicy: Local` so the server sees the real player address (logs, `banned-ips`, Geyser and the voice chat);
   with one replica only the node running the pod advertises the address over BGP.
