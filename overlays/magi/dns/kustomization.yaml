@@ -5,3 +5,4 @@ resources:
   - technitium
   - image-automation.yaml
   - image-update.yaml
+  - external-dns
