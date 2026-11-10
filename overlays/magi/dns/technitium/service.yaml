@@ -101,13 +101,15 @@ spec:
       targetPort: doh
 ---
 # Stable in-cluster address of one instance (pod IPs change on restart) that the cluster nodes register and reach each
-# other on: zone transfers on 53 and the cluster API on 53443. Not exposed outside the cluster.
+# other on: zone transfers on 53 and the cluster API on 53443. Not exposed outside the cluster. The cluster registers the
+# ClusterIP itself (see cluster-sync.sh), so it is pinned.
 apiVersion: v1
 kind: Service
 metadata:
   name: technitium-node-0
   namespace: dns
 spec:
+  clusterIP: 10.96.143.127
   selector:
     statefulset.kubernetes.io/pod-name: technitium-0
   ports:
@@ -127,13 +129,15 @@ spec:
       targetPort: web-tls
 ---
 # Stable in-cluster address of one instance (pod IPs change on restart) that the cluster nodes register and reach each
-# other on: zone transfers on 53 and the cluster API on 53443. Not exposed outside the cluster.
+# other on: zone transfers on 53 and the cluster API on 53443. Not exposed outside the cluster. The cluster registers the
+# ClusterIP itself (see cluster-sync.sh), so it is pinned.
 apiVersion: v1
 kind: Service
 metadata:
   name: technitium-node-1
   namespace: dns
 spec:
+  clusterIP: 10.102.75.133
   selector:
     statefulset.kubernetes.io/pod-name: technitium-1
   ports:

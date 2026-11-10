@@ -1,12 +1,12 @@
 # external-dns
 
 Creates the DNS records of the HTTPRoute hostnames in the `vbalex.com` and `mrakaki.com` zones of Technitium. Records point at the address of the
-Gateway the route is attached to. Only `vbalex.com` and `mrakaki.com` are managed; routes for other domains (suspectsquadron.co.uk) are ignored.
+Gateway the route is attached to. Only `vbalex.com` and `mrakaki.com` are managed; routes for other domains are ignored.
 
 ## Set up (once)
 
 1. In Technitium (primary node), for each of the `vbalex.com` and `mrakaki.com` zones: Options, Dynamic Updates, policy allow for TSIG key `external-dns`
-   on `vbalex.com` (all record types), and under Zone Transfer allow the same key (external-dns lists the zone with AXFR). Create the key under Settings, TSIG, algorithm `hmac-sha256`, and copy its secret.
+   on the zone (all record types), and under Zone Transfer allow the same key (external-dns lists the zone with AXFR). Create the key under Settings, TSIG, algorithm `hmac-sha256`, and copy its secret.
 2. Create the secret and encrypt it:
 
    ```sh

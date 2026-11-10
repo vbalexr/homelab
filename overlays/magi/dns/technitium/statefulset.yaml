@@ -109,7 +109,7 @@ spec:
             - name: tls
               mountPath: /etc/dns-tls
               readOnly: true
-        # Re-registers the pod IP with the Technitium cluster after restarts (see cluster-sync.sh). Same image, so it follows
+        # Keeps the Technitium cluster registered on the stable Service addresses of the nodes (see cluster-sync.sh). Same image, so it follows
         # the image automation, and it only talks to its own pod.
         - name: cluster-sync
           image: docker.io/technitium/dns-server
@@ -119,10 +119,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
             - name: DNS_SERVER_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:

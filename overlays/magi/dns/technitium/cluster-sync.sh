@@ -1,12 +1,17 @@
 #!/bin/bash
-# Keeps the Technitium cluster pointed at the current pod IPs. The cluster identifies peers by IP address, and pod IPs
-# change on every restart, so each pod checks the IP it is registered with against its real one and re-registers when they
-# differ. A secondary whose primary is unreachable also takes the primary's current pod IP from the headless service.
+# Keeps the Technitium cluster registered on stable addresses. The cluster identifies peers by IP address, and pod IPs
+# change on every restart, so each node is registered with the ClusterIP of its technitium-node-<n> Service instead, which
+# does not change while the Service exists. Each pod checks the IP it is registered with against that address and
+# re-registers when they differ; a secondary whose primary is not connected is pointed at the primary's Service address.
 api=http://127.0.0.1:5380
-peer_suffix=technitium-headless.dns.svc.cluster.local
+svc_suffix=dns.svc.cluster.local
 
 log() {
   printf '{"level":"%s","service":"technitium-cluster-sync","pod":"%s","msg":"%s"}\n' "$1" "$POD_NAME" "$2"
+}
+
+node_ip() {
+  getent ahostsv4 "technitium-node-$1.$svc_suffix" | awk 'NR==1{print $1}'
 }
 
 call() {
@@ -25,12 +30,15 @@ while true; do
 
   nodes=$(echo "$state" | grep -o '{"id":[^{}]*}')
 
+  node_self_ip=$(node_ip "${POD_NAME##*-}")
+  [ -z "$node_self_ip" ] && continue
+
   self_ips=$(echo "$nodes" | grep '"state":"Self"' | sed -n 's/.*"ipAddresses":\["\([^]]*\)\].*/\1/p' | tr -d '"')
-  if [ "$self_ips" != "$POD_IP" ]; then
-    if call --data-urlencode "token=$token" --data-urlencode "ipAddresses=$POD_IP" "$api/api/admin/cluster/updateIpAddress" >/dev/null; then
-      log info "registered pod IP $POD_IP (was ${self_ips:-none})"
+  if [ "$self_ips" != "$node_self_ip" ]; then
+    if call --data-urlencode "token=$token" --data-urlencode "ipAddresses=$node_self_ip" "$api/api/admin/cluster/updateIpAddress" >/dev/null; then
+      log info "registered service IP $node_self_ip (was ${self_ips:-none})"
     else
-      log error "failed to register pod IP $POD_IP"
+      log error "failed to register service IP $node_self_ip"
     fi
   fi
 
@@ -41,7 +49,7 @@ while true; do
 
   primary_url=$(echo "$primary" | sed -n 's/.*"url":"\([^"]*\)".*/\1/p')
   primary_pod=$(echo "$primary" | sed -n 's/.*"name":"\([^."]*\)\..*/\1/p')
-  primary_ip=$(getent ahostsv4 "$primary_pod.$peer_suffix" | awk 'NR==1{print $1}')
+  primary_ip=$(node_ip "${primary_pod##*-}")
   [ -z "$primary_ip" ] && continue
 
   if call --data-urlencode "token=$token" --data-urlencode "primaryNodeUrl=$primary_url" \
