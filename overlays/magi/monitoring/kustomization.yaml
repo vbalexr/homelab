@@ -6,4 +6,16 @@ resources:
   - prometheus-stack.yaml
   - loki.yaml
   - alloy.yaml
+  - routers.yaml
+  - truenas.yaml
   - httproute.yaml
+configMapGenerator:
+  # Picked up by the Grafana sidecar (label below), which watches every namespace.
+  - name: dashboard-homelab-overview
+    namespace: monitoring
+    files:
+      - homelab-overview.json=dashboards/homelab-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"

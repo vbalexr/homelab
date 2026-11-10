@@ -1,0 +1,17 @@
+# node_exporter (os-node_exporter plugin) on the two OPNsense routers, scraped on each router's own lab address, never
+# the CARP VIP, so both are monitored whichever one is master.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: routers
+  namespace: monitoring
+spec:
+  jobName: routers
+  scrapeInterval: 30s
+  staticConfigs:
+    - targets: ["10.1.0.2:9100"]
+      labels:
+        instance: victim
+    - targets: ["10.1.0.3:9100"]
+      labels:
+        instance: demiurg

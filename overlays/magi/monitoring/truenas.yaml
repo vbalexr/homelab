@@ -1,0 +1,97 @@
+# TrueNAS SCALE pushes its reporting metrics here (Credentials > Reporting > Exporters, type GRAPHITE, destination
+# 10.1.1.24:9109). The exporter turns them into Prometheus metrics on :9108. No name mapping yet: the metric names are
+# whatever TrueNAS sends, dots turned into underscores; add a mapping once the real names are visible.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: truenas-graphite-exporter
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: truenas-graphite-exporter
+  template:
+    metadata:
+      labels:
+        app: truenas-graphite-exporter
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: graphite-exporter
+          image: prom/graphite-exporter:v0.16.0
+          args:
+            - --web.listen-address=:9108
+            - --graphite.listen-address=:9109
+            - --graphite.sample-expiry=5m
+          ports:
+            - name: metrics
+              containerPort: 9108
+            - name: graphite-tcp
+              containerPort: 9109
+              protocol: TCP
+            - name: graphite-udp
+              containerPort: 9109
+              protocol: UDP
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+---
+# Fixed pool address so TrueNAS has a stable destination; advertised to the routers over BGP like the other services.
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-graphite-exporter
+  namespace: monitoring
+  labels:
+    app: truenas-graphite-exporter
+  annotations:
+    lbipam.cilium.io/ips: "10.1.1.24,fd7a:2201:1ac::24"
+spec:
+  type: LoadBalancer
+  ipFamilyPolicy: PreferDualStack
+  selector:
+    app: truenas-graphite-exporter
+  ports:
+    - name: metrics
+      port: 9108
+      targetPort: metrics
+    - name: graphite-tcp
+      protocol: TCP
+      port: 9109
+      targetPort: graphite-tcp
+    - name: graphite-udp
+      protocol: UDP
+      port: 9109
+      targetPort: graphite-udp
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: truenas-graphite-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: truenas-graphite-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s
+      # Keep the labels the exporter derives from TrueNAS rather than overwriting them with the pod's.
+      honorLabels: true
