@@ -1,15 +1,18 @@
 # Databases and other data that must survive an accidental PVC deletion: the volume is kept (PV Released) instead of
-# being deleted with the claim. Three replicas, one kept on the node that runs the pod.
+# being deleted with the claim. Two replicas (backups on the NAS cover the rest), one kept on the node that runs the pod.
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: longhorn-retain
+  annotations:
+    # numberOfReplicas is immutable on a StorageClass, so let Flux delete and recreate it (existing PVs are unaffected).
+    kustomize.toolkit.fluxcd.io/force: enabled
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
 reclaimPolicy: Retain
 volumeBindingMode: Immediate
 parameters:
-  numberOfReplicas: "3"
+  numberOfReplicas: "2"
   staleReplicaTimeout: "30"
   dataLocality: best-effort
   fsType: ext4

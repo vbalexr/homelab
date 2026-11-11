@@ -6,3 +6,11 @@ metadata:
   name: node-down-pod-deletion-policy
   namespace: longhorn-system
 value: delete-both-statefulset-and-deployment-pod
+---
+# Two replicas per volume: the NAS backups (recurring job) are the safety net beyond that. Only affects new volumes.
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: default-replica-count
+  namespace: longhorn-system
+value: '{"v1":"2","v2":"2"}'

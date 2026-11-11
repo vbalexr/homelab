@@ -19,11 +19,11 @@ spec:
     defaultSettings:
       # The longhorn UserVolume on the 1 TB NVMe of each node (cluster/magi/talos/config).
       defaultDataPath: /var/mnt/longhorn
-      defaultReplicaCount: 3
+      defaultReplicaCount: 2
       # Chart defaultSettings only apply on first install; settings.yaml keeps the running cluster in line.
       nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
     persistence:
       defaultClass: true
-      defaultClassReplicaCount: 3
+      defaultClassReplicaCount: 2
     # Storage traffic stays on the pod network: pod CIDRs are routed over the 10G DAC mesh (BGP, metric 0) with the
     # bond-up statics (metric 2000) as the 2.5G fallback, so no dedicated storage network is configured.
