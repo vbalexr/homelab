@@ -16,7 +16,6 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["create", "get", "patch", "delete"]
-  # read-only, to report why a job pod failed
   - apiGroups: [""]
     resources: ["pods", "events"]
     verbs: ["get", "list"]

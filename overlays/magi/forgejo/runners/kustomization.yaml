@@ -4,9 +4,10 @@ resources:
   - namespace.yaml
   - rbac.yaml
   - configmap.yaml
-  # - secret.yaml   # forgejo-controller-token, key "token": see README.md
+  # - secret.yaml
   - deployment.yaml
   - service.yaml
+  - networkpolicy.yaml
 images:
   - name: ghcr.io/vbalexr/forgejo-job-controller
     newTag: 20261111-2238 # {"$imagepolicy":"flux-system:forgejo-job-controller:tag"}

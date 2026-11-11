@@ -1,8 +1,4 @@
-# Forgejo 15 (LTS) from the official chart, rootless image, one replica with the Recreate strategy (the RWO volume cannot be
-# attached to two pods). Database on the cluster postgres. Web and SSH come in through the group Gateway (httproute.yaml,
-# tcproute.yaml), so both Services stay ClusterIP. The chart generates its secret keys on first start and keeps them in
-# /data/gitea/conf/app.ini on the volume; SECRET_KEY and the JWT secrets are also pinned from a SOPS secret so a restore
-# onto a fresh volume can still read what the database has encrypted.
+# Forgejo from the official chart. Web and SSH come in through the group Gateway.
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:

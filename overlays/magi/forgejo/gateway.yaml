@@ -1,6 +1,4 @@
-# Entry point of Forgejo: web (80 redirects, 443 TLS) and Git over SSH (22) on one fixed LoadBalancer address. The Cilium
-# controller creates the Service and the address is advertised to the routers over BGP, so only networks the firewall lets
-# reach it can use Forgejo. external-dns publishes git.vbalex.com from the HTTPRoute; SSH uses the same name and IP.
+# Web and SSH entry point of Forgejo.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:

@@ -1,4 +1,3 @@
-# One replica and Recreate: two controllers would start every job twice.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,8 +50,6 @@ spec:
               path: /healthz
               port: metrics
             periodSeconds: 10
-          # Liveness only checks that the process answers. /healthz depends on Forgejo being reachable, and restarting
-          # the controller does not fix a Forgejo outage.
           livenessProbe:
             httpGet:
               path: /metrics
