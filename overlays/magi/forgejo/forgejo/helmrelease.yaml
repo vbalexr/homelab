@@ -1,0 +1,100 @@
+# Forgejo 15 (LTS) from the official chart, rootless image, one replica with the Recreate strategy (the RWO volume cannot be
+# attached to two pods). Database on the cluster postgres. Web and SSH come in through the group Gateway (httproute.yaml,
+# tcproute.yaml), so both Services stay ClusterIP. The chart generates its secret keys on first start and keeps them in
+# /data/gitea/conf/app.ini on the volume; SECRET_KEY and the JWT secrets are also pinned from a SOPS secret so a restore
+# onto a fresh volume can still read what the database has encrypted.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: forgejo
+  namespace: forgejo
+spec:
+  interval: 1h
+  timeout: 10m
+  chart:
+    spec:
+      chart: forgejo
+      version: 17.3.2
+      sourceRef:
+        kind: HelmRepository
+        name: forgejo
+  install:
+    remediation:
+      retries: 3
+  values:
+    replicaCount: 1
+    strategy:
+      type: Recreate
+    persistence:
+      enabled: true
+      claimName: forgejo-data
+      size: 100Gi
+      storageClass: longhorn-retain
+    service:
+      http:
+        type: ClusterIP
+      ssh:
+        type: ClusterIP
+        port: 22
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1Gi
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ALL]
+    gitea:
+      admin:
+        existingSecret: forgejo-admin
+        email: forgejo@vbalex.com
+        passwordMode: keepUpdated
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+      additionalConfigFromEnvs:
+        - name: FORGEJO__DATABASE__PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-env
+              key: DB_PASSWORD
+        - name: FORGEJO__SECURITY__SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-env
+              key: SECRET_KEY
+        - name: FORGEJO__OAUTH2__JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-env
+              key: JWT_SECRET
+        - name: FORGEJO__SERVER__LFS_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: forgejo-env
+              key: LFS_JWT_SECRET
+      config:
+        server:
+          DOMAIN: git.vbalex.com
+          SSH_DOMAIN: git.vbalex.com
+          ROOT_URL: https://git.vbalex.com/
+          SSH_PORT: 22 # what clone URLs show; the pod listens on 2222 (rootless) behind Service port 22
+          SSH_LISTEN_PORT: 2222
+        database:
+          DB_TYPE: postgres
+          HOST: postgres.database.svc.cluster.local:5432
+          NAME: forgejo
+          USER: forgejo
+          SSL_MODE: disable
+        service:
+          DISABLE_REGISTRATION: true
+          REQUIRE_SIGNIN_VIEW: true
+        actions:
+          ENABLED: true
+        log:
+          LEVEL: info
+    test:
+      enabled: false

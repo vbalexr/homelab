@@ -1,0 +1,15 @@
+# Git over SSH on port 22 of the Gateway. The chart's own TCPRoute template uses v1alpha2, which this cluster's Gateway API
+# CRDs (standard channel 1.6.3) no longer serve, so the route lives here with v1.
+apiVersion: gateway.networking.k8s.io/v1
+kind: TCPRoute
+metadata:
+  name: forgejo-ssh
+  namespace: forgejo
+spec:
+  parentRefs:
+    - name: forgejo-gateway
+      sectionName: ssh
+  rules:
+    - backendRefs:
+        - name: forgejo-ssh
+          port: 22

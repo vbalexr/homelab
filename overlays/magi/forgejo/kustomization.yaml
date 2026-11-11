@@ -1,6 +1,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - runners
+  - namespace.yaml
+  - gateway.yaml
+  - certificate.yaml
+  - forgejo
+  # - runners   # not before the checklist in runners/README.md is done
   - image-automation.yaml
   - image-update.yaml
