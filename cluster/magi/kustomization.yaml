@@ -16,3 +16,4 @@ resources:
   - ./admin.yaml
   - ./dns.yaml
   - ./monitoring.yaml
+  - ./forgejo.yaml

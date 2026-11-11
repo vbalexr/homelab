@@ -3,6 +3,14 @@
 Scratch notes from the research phase, written 2026-11-11. Delete this file once the real `README.md` for the app exists.
 Nothing here is deployed. "Verify" marks things I could not confirm from the docs and must check at implementation time.
 
+## 0. Decided (2026-11-11)
+
+- Host `git.vbalex.com`, web and SSH on one Gateway IP (`10.1.1.17`), SSH through a TCP listener and a `TCPRoute` (v1; the chart's own template uses v1alpha2, which the cluster CRDs no longer serve).
+- DNS is automatic: external-dns publishes the HTTPRoute hostname. Reachable only from networks the routers/firewall allow to the service IPs (no tunnel, no Tailscale).
+- Forgejo 15.0.11 LTS from chart 17.3.2, rootless, 100Gi `longhorn-retain` PVC `forgejo-data`, database `forgejo` (role `forgejo`) on the cluster postgres.
+- Runners: one pod per job through `containers/forgejo-job-controller`, not wired until `runners/README.md` is done.
+- Written in `forgejo/` and the group files; `cluster/magi/forgejo.yaml` exists but is not listed in `cluster/magi/kustomization.yaml` yet.
+
 ## 1. Decisions to take (recommendations first)
 
 | # | Question | Recommendation | Why |
@@ -51,7 +59,7 @@ CREATE DATABASE forgejo_forgejo WITH OWNER forgejo_forgejo TEMPLATE template0
 ```
 No TLS is needed inside the cluster per the Forgejo docs (private network). There is no `pg_hba` customisation in this repo, so the defaults apply (verify the pod CIDR is allowed, as it is for the other apps).
 
-**Sizing proposal:** requests 100m CPU and 256Mi, memory limit 1Gi. PVC 20Gi on `longhorn-retain` (volume expansion is allowed). Repos, LFS and attachments live on it. A container registry or packages would grow it quickly.
+**Sizing (decided):** requests 100m CPU and 256Mi, memory limit 1Gi. PVC **100Gi** on `longhorn-retain` (volume expansion is allowed). Repos, LFS, attachments and Actions logs live on it, and a container registry or packages would grow it quickly. At 2 replicas that is 200Gi of Longhorn disk across the nodes.
 
 **Caches and queues:** leave the defaults (memory cache, leveldb queue on disk, bleve indexer). Valkey exists in the cluster but is not needed for one instance.
 
