@@ -50,6 +50,11 @@ spec:
                 requests:
                   storage: 2Gi
     grafana:
+      # One replica on an RWO volume: the new pod can't attach it while the old one runs, so stop the old one first.
+      deploymentStrategy:
+        type: Recreate
+        # The chart default carries a rollingUpdate block, which Kubernetes rejects next to Recreate.
+        rollingUpdate: null
       persistence:
         enabled: true
         type: pvc
