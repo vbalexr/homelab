@@ -1,0 +1,38 @@
+# Settings of the controller. FORGEJO_SCOPE is the organisation whose jobs the runners serve: set it before wiring this in.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forgejo-job-controller
+  namespace: forgejo-runners
+data:
+  FORGEJO_URL: http://forgejo-http.forgejo.svc.cluster.local:3000
+  FORGEJO_SCOPE: orgs/homelab
+  LABELS: ubuntu-latest=docker://data.forgejo.org/oci/node:24-bookworm,docker=docker://data.forgejo.org/oci/node:24-bookworm
+  RUNNER_IMAGE: data.forgejo.org/forgejo/runner:13.2.1
+  DIND_IMAGE: docker.io/library/docker:28.5.2-dind
+  RUNNER_CONFIGMAP: forgejo-job-runner-config
+  MAX_JOBS: "2"
+  JOB_CPU_LIMIT: "4"
+  JOB_MEMORY_LIMIT: 6Gi
+  JOB_DISK_LIMIT: 20Gi
+  JOB_TIMEOUT: 2h
+  LONG_RUNNING_AFTER: 45m
+  FINISHED_TTL: 30m
+---
+# config.yml of every runner pod (connection details come from flags, so no server.connections here).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forgejo-job-runner-config
+  namespace: forgejo-runners
+data:
+  config.yml: |
+    log:
+      level: info
+    runner:
+      timeout: 1h
+    container:
+      # jobs use the pod's own dind daemon, which dies with the job
+      docker_host: automount
+      privileged: false
+      valid_volumes: []

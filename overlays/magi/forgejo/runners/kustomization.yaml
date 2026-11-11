@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - configmap.yaml
+  # - secret.yaml   # forgejo-controller-token, key "token": see README.md
+  - deployment.yaml
+  - service.yaml
+images:
+  - name: ghcr.io/vbalexr/forgejo-job-controller
+    newTag: 20261111-2222 # {"$imagepolicy":"flux-system:forgejo-job-controller:tag"}

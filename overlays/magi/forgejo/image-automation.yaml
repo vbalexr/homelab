@@ -1,0 +1,23 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: forgejo-job-controller
+  namespace: flux-system
+spec:
+  image: ghcr.io/vbalexr/forgejo-job-controller
+  interval: 5m0s
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: forgejo-job-controller
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: forgejo-job-controller
+  filterTags:
+    pattern: '^\d{8}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc

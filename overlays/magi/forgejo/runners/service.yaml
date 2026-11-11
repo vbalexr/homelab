@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: forgejo-job-controller
+  namespace: forgejo-runners
+  labels:
+    app: forgejo-job-controller
+spec:
+  selector:
+    app: forgejo-job-controller
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: forgejo-job-controller
+  namespace: forgejo-runners
+spec:
+  selector:
+    matchLabels:
+      app: forgejo-job-controller
+  endpoints:
+    - port: metrics
+      interval: 30s

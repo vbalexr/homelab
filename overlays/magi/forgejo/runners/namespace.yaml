@@ -1,0 +1,9 @@
+# Job pods run Docker-in-Docker as a privileged sidecar, so this namespace is privileged (same as longhorn-system and
+# monitoring). Forgejo itself lives in its own baseline namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: forgejo-runners
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: privileged

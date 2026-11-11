@@ -61,7 +61,7 @@ container:
 
 ## Kubernetes access
 
-A Role in the job namespace is enough: `batch/jobs` create, get, list, patch, delete; `secrets` create, get, patch, delete.
+A Role in the job namespace is enough: `batch/jobs` create, get, list, patch, delete; `secrets` create, get, patch, delete; `pods` and `events` get, list (read-only, to report why a pod failed).
 The pods it creates run with `automountServiceAccountToken: false`. The dind sidecar is privileged, so the namespace needs
 `pod-security.kubernetes.io/enforce: privileged`; add a NetworkPolicy that keeps job pods away from the rest of the cluster.
 
