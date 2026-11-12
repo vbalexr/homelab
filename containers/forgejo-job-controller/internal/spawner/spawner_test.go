@@ -324,7 +324,7 @@ func TestManifestIsSafe(t *testing.T) {
 			t.Errorf("manifest must not contain %q", bad)
 		}
 	}
-	for _, want := range []string{`"automountServiceAccountToken":false`, `"restartPolicy":"Always"`, "--mtu=1400", `"backoffLimit":0`, "unix:///run/dind/docker.sock"} {
+	for _, want := range []string{`"automountServiceAccountToken":false`, `"restartPolicy":"Always"`, "--mtu=1400", "--cgroup-parent", `"backoffLimit":0`, "unix:///run/dind/docker.sock"} {
 		if !strings.Contains(s, want) {
 			t.Errorf("manifest misses %s", want)
 		}

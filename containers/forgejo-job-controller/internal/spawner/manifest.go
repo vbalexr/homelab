@@ -95,10 +95,13 @@ func jobManifest(cfg config.Config, name string, job forgejo.Job, repo, profile 
 		"--wait")
 	runnerArgs = append(runnerArgs, flags...)
 
-	dindArgs := []string{"dockerd", "--host=" + socket, fmt.Sprintf("--group=%d", userID)}
+	dockerd := fmt.Sprintf("docker-entrypoint.sh dockerd --host=%s --group=%d", socket, userID)
 	if cfg.DindMTU > 0 {
-		dindArgs = append(dindArgs, fmt.Sprintf("--mtu=%d", cfg.DindMTU))
+		dockerd += fmt.Sprintf(" --mtu=%d", cfg.DindMTU)
 	}
+	// A privileged container sees the node's cgroup tree, so Docker would place job containers outside the
+	// pod and neither the limits nor the metrics would apply. Parent them under the pod's own cgroup.
+	dindScript := "cg=$(sed 's/^0:://' /proc/self/cgroup)\nexec " + dockerd + ` --cgroup-parent="${cg%/*}"`
 
 	volumes := []map[string]any{
 		{"name": "dind-socket", "emptyDir": map[string]any{}},
@@ -122,7 +125,8 @@ func jobManifest(cfg config.Config, name string, job forgejo.Job, repo, profile 
 		"name":            "dind",
 		"image":           cfg.DindImage,
 		"restartPolicy":   "Always", // native sidecar: starts first, is ready before the runner, stops after it
-		"args":            dindArgs,
+		"command":         []string{"sh", "-c"},
+		"args":            []string{dindScript},
 		"securityContext": map[string]any{"privileged": true},
 		"startupProbe": map[string]any{
 			"exec":             map[string]any{"command": []string{"docker", "-H", socket, "info"}},
