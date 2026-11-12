@@ -5,5 +5,4 @@ resources:
   - secret-image-pull.yaml
   - image-automation.yaml
   - image-update.yaml
-  - gateway.yaml
   - chilu-bb

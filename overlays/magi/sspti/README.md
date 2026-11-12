@@ -1,6 +1,6 @@
 # sspti
 
-AllianceAuth, served by `sspti-gateway` (certificate `sspti-gateway-tls`).
+AllianceAuth, reached through the Cloudflare tunnel (straight to the `aa-sspti-web` Service).
 
 - **Image:** `ghcr.io/vbalexr/aa-sspti` (pinned by digest), built by the `Build aa-sspti Images` workflow from `containers/aa-sspti`.
   `conf/constraints.txt` is the `pip freeze` of the image and pins every Python dependency. The package is private: pods use the `ghcr-pull` Secret.
