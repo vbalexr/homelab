@@ -188,7 +188,8 @@ func setup(t *testing.T, mutate func(*config.Config)) (*Controller, *fakeForgejo
 	f, k := newFakeForgejo(t), newFakeKube(t)
 	cfg := config.Config{
 		ForgejoURL: f.srv.URL, ForgejoRunnerURL: "http://forgejo.test:3000", ForgejoScope: "orgs/lab", ForgejoToken: "secret",
-		Namespace: "ci", Labels: map[string]string{"ubuntu-latest": "docker://node:lts", "docker": "docker://node:lts"},
+		Namespace: "ci", Labels: map[string]string{"ubuntu-latest": "docker://node:lts", "docker": "docker://node:lts", "native": "docker://graal"},
+		Profiles: map[string]config.Profile{"native": {CPU: "8", Memory: "12Gi", Disk: "30Gi", Max: 1}, "large": {CPU: "8", Memory: "16Gi", Disk: "40Gi", Max: 1}}, PriorityClass: "forgejo-job",
 		RunnerImage: "runner:13", DindImage: "docker:dind", RunnerConfigMap: "runner-config",
 		PollInterval: time.Second, LongRunningAfter: 30 * time.Minute, MaxJobs: 2, JobTimeout: time.Hour, FinishedTTL: 10 * time.Minute,
 		JobCPULimit: "2", JobMemoryLimit: "4Gi", JobDiskLimit: "10Gi",
@@ -315,7 +316,7 @@ func TestTickReportsForgejoFailure(t *testing.T) {
 func TestManifestIsSafe(t *testing.T) {
 	cfg := config.Config{ForgejoRunnerURL: "http://f", RunnerImage: "r", DindImage: "d", JobTimeout: time.Hour, FinishedTTL: time.Minute,
 		JobCPULimit: "1", JobMemoryLimit: "1Gi", JobDiskLimit: "1Gi", DindMTU: 1400}
-	m := jobManifest(cfg, "fj-0123456789abcdef", waiting(1, "docker"), "lab/demo", forgejo.Runner{ID: 1}, nil)
+	m := jobManifest(cfg, "fj-0123456789abcdef", waiting(1, "docker"), "lab/demo", "default", config.Profile{CPU: "1", Memory: "1Gi", Disk: "1Gi", Max: 1}, forgejo.Runner{ID: 1}, nil)
 	b, _ := json.Marshal(m)
 	s := string(b)
 	for _, bad := range []string{"tcp://", "2375", "2376", "hostNetwork", "hostPath"} {
@@ -404,5 +405,87 @@ func TestLongRunningPodIsFlaggedOnceAndClearsWhenFinished(t *testing.T) {
 	_ = c.Tick(context.Background())
 	if out := metricsText(); !strings.Contains(out, "fjc_long_running_jobs 0") || c.warned[name] {
 		t.Fatalf("a finished pod must no longer count:\n%s", out)
+	}
+}
+
+func TestNativeJobGetsItsProfileAndNeverRunsTwoAtOnce(t *testing.T) {
+	c, f, k := setup(t, func(cfg *config.Config) { cfg.MaxJobs = 3 })
+	f.jobs = []forgejo.Job{waiting(1, "native"), waiting(2, "native"), waiting(3, "docker")}
+	if err := c.Tick(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(k.names("/jobs")); got != 2 {
+		t.Fatalf("want the first native job and the docker job, got %d jobs", got)
+	}
+	native := k.objects[kube.JobsPath("ci")+"/"+JobName("handle-1")]
+	b, _ := json.Marshal(native)
+	s := string(b)
+	for _, want := range []string{`"memory":"12Gi"`, `"cpu":"8"`, `"sizeLimit":"30Gi"`, `"priorityClassName":"forgejo-job"`, `"forgejo.vbalex.com/profile":"native"`} {
+		if !strings.Contains(s, want) {
+			t.Errorf("native job misses %s", want)
+		}
+	}
+	if _, ok := k.objects[kube.JobsPath("ci")+"/"+JobName("handle-2")]; ok {
+		t.Fatal("the second native job must wait while one is running")
+	}
+	other := k.objects[kube.JobsPath("ci")+"/"+JobName("handle-3")]
+	b, _ = json.Marshal(other)
+	if !strings.Contains(string(b), `"memory":"4Gi"`) || !strings.Contains(string(b), `"forgejo.vbalex.com/profile":"default"`) {
+		t.Errorf("a docker job must keep the default profile: %s", b)
+	}
+
+	k.finish(JobName("handle-1"))
+	if err := c.Tick(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := k.objects[kube.JobsPath("ci")+"/"+JobName("handle-2")]; !ok {
+		t.Fatal("the waiting native job must start once the first one finished")
+	}
+}
+
+func TestMemoryRequestEqualsLimit(t *testing.T) {
+	cfg := config.Config{ForgejoRunnerURL: "http://f", RunnerImage: "r", DindImage: "d", JobTimeout: time.Hour, FinishedTTL: time.Minute}
+	m := jobManifest(cfg, "fj-0123456789abcdef", waiting(1, "native"), "", "native", config.Profile{CPU: "8", Memory: "12Gi", Disk: "30Gi", Max: 1}, forgejo.Runner{ID: 1}, nil)
+	b, _ := json.Marshal(m)
+	if strings.Count(string(b), `"memory":"12Gi"`) != 2 {
+		t.Fatalf("dind needs the memory both as request and as limit: %s", b)
+	}
+}
+
+func TestSizeLabelBorrowsTheImageOfTheOtherLabel(t *testing.T) {
+	c, f, k := setup(t, nil)
+	f.jobs = []forgejo.Job{waiting(1, "ubuntu-latest", "large"), waiting(2, "large")}
+	if err := c.Tick(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	obj, ok := k.objects[kube.JobsPath("ci")+"/"+JobName("handle-1")]
+	if !ok {
+		t.Fatal("a job with an image label and a size label must start")
+	}
+	b, _ := json.Marshal(obj)
+	s := string(b)
+	for _, want := range []string{`"memory":"16Gi"`, "large:docker://node:lts", "ubuntu-latest:docker://node:lts", `"forgejo.vbalex.com/profile":"large"`} {
+		if !strings.Contains(s, want) {
+			t.Errorf("job misses %s", want)
+		}
+	}
+	if _, ok := k.objects[kube.JobsPath("ci")+"/"+JobName("handle-2")]; ok {
+		t.Fatal("a size label alone has no image, so that job must not start")
+	}
+}
+
+func TestSizeLabelAloneUsesTheDefaultLabelImage(t *testing.T) {
+	c, f, k := setup(t, func(cfg *config.Config) { cfg.DefaultLabel = "ubuntu-latest" })
+	f.jobs = []forgejo.Job{waiting(1, "large")}
+	if err := c.Tick(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	obj, ok := k.objects[kube.JobsPath("ci")+"/"+JobName("handle-1")]
+	if !ok {
+		t.Fatal("runs-on: large must start when DEFAULT_LABEL gives it an image")
+	}
+	b, _ := json.Marshal(obj)
+	if !strings.Contains(string(b), "large:docker://node:lts") || !strings.Contains(string(b), `"memory":"16Gi"`) {
+		t.Errorf("wrong image or size: %s", b)
 	}
 }

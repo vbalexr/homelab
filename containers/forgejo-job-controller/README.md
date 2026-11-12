@@ -19,7 +19,10 @@ Starts one Kubernetes pod per waiting Forgejo Actions job. Go, standard library 
 | `JOB_TIMEOUT` | `2h` | Pod deadline |
 | `LONG_RUNNING_AFTER` | `45m` | Warn about job pods older than this |
 | `FINISHED_TTL` | `30m` | How long finished Jobs are kept |
-| `JOB_CPU_LIMIT`, `JOB_MEMORY_LIMIT`, `JOB_DISK_LIMIT` | `2`, `4Gi`, `10Gi` | Job pod limits |
+| `JOB_CPU_LIMIT`, `JOB_MEMORY_LIMIT`, `JOB_DISK_LIMIT` | `2`, `4Gi`, `10Gi` | Default job pod limits |
+| `PROFILES` | none | Resource classes by `runs-on` label: `name:cpu=8,memory=12Gi,disk=30Gi,max=2;...` (a name in `LABELS` also picks an image; a name only in `PROFILES` is a size label that takes the image of the job's other label, e.g. `runs-on: [ubuntu-latest, large]`) |
+| `DEFAULT_LABEL` | none | Image label used by jobs that only name a size label, so `runs-on: large` works alone |
+| `PRIORITY_CLASS` | none | PriorityClass of the job pods |
 | `DIND_MTU` | unset | MTU of the job pod Docker daemon |
 | `LISTEN` | `:8080` | `/metrics` and `/healthz` |
 | `LOG_LEVEL` | `info` | |

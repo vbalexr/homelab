@@ -35,21 +35,36 @@ func labelsFor(name string) map[string]string {
 	}
 }
 
-// labelFlags maps the runs-on labels of a job to --label flags. It returns false when a label has no image, which
-// means the job is meant for another runner.
-func labelFlags(labels map[string]string, runsOn []string) ([]string, bool) {
+// labelFlags maps the runs-on labels of a job to --label flags. A label is either an image label (in LABELS) or a size
+// label (in PROFILES only): a size label has no image of its own and takes the image of the job's first image label, so any
+// image can be combined with any size, e.g. runs-on: [ubuntu-latest, large]. It returns false when a label is neither, or when
+// there is no image label and no DEFAULT_LABEL to fall back on, which means the job is meant for another runner.
+func labelFlags(cfg config.Config, runsOn []string) ([]string, bool) {
 	if len(runsOn) == 0 {
 		return nil, false
 	}
 	names := append([]string(nil), runsOn...)
 	sort.Strings(names)
+	image := ""
+	for _, name := range names {
+		if img, ok := cfg.Labels[name]; ok {
+			image = img
+			break
+		}
+	}
+	if image == "" {
+		image = cfg.Labels[cfg.DefaultLabel] // jobs that only name a size, e.g. runs-on: large
+	}
 	var flags []string
 	for _, name := range names {
-		image, ok := labels[name]
+		img, ok := cfg.Labels[name]
 		if !ok {
-			return nil, false
+			if _, isSize := cfg.Profiles[name]; !isSize || image == "" {
+				return nil, false
+			}
+			img = image
 		}
-		flags = append(flags, "--label", name+":"+image)
+		flags = append(flags, "--label", name+":"+img)
 	}
 	return flags, true
 }
@@ -67,7 +82,7 @@ func secretManifest(name string, runner forgejo.Runner) map[string]any {
 
 // jobManifest is one pod that runs exactly one Forgejo job: a Docker-in-Docker native sidecar on a Unix socket (no
 // TCP listener) and the runner started with one-job for this handle.
-func jobManifest(cfg config.Config, name string, job forgejo.Job, repo string, runner forgejo.Runner, flags []string) map[string]any {
+func jobManifest(cfg config.Config, name string, job forgejo.Job, repo, profile string, res config.Profile, runner forgejo.Runner, flags []string) map[string]any {
 	runnerArgs := []string{}
 	if cfg.RunnerConfigMap != "" {
 		runnerArgs = append(runnerArgs, "-c", "/config/config.yml")
@@ -87,7 +102,7 @@ func jobManifest(cfg config.Config, name string, job forgejo.Job, repo string, r
 
 	volumes := []map[string]any{
 		{"name": "dind-socket", "emptyDir": map[string]any{}},
-		{"name": "docker-data", "emptyDir": map[string]any{"sizeLimit": cfg.JobDiskLimit}},
+		{"name": "docker-data", "emptyDir": map[string]any{"sizeLimit": res.Disk}},
 		{"name": "data", "emptyDir": map[string]any{}},
 		{"name": "tmp", "emptyDir": map[string]any{}},
 		{"name": "runner-secret", "secret": map[string]any{"secretName": name, "defaultMode": 0o440}},
@@ -115,8 +130,9 @@ func jobManifest(cfg config.Config, name string, job forgejo.Job, repo string, r
 			"failureThreshold": 90,
 		},
 		"resources": map[string]any{
-			"requests": map[string]any{"cpu": "250m", "memory": "512Mi"},
-			"limits":   map[string]any{"cpu": cfg.JobCPULimit, "memory": cfg.JobMemoryLimit},
+			// memory request = limit: the scheduler reserves what the job may use, so heavy builds cannot pile onto one node
+			"requests": map[string]any{"cpu": "250m", "memory": res.Memory},
+			"limits":   map[string]any{"cpu": res.CPU, "memory": res.Memory},
 		},
 		"volumeMounts": []map[string]any{
 			{"name": "dind-socket", "mountPath": socketDir},
@@ -150,12 +166,30 @@ func jobManifest(cfg config.Config, name string, job forgejo.Job, repo string, r
 		"volumeMounts": runnerMounts,
 	}
 
+	labels := labelsFor(name)
+	labels[kube.LabelProfile] = profile
+	podSpec := map[string]any{
+		"restartPolicy":                 "Never",
+		"automountServiceAccountToken":  false,
+		"terminationGracePeriodSeconds": 30,
+		"securityContext": map[string]any{
+			"fsGroup":        userID,
+			"seccompProfile": map[string]any{"type": "RuntimeDefault"},
+		},
+		"initContainers": []map[string]any{dind},
+		"containers":     []map[string]any{runnerContainer},
+		"volumes":        volumes,
+	}
+	if cfg.PriorityClass != "" {
+		podSpec["priorityClassName"] = cfg.PriorityClass
+	}
+
 	return map[string]any{
 		"apiVersion": "batch/v1",
 		"kind":       "Job",
 		"metadata": map[string]any{
 			"name":   name,
-			"labels": labelsFor(name),
+			"labels": labels,
 			"annotations": map[string]string{
 				kube.AnnotationHandle:  job.Handle,
 				kube.AnnotationRunner:  fmt.Sprint(runner.ID),
@@ -169,19 +203,8 @@ func jobManifest(cfg config.Config, name string, job forgejo.Job, repo string, r
 			"activeDeadlineSeconds":   int64(cfg.JobTimeout.Seconds()),
 			"ttlSecondsAfterFinished": int64(cfg.FinishedTTL.Seconds()),
 			"template": map[string]any{
-				"metadata": map[string]any{"labels": labelsFor(name)},
-				"spec": map[string]any{
-					"restartPolicy":                 "Never",
-					"automountServiceAccountToken":  false,
-					"terminationGracePeriodSeconds": 30,
-					"securityContext": map[string]any{
-						"fsGroup":        userID,
-						"seccompProfile": map[string]any{"type": "RuntimeDefault"},
-					},
-					"initContainers": []map[string]any{dind},
-					"containers":     []map[string]any{runnerContainer},
-					"volumes":        volumes,
-				},
+				"metadata": map[string]any{"labels": labels},
+				"spec":     podSpec,
 			},
 		},
 	}

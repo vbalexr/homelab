@@ -40,3 +40,32 @@ func TestLoadRejectsBadInput(t *testing.T) {
 		}
 	}
 }
+
+func TestProfiles(t *testing.T) {
+	m := base()
+	m["LABELS"] += ",native=docker://graal"
+	m["PROFILES"] = "native:cpu=8,memory=12Gi,disk=30Gi,max=1"
+	c, err := Load(env(m))
+	if err != nil {
+		t.Fatal(err)
+	}
+	name, p := c.ProfileFor([]string{"ubuntu-latest", "native"})
+	if name != "native" || p.Memory != "12Gi" || p.Max != 1 || p.Disk != "30Gi" {
+		t.Fatalf("got %s %+v", name, p)
+	}
+	name, p = c.ProfileFor([]string{"docker"})
+	if name != DefaultProfile || p.Memory != "4Gi" || p.Max != c.MaxJobs {
+		t.Fatalf("a job without a profile label must get the default: %s %+v", name, p)
+	}
+	m["DEFAULT_LABEL"] = "nope"
+	if _, err := Load(env(m)); err == nil {
+		t.Error("DEFAULT_LABEL must be one of the labels")
+	}
+	delete(m, "DEFAULT_LABEL")
+	for _, bad := range []string{"native:cpu=8", "native:cpu=8,memory=1Gi,max=0", "native:cpu=8,memory=1Gi,color=red", "default:cpu=1,memory=1Gi"} {
+		m["PROFILES"] = bad
+		if _, err := Load(env(m)); err == nil {
+			t.Errorf("PROFILES %q must be rejected", bad)
+		}
+	}
+}

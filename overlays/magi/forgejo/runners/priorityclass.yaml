@@ -1,0 +1,8 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: forgejo-job
+value: -100
+preemptionPolicy: Never
+globalDefault: false
+description: Forgejo job pods, evicted before regular workloads and never preempting them.

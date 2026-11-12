@@ -9,6 +9,7 @@ import (
 const (
 	LabelManagedBy    = "app.kubernetes.io/managed-by"
 	LabelHandle       = "forgejo.vbalex.com/handle"
+	LabelProfile      = "forgejo.vbalex.com/profile"
 	AnnotationHandle  = "forgejo.vbalex.com/handle"
 	AnnotationRunner  = "forgejo.vbalex.com/runner-id"
 	AnnotationCleaned = "forgejo.vbalex.com/runner-cleaned"

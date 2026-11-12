@@ -21,7 +21,7 @@ import (
 // Metrics are the controller's own series.
 type Metrics struct {
 	Polls       *metrics.Counter // result
-	Spawned     *metrics.Counter
+	Spawned     *metrics.Counter // profile
 	SpawnErrors *metrics.Counter // stage
 	Reaped      *metrics.Counter
 	Finished    *metrics.Counter // result, cause
@@ -35,7 +35,7 @@ type Metrics struct {
 func NewMetrics(r *metrics.Registry) Metrics {
 	return Metrics{
 		Polls:       r.NewCounter("fjc_polls_total", "Poll cycles by result.", "result"),
-		Spawned:     r.NewCounter("fjc_jobs_spawned_total", "Kubernetes Jobs created for waiting Forgejo jobs."),
+		Spawned:     r.NewCounter("fjc_jobs_spawned_total", "Kubernetes Jobs created for waiting Forgejo jobs.", "profile"),
 		SpawnErrors: r.NewCounter("fjc_spawn_errors_total", "Failed spawns by stage.", "stage"),
 		Reaped:      r.NewCounter("fjc_runners_reaped_total", "Runners deleted from Forgejo after their Job finished."),
 		Finished:    r.NewCounter("fjc_jobs_finished_total", "Finished job pods by result and cause.", "result", "cause"),
@@ -112,10 +112,12 @@ func (c *Controller) Tick(ctx context.Context) error {
 
 	existing := map[string]bool{}
 	active := 0
+	activeBy := map[string]int{}
 	for _, j := range own.Items {
 		existing[j.Metadata.Name] = true
 		if !j.Finished() {
 			active++
+			activeBy[profileOf(j)]++
 		}
 	}
 
@@ -124,7 +126,7 @@ func (c *Controller) Tick(ctx context.Context) error {
 		if j.Status != "waiting" {
 			continue
 		}
-		if _, ok := labelFlags(c.cfg.Labels, j.RunsOn); !ok {
+		if _, ok := labelFlags(c.cfg, j.RunsOn); !ok {
 			c.noteSkipped(ctx, j)
 			continue
 		}
@@ -143,11 +145,17 @@ func (c *Controller) Tick(ctx context.Context) error {
 			log.Info("at the parallel job limit, leaving jobs waiting", "limit", c.cfg.MaxJobs)
 			break
 		}
-		if err := c.spawn(ctx, name, job); err != nil {
-			log.Error("spawn failed", "job", job.Name, "handle", job.Handle, "error", err.Error())
+		profile, res := c.cfg.ProfileFor(job.RunsOn)
+		if activeBy[profile] >= res.Max {
+			log.Info("at the limit of this profile, leaving the job waiting", "profile", profile, "limit", res.Max, "job", job.Name)
+			continue
+		}
+		if err := c.spawn(ctx, name, job, profile, res); err != nil {
+			log.Error("spawn failed", "job", job.Name, "handle", job.Handle, "profile", profile, "error", err.Error())
 			continue
 		}
 		active++
+		activeBy[profile]++
 		c.m.Active.Set(float64(active))
 	}
 	return nil
@@ -172,7 +180,7 @@ func (e *stageError) Unwrap() error { return e.err }
 
 // spawn registers an ephemeral runner, stores its credentials in a Secret and creates the Job. Anything created
 // before a failure is removed again, so a half-started job never lingers.
-func (c *Controller) spawn(ctx context.Context, name string, job forgejo.Job) (err error) {
+func (c *Controller) spawn(ctx context.Context, name string, job forgejo.Job, profile string, res config.Profile) (err error) {
 	log := logging.From(ctx).With("job", job.Name, "handle", job.Handle, "kube_job", name)
 	defer func() {
 		var se *stageError
@@ -181,7 +189,7 @@ func (c *Controller) spawn(ctx context.Context, name string, job forgejo.Job) (e
 		}
 	}()
 
-	flags, _ := labelFlags(c.cfg.Labels, job.RunsOn)
+	flags, _ := labelFlags(c.cfg, job.RunsOn)
 	repo, rerr := c.forgejo.RepoName(ctx, job.RepoID)
 	if rerr != nil {
 		log.Warn("could not resolve the repository name", "repo_id", job.RepoID, "error", rerr.Error())
@@ -210,7 +218,7 @@ func (c *Controller) spawn(ctx context.Context, name string, job forgejo.Job) (e
 
 	var created kube.Job
 	jobsPath := kube.JobsPath(c.cfg.Namespace)
-	if err := c.kube.Create(ctx, jobsPath, jobManifest(c.cfg, name, job, repo, runner, flags), &created); err != nil {
+	if err := c.kube.Create(ctx, jobsPath, jobManifest(c.cfg, name, job, repo, profile, res, runner, flags), &created); err != nil {
 		cleanupSecret()
 		cleanupRunner()
 		return &stageError{"create-job", err}
@@ -234,8 +242,8 @@ func (c *Controller) spawn(ctx context.Context, name string, job forgejo.Job) (e
 		return &stageError{"own-secret", err}
 	}
 
-	c.m.Spawned.Inc()
-	log.Info("started job pod", "repo", repo, "runner_id", runner.ID, "runs_on", job.RunsOn)
+	c.m.Spawned.Inc(profile)
+	log.Info("started job pod", "profile", profile, "memory", res.Memory, "repo", repo, "runner_id", runner.ID, "runs_on", job.RunsOn)
 	return nil
 }
 
@@ -323,4 +331,12 @@ func (c *Controller) checkLongRunning(ctx context.Context, jobs []kube.Job) {
 	}
 	c.m.LongRunning.Set(float64(long))
 	c.m.OldestAge.Set(oldest.Seconds())
+}
+
+// profileOf returns the profile a Job was started with.
+func profileOf(j kube.Job) string {
+	if p := j.Metadata.Labels[kube.LabelProfile]; p != "" {
+		return p
+	}
+	return config.DefaultProfile
 }

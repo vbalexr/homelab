@@ -6,12 +6,25 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
 
 const namespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+
+// Profile is a resource class for job pods. The profile of a job is the one named like one of its runs-on labels.
+type Profile struct {
+	CPU    string
+	Memory string // also the memory request, so the scheduler counts it
+	Disk   string // size of /var/lib/docker
+	Max    int    // job pods of this profile that may run at once
+}
+
+// DefaultProfile is the name of the profile of jobs whose labels have none.
+const DefaultProfile = "default"
 
 // Config holds every setting of the controller.
 type Config struct {
@@ -23,7 +36,10 @@ type Config struct {
 	Labels           map[string]string // runs-on label -> runner image, e.g. ubuntu-latest -> docker://node:lts
 	RunnerImage      string
 	DindImage        string
-	RunnerConfigMap  string // optional ConfigMap with config.yml, mounted at /config
+	RunnerConfigMap  string             // optional ConfigMap with config.yml, mounted at /config
+	Profiles         map[string]Profile // resource classes by runs-on label name
+	DefaultLabel     string             // image label used by jobs that only name size labels
+	PriorityClass    string             // PriorityClass of the job pods
 	PollInterval     time.Duration
 	MaxJobs          int
 	JobTimeout       time.Duration
@@ -50,6 +66,8 @@ func Load(getenv func(string) string) (Config, error) {
 		RunnerImage:      getenv("RUNNER_IMAGE"),
 		DindImage:        getenv("DIND_IMAGE"),
 		RunnerConfigMap:  getenv("RUNNER_CONFIGMAP"),
+		PriorityClass:    getenv("PRIORITY_CLASS"),
+		DefaultLabel:     getenv("DEFAULT_LABEL"),
 		JobCPULimit:      or(getenv("JOB_CPU_LIMIT"), "2"),
 		JobMemoryLimit:   or(getenv("JOB_MEMORY_LIMIT"), "4Gi"),
 		JobDiskLimit:     or(getenv("JOB_DISK_LIMIT"), "10Gi"),
@@ -108,6 +126,14 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	if c.MaxJobs < 1 {
 		return Config{}, errors.New("MAX_JOBS must be at least 1")
+	}
+	if c.DefaultLabel != "" {
+		if _, ok := c.Labels[c.DefaultLabel]; !ok {
+			return Config{}, fmt.Errorf("DEFAULT_LABEL %q is not a label in LABELS", c.DefaultLabel)
+		}
+	}
+	if c.Profiles, err = parseProfiles(getenv("PROFILES"), c); err != nil {
+		return Config{}, err
 	}
 	if c.DindMTU, err = integer(getenv("DIND_MTU"), 0); err != nil {
 		return Config{}, fmt.Errorf("DIND_MTU: %w", err)
@@ -178,4 +204,63 @@ func integer(v string, fallback int) (int, error) {
 		return fallback, nil
 	}
 	return strconv.Atoi(v)
+}
+
+var profileName = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`)
+
+// parseProfiles reads "name:cpu=8,memory=14Gi,disk=30Gi,max=1;other:...". A profile name is a runs-on label: either an image label
+// (also in LABELS) or a size-only label that borrows the image of the job's other label.
+func parseProfiles(raw string, c Config) (map[string]Profile, error) {
+	profiles := map[string]Profile{}
+	for _, item := range strings.Split(raw, ";") {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		name, rest, ok := strings.Cut(item, ":")
+		name = strings.TrimSpace(name)
+		if !ok || !profileName.MatchString(name) || name == DefaultProfile {
+			return nil, fmt.Errorf("PROFILES entry %q must look like name:cpu=8,memory=14Gi (name is not %q)", item, DefaultProfile)
+		}
+		p := Profile{Disk: c.JobDiskLimit, Max: c.MaxJobs}
+		for _, kv := range strings.Split(rest, ",") {
+			key, value, ok := strings.Cut(strings.TrimSpace(kv), "=")
+			if !ok || value == "" {
+				return nil, fmt.Errorf("PROFILES %q: %q must look like key=value", name, kv)
+			}
+			switch key {
+			case "cpu":
+				p.CPU = value
+			case "memory":
+				p.Memory = value
+			case "disk":
+				p.Disk = value
+			case "max":
+				n, err := strconv.Atoi(value)
+				if err != nil || n < 1 {
+					return nil, fmt.Errorf("PROFILES %q: max must be a number of at least 1", name)
+				}
+				p.Max = n
+			default:
+				return nil, fmt.Errorf("PROFILES %q: unknown key %q (cpu, memory, disk, max)", name, key)
+			}
+		}
+		if p.CPU == "" || p.Memory == "" {
+			return nil, fmt.Errorf("PROFILES %q needs cpu and memory", name)
+		}
+		profiles[name] = p
+	}
+	return profiles, nil
+}
+
+// ProfileFor picks the resource profile of a job from its runs-on labels (the first label, in name order, that has one).
+func (c Config) ProfileFor(runsOn []string) (string, Profile) {
+	names := append([]string(nil), runsOn...)
+	sort.Strings(names)
+	for _, name := range names {
+		if p, ok := c.Profiles[name]; ok {
+			return name, p
+		}
+	}
+	return DefaultProfile, Profile{CPU: c.JobCPULimit, Memory: c.JobMemoryLimit, Disk: c.JobDiskLimit, Max: c.MaxJobs}
 }

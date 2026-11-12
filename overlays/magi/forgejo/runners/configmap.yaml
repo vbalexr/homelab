@@ -7,10 +7,13 @@ data:
   FORGEJO_URL: http://forgejo-http.forgejo.svc.cluster.local:3000
   FORGEJO_SCOPE: admin
   LABELS: ubuntu-latest=docker://data.forgejo.org/oci/node:24-bookworm,docker=docker://data.forgejo.org/oci/node:24-bookworm
+  PROFILES: small:cpu=2,memory=2Gi,disk=10Gi,max=3;medium:cpu=4,memory=6Gi,disk=20Gi,max=2;large:cpu=8,memory=12Gi,disk=30Gi,max=2
+  DEFAULT_LABEL: ubuntu-latest
+  PRIORITY_CLASS: forgejo-job
   RUNNER_IMAGE: data.forgejo.org/forgejo/runner:13.2.1
   DIND_IMAGE: docker.io/library/docker:28.5.2-dind
   RUNNER_CONFIGMAP: forgejo-job-runner-config
-  MAX_JOBS: "2"
+  MAX_JOBS: "3"
   JOB_CPU_LIMIT: "4"
   JOB_MEMORY_LIMIT: 6Gi
   JOB_DISK_LIMIT: 20Gi
