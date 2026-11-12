@@ -38,6 +38,18 @@ spec:
               source_labels = ["__meta_kubernetes_pod_name"]
               target_label  = "pod"
             }
+            // workload = owning Deployment/StatefulSet/DaemonSet/Job name.
+            rule {
+              source_labels = ["__meta_kubernetes_pod_controller_name"]
+              target_label  = "workload"
+            }
+            // ReplicaSets are named <deployment>-<pod-template-hash>; strip the hash.
+            rule {
+              source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+              regex         = "ReplicaSet;(.+)-[a-z0-9]{6,10}"
+              target_label  = "workload"
+              replacement   = "$1"
+            }
             rule {
               source_labels = ["__meta_kubernetes_pod_container_name"]
               target_label  = "container"

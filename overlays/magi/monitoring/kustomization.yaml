@@ -10,6 +10,14 @@ resources:
   - truenas.yaml
   - httproute.yaml
 configMapGenerator:
+  - name: dashboard-logs-explorer
+    namespace: monitoring
+    files:
+      - logs-explorer.json=dashboards/logs-explorer.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
   # Picked up by the Grafana sidecar (label below), which watches every namespace.
   - name: dashboard-homelab-overview
     namespace: monitoring
