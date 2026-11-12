@@ -11,4 +11,4 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/vbalexr/forgejo-job-controller
-    newTag: 20261112-0021 # {"$imagepolicy":"flux-system:forgejo-job-controller:tag"}
+    newTag: 20261112-0321 # {"$imagepolicy":"flux-system:forgejo-job-controller:tag"}
