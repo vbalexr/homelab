@@ -5,7 +5,7 @@ resources:
   - priorityclass.yaml
   - rbac.yaml
   - configmap.yaml
-  # - secret.yaml
+  - secret.yaml
   - deployment.yaml
   - service.yaml
   - networkpolicy.yaml
