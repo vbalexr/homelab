@@ -1,0 +1,39 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - secret-pull.yaml
+  - secret.yaml
+  - secret-db.yaml
+  - podmonitor.yaml
+  - httproute.yaml
+  - auth.yaml
+  - esi-wrapper.yaml
+  - market.yaml
+  - universe.yaml
+  - appraisal.yaml
+  - buyback.yaml
+  - dscan.yaml
+  - safetravel.yaml
+  - scheduler.yaml
+  - webapp.yaml
+images:
+  - name: git.vbalex.com/mrakaki/auth
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-auth:tag"}
+  - name: git.vbalex.com/mrakaki/esi-wrapper
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-esi-wrapper:tag"}
+  - name: git.vbalex.com/mrakaki/market
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-market:tag"}
+  - name: git.vbalex.com/mrakaki/universe
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-universe:tag"}
+  - name: git.vbalex.com/mrakaki/appraisal
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-appraisal:tag"}
+  - name: git.vbalex.com/mrakaki/buyback
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-buyback:tag"}
+  - name: git.vbalex.com/mrakaki/dscan
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-dscan:tag"}
+  - name: git.vbalex.com/mrakaki/safetravel
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-safetravel:tag"}
+  - name: git.vbalex.com/mrakaki/scheduler
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-scheduler:tag"}
+  - name: git.vbalex.com/mrakaki/webapp
+    newTag: "000000-0000" # {"$imagepolicy": "flux-system:akaki-webapp:tag"}

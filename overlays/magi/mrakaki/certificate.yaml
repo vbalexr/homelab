@@ -9,5 +9,6 @@ spec:
     kind: ClusterIssuer
     name: letsencrypt-prod
   dnsNames:
+    - mrakaki.com
     - auth.mrakaki.com
     - buyback.mrakaki.com

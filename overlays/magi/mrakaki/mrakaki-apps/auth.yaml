@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: mrakaki
+  labels:
+    app: auth
+    app.kubernetes.io/part-of: akaki-apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+        app.kubernetes.io/part-of: akaki-apps
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: forgejo-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: auth
+          image: git.vbalex.com/mrakaki/auth
+          env:
+            - name: AUTH_DB_URL
+              value: "jdbc:postgresql://postgres.database.svc.cluster.local:5432/mrakaki?currentSchema=auth"
+            - name: AUTH_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_USER
+            - name: AUTH_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_PASSWORD
+            - name: S2S_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_PUBLIC_KEY
+            - name: AUTH_TOKEN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: AUTH_TOKEN_KEY
+            - name: EVE_SSO_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: EVE_SSO_CLIENT_ID
+            - name: EVE_SSO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: EVE_SSO_CLIENT_SECRET
+            - name: EVE_SSO_CALLBACK_URL
+              value: "https://mrakaki.com/login/callback"
+          ports:
+            - name: http
+              containerPort: 8081
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: mrakaki
+  labels:
+    app: auth
+spec:
+  selector:
+    app: auth
+  ports:
+    - name: http
+      port: 8081
+      targetPort: http

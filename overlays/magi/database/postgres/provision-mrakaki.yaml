@@ -1,0 +1,74 @@
+# Creates the mrakaki role, the mrakaki database and one schema per application (the role owns all of it). Safe to repeat.
+# The Job is deleted an hour after it finishes; Flux recreates it on the next reconcile, so a change to the SQL below is
+# applied without touching the old Job (a Job's spec cannot be edited). The password comes from mrakaki-db-credentials;
+# the apps get the same value from the mrakaki-db Secret in the mrakaki namespace.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: provision-mrakaki
+  namespace: database
+spec:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: psql
+          image: ghcr.io/vbalexr/postgres
+          command: [sh, -c]
+          args:
+            - |
+              set -eu
+              until pg_isready -q; do sleep 2; done
+              psql -v ON_ERROR_STOP=1 -v pw="$APP_PASSWORD" <<'SQL'
+              SELECT format('CREATE ROLE mrakaki LOGIN PASSWORD %L', :'pw')
+                WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'mrakaki') \gexec
+              ALTER ROLE mrakaki PASSWORD :'pw';
+              SELECT 'CREATE DATABASE mrakaki OWNER mrakaki'
+                WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mrakaki') \gexec
+              REVOKE CONNECT ON DATABASE mrakaki FROM PUBLIC;
+              \c mrakaki
+              CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS esi_wrapper AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS market AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS universe AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS appraisal AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS dscan AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS buyback AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS safetravel AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS scheduler AUTHORIZATION mrakaki;
+              SQL
+          env:
+            - name: PGHOST
+              value: postgres
+            - name: PGUSER
+              value: postgres
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db-credentials
+                  key: DB_PASSWORD
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]

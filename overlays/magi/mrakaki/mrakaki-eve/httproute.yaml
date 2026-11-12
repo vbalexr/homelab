@@ -40,6 +40,7 @@ spec:
     - name: mrakaki-gateway
       sectionName: http
   hostnames:
+    - mrakaki.com
     - auth.mrakaki.com
     - buyback.mrakaki.com
   rules:

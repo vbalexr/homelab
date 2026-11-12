@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  namespace: mrakaki
+  labels:
+    app: webapp
+    app.kubernetes.io/part-of: akaki-apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+        app.kubernetes.io/part-of: akaki-apps
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: forgejo-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: webapp
+          image: git.vbalex.com/mrakaki/webapp
+          env:
+            - name: AUTH_URL
+              value: "http://auth:8081"
+            - name: ESI_WRAPPER_URL
+              value: "http://esi-wrapper:8082"
+            - name: APPRAISAL_URL
+              value: "http://appraisal:8085"
+            - name: DSCAN_URL
+              value: "http://dscan:8087"
+            - name: BUYBACK_URL
+              value: "http://buyback:8086"
+            - name: SAFETRAVEL_URL
+              value: "http://safetravel:8088"
+            - name: UNIVERSE_URL
+              value: "http://universe:8084"
+            - name: SCHEDULER_URL
+              value: "http://scheduler:8089"
+            - name: MARKET_URL
+              value: "http://market:8083"
+            - name: S2S_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_TOKEN_WEBAPP
+            - name: VALKEY_HOST
+              value: "valkey.database.svc.cluster.local"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: VALKEY_PASSWORD
+            - name: WEBAPP_PUBLIC_URL
+              value: "https://mrakaki.com"
+            - name: SERVER_FORWARD_HEADERS_STRATEGY
+              value: "native"
+            - name: WEBAPP_CONTACT
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: WEBAPP_CONTACT
+                  optional: true  # empty hides the contact line on the error page
+          ports:
+            - name: http
+              containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp
+  namespace: mrakaki
+  labels:
+    app: webapp
+spec:
+  selector:
+    app: webapp
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

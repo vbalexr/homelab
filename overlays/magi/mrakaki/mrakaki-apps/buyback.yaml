@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buyback
+  namespace: mrakaki
+  labels:
+    app: buyback
+    app.kubernetes.io/part-of: akaki-apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buyback
+  template:
+    metadata:
+      labels:
+        app: buyback
+        app.kubernetes.io/part-of: akaki-apps
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: forgejo-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: buyback
+          image: git.vbalex.com/mrakaki/buyback
+          env:
+            - name: BUYBACK_DB_URL
+              value: "jdbc:postgresql://postgres.database.svc.cluster.local:5432/mrakaki?currentSchema=buyback"
+            - name: BUYBACK_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_USER
+            - name: BUYBACK_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_PASSWORD
+            - name: APPRAISAL_URL
+              value: "http://appraisal:8085"
+            - name: AUTH_URL
+              value: "http://auth:8081"
+            - name: UNIVERSE_URL
+              value: "http://universe:8084"
+            - name: MARKET_URL
+              value: "http://market:8083"
+            - name: S2S_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_TOKEN_BUYBACK
+            - name: S2S_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_PUBLIC_KEY
+            - name: WEBAPP_PUBLIC_URL
+              value: "https://mrakaki.com"
+          ports:
+            - name: http
+              containerPort: 8086
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: buyback
+  namespace: mrakaki
+  labels:
+    app: buyback
+spec:
+  selector:
+    app: buyback
+  ports:
+    - name: http
+      port: 8086
+      targetPort: http

@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market
+  namespace: mrakaki
+  labels:
+    app: market
+    app.kubernetes.io/part-of: akaki-apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: market
+  template:
+    metadata:
+      labels:
+        app: market
+        app.kubernetes.io/part-of: akaki-apps
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: forgejo-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: market
+          image: git.vbalex.com/mrakaki/market
+          env:
+            - name: MARKET_DB_URL
+              value: "jdbc:postgresql://postgres.database.svc.cluster.local:5432/mrakaki?reWriteBatchedInserts=true&currentSchema=market"
+            - name: MARKET_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_USER
+            - name: MARKET_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_PASSWORD
+            - name: AUTH_URL
+              value: "http://auth:8081"
+            - name: ESI_WRAPPER_URL
+              value: "http://esi-wrapper:8082"
+            - name: UNIVERSE_URL
+              value: "http://universe:8084"
+            - name: S2S_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_TOKEN_MARKET
+            - name: S2S_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_PUBLIC_KEY
+          ports:
+            - name: http
+              containerPort: 8083
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: market
+  namespace: mrakaki
+  labels:
+    app: market
+spec:
+  selector:
+    app: market
+  ports:
+    - name: http
+      port: 8083
+      targetPort: http

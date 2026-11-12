@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esi-wrapper
+  namespace: mrakaki
+  labels:
+    app: esi-wrapper
+    app.kubernetes.io/part-of: akaki-apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: esi-wrapper
+  template:
+    metadata:
+      labels:
+        app: esi-wrapper
+        app.kubernetes.io/part-of: akaki-apps
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: forgejo-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: esi-wrapper
+          image: git.vbalex.com/mrakaki/esi-wrapper
+          env:
+            - name: ESI_DB_URL
+              value: "jdbc:postgresql://postgres.database.svc.cluster.local:5432/mrakaki?currentSchema=esi_wrapper"
+            - name: ESI_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_USER
+            - name: ESI_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_PASSWORD
+            - name: AUTH_BASE_URL
+              value: "http://auth:8081"
+            - name: S2S_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_TOKEN_ESI_WRAPPER
+            - name: S2S_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_PUBLIC_KEY
+            - name: VALKEY_HOST
+              value: "valkey.database.svc.cluster.local"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: VALKEY_PASSWORD
+            - name: ESI_USER_AGENT
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: ESI_USER_AGENT
+          ports:
+            - name: http
+              containerPort: 8082
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: esi-wrapper
+  namespace: mrakaki
+  labels:
+    app: esi-wrapper
+spec:
+  selector:
+    app: esi-wrapper
+  ports:
+    - name: http
+      port: 8082
+      targetPort: http

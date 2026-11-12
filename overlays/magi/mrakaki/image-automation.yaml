@@ -1,0 +1,284 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-auth
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/auth
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-auth
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-auth
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-esi-wrapper
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/esi-wrapper
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-esi-wrapper
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-esi-wrapper
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-market
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/market
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-market
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-market
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-universe
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/universe
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-universe
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-universe
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-appraisal
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/appraisal
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-appraisal
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-appraisal
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-buyback
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/buyback
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-buyback
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-buyback
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-dscan
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/dscan
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-dscan
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-dscan
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-safetravel
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/safetravel
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-safetravel
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-safetravel
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-scheduler
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/scheduler
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-scheduler
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-scheduler
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: akaki-webapp
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/webapp
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-webapp
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-webapp
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: akaki-apps
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: "chore(images): update akaki apps images to latest tag"
+    push:
+      branch: main
+  update:
+    path: ./overlays/magi/mrakaki/mrakaki-apps
+    strategy: Setters

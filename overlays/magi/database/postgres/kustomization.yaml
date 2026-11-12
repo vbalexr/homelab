@@ -6,6 +6,8 @@ resources:
   - configmap.yaml
   - service.yaml
   - statefulset.yaml
+  - secret-mrakaki.yaml
+  - provision-mrakaki.yaml
 images:
   - name: ghcr.io/vbalexr/postgres
     newTag: "20261104.2323" # {"$imagepolicy":"flux-system:postgres:tag"}
