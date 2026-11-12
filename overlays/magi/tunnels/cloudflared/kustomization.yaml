@@ -5,4 +5,4 @@ resources:
   - deployment.yaml
 images:
   - name: docker.io/cloudflare/cloudflared
-    newTag: 2026.10.7 # {"$imagepolicy":"flux-system:cloudflared:tag"}
+    newTag: 2026.11.0 # {"$imagepolicy":"flux-system:cloudflared:tag"}
