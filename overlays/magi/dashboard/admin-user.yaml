@@ -1,0 +1,31 @@
+# Cluster-admin account for the dashboard login. The token Secret below is populated by Kubernetes and never expires; the
+# manifest holds no secret. Read it with:
+#   kubectl -n dashboard get secret dashboard-admin-token -o jsonpath='{.data.token}' | base64 -d
+# Revoke by deleting the Secret (it is recreated with a new token) or the ServiceAccount.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dashboard-admin
+  namespace: dashboard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dashboard-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: dashboard-admin
+    namespace: dashboard
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dashboard-admin-token
+  namespace: dashboard
+  annotations:
+    kubernetes.io/service-account.name: dashboard-admin
+type: kubernetes.io/service-account-token
