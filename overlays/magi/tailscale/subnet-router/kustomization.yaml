@@ -8,4 +8,4 @@ resources:
   - statefulset.yaml
 images:
   - name: docker.io/tailscale/tailscale
-    newTag: v1.104.4 # {"$imagepolicy":"flux-system:tailscale:tag"}
+    newTag: v1.104.7 # {"$imagepolicy":"flux-system:tailscale:tag"}
