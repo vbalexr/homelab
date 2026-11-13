@@ -20,7 +20,7 @@ images:
   - name: git.vbalex.com/mrakaki/auth
     newTag: "261113-0109" # {"$imagepolicy": "flux-system:akaki-auth:tag"}
   - name: git.vbalex.com/mrakaki/esi-wrapper
-    newTag: "261112-2047" # {"$imagepolicy": "flux-system:akaki-esi-wrapper:tag"}
+    newTag: "261113-0109" # {"$imagepolicy": "flux-system:akaki-esi-wrapper:tag"}
   - name: git.vbalex.com/mrakaki/market
     newTag: "261112-2047" # {"$imagepolicy": "flux-system:akaki-market:tag"}
   - name: git.vbalex.com/mrakaki/universe
