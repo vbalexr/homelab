@@ -30,6 +30,16 @@ spec:
           args:
             - pip install --no-cache-dir django-health-check==4.8.0 && exec celery -A myauth worker --pool=threads --concurrency=1 -Q services -n worker_services_%n
           workingDir: /home/allianceauth/myauth/
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - celery -A myauth inspect ping -d worker_services_${HOSTNAME}@${HOSTNAME} -t 20
+            initialDelaySeconds: 180
+            periodSeconds: 60
+            timeoutSeconds: 45
+            failureThreshold: 3
           envFrom:
             - configMapRef:
                 name: aa-sspti-env
