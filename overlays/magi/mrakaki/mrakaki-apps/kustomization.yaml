@@ -18,7 +18,7 @@ resources:
   - webapp.yaml
 images:
   - name: git.vbalex.com/mrakaki/auth
-    newTag: "261113-0318" # {"$imagepolicy": "flux-system:akaki-auth:tag"}
+    newTag: "261113-1653" # {"$imagepolicy": "flux-system:akaki-auth:tag"}
   - name: git.vbalex.com/mrakaki/esi-wrapper
     newTag: "261113-0318" # {"$imagepolicy": "flux-system:akaki-esi-wrapper:tag"}
   - name: git.vbalex.com/mrakaki/market
@@ -26,9 +26,9 @@ images:
   - name: git.vbalex.com/mrakaki/universe
     newTag: "261113-0318" # {"$imagepolicy": "flux-system:akaki-universe:tag"}
   - name: git.vbalex.com/mrakaki/appraisal
-    newTag: "261113-0318" # {"$imagepolicy": "flux-system:akaki-appraisal:tag"}
+    newTag: "261113-1653" # {"$imagepolicy": "flux-system:akaki-appraisal:tag"}
   - name: git.vbalex.com/mrakaki/buyback
-    newTag: "261113-0318" # {"$imagepolicy": "flux-system:akaki-buyback:tag"}
+    newTag: "261113-1653" # {"$imagepolicy": "flux-system:akaki-buyback:tag"}
   - name: git.vbalex.com/mrakaki/dscan
     newTag: "261113-0318" # {"$imagepolicy": "flux-system:akaki-dscan:tag"}
   - name: git.vbalex.com/mrakaki/safetravel
