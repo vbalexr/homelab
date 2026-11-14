@@ -35,10 +35,10 @@ spec:
               command:
                 - sh
                 - -c
-                - celery -A myauth inspect ping -d worker_${HOSTNAME}@${HOSTNAME} -t 20
+                - celery -A myauth inspect ping -d celery@worker_${HOSTNAME} -t 20 && python -c "import os;os.environ.setdefault('DJANGO_SETTINGS_MODULE','myauth.settings.local');import django;django.setup();from django.db import connection as c;c.ensure_connection()"
             initialDelaySeconds: 180
             periodSeconds: 60
-            timeoutSeconds: 45
+            timeoutSeconds: 60
             failureThreshold: 3
           envFrom:
             - configMapRef:
