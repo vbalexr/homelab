@@ -14,3 +14,20 @@ metadata:
   name: default-replica-count
   namespace: longhorn-system
 value: '{"v1":"2","v2":"2"}'
+---
+# The NAS drops packets under backup load, so cap the pressure: one backup/restore at a time per node (3 nodes = at most 3
+# volumes in flight cluster-wide). Backups beyond the limit wait in the queue.
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: concurrent-volume-backup-restore-per-node-limit
+  namespace: longhorn-system
+value: "1"
+---
+# Worker threads per backup (default 5). Lower it to 1 if the NAS still drops packets.
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: backup-concurrent-limit
+  namespace: longhorn-system
+value: "2"
