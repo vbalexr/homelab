@@ -30,7 +30,7 @@ images:
   - name: git.vbalex.com/mrakaki/buyback
     newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-buyback:tag"}
   - name: git.vbalex.com/mrakaki/dscan
-    newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-dscan:tag"}
+    newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-dscan:tag"}
   - name: git.vbalex.com/mrakaki/safetravel
     newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-safetravel:tag"}
   - name: git.vbalex.com/mrakaki/scheduler
