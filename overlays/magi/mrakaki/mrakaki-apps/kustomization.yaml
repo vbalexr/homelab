@@ -20,11 +20,11 @@ images:
   - name: git.vbalex.com/mrakaki/auth
     newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-auth:tag"}
   - name: git.vbalex.com/mrakaki/esi-wrapper
-    newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-esi-wrapper:tag"}
+    newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-esi-wrapper:tag"}
   - name: git.vbalex.com/mrakaki/market
-    newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-market:tag"}
+    newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-market:tag"}
   - name: git.vbalex.com/mrakaki/universe
-    newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-universe:tag"}
+    newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-universe:tag"}
   - name: git.vbalex.com/mrakaki/appraisal
     newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-appraisal:tag"}
   - name: git.vbalex.com/mrakaki/buyback
@@ -32,8 +32,8 @@ images:
   - name: git.vbalex.com/mrakaki/dscan
     newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-dscan:tag"}
   - name: git.vbalex.com/mrakaki/safetravel
-    newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-safetravel:tag"}
+    newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-safetravel:tag"}
   - name: git.vbalex.com/mrakaki/scheduler
-    newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-scheduler:tag"}
+    newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-scheduler:tag"}
   - name: git.vbalex.com/mrakaki/webapp
-    newTag: "261113-1846" # {"$imagepolicy": "flux-system:akaki-webapp:tag"}
+    newTag: "261114-0052" # {"$imagepolicy": "flux-system:akaki-webapp:tag"}
