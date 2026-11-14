@@ -23,6 +23,6 @@ configMapGenerator:
       - nginx.conf
 images:
   - name: ghcr.io/vbalexr/aa-sspti
-    newTag: 20261113-1506 # {"$imagepolicy":"flux-system:aa-sspti:tag"}
+    newTag: 20261114-0056 # {"$imagepolicy":"flux-system:aa-sspti:tag"}
   - name: ghcr.io/vbalexr/aa-sspti-nginx
-    newTag: 20261113-1508 # {"$imagepolicy":"flux-system:aa-sspti-nginx:tag"}
+    newTag: 20261114-0057 # {"$imagepolicy":"flux-system:aa-sspti-nginx:tag"}
