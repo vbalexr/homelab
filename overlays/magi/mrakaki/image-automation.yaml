@@ -53,6 +53,32 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
+  name: akaki-zkill-wrapper
+  namespace: flux-system
+spec:
+  image: git.vbalex.com/mrakaki/zkill-wrapper
+  interval: 5m0s
+  secretRef:
+    name: forgejo-pull-mrakaki
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: akaki-zkill-wrapper
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: akaki-zkill-wrapper
+  # Tags are yymmdd-HHMM, so the alphabetical order is the build order.
+  filterTags:
+    pattern: '^\d{6}-\d{4}$'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
   name: akaki-market
   namespace: flux-system
 spec:

@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zkill-wrapper
+  namespace: mrakaki
+  labels:
+    app: zkill-wrapper
+    app.kubernetes.io/part-of: akaki-apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zkill-wrapper
+  template:
+    metadata:
+      labels:
+        app: zkill-wrapper
+        app.kubernetes.io/part-of: akaki-apps
+    spec:
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: forgejo-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: zkill-wrapper
+          image: git.vbalex.com/mrakaki/zkill-wrapper
+          env:
+            - name: ZKILL_DB_URL
+              value: "jdbc:postgresql://postgres.database.svc.cluster.local:5432/mrakaki?currentSchema=zkill_wrapper"
+            - name: ZKILL_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_USER
+            - name: ZKILL_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-db
+                  key: DB_PASSWORD
+            - name: S2S_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: S2S_PUBLIC_KEY
+            - name: VALKEY_HOST
+              value: "valkey.database.svc.cluster.local"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: VALKEY_PASSWORD
+            - name: ESI_USER_AGENT
+              valueFrom:
+                secretKeyRef:
+                  name: mrakaki-apps
+                  key: ESI_USER_AGENT
+          ports:
+            - name: http
+              containerPort: 8090
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zkill-wrapper
+  namespace: mrakaki
+  labels:
+    app: zkill-wrapper
+spec:
+  selector:
+    app: zkill-wrapper
+  ports:
+    - name: http
+      port: 8090
+      targetPort: http

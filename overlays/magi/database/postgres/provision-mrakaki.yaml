@@ -7,6 +7,9 @@ kind: Job
 metadata:
   name: provision-mrakaki
   namespace: database
+  annotations:
+    # Flux deletes and recreates the Job when its spec changes, since a Job's spec is immutable.
+    kustomize.toolkit.fluxcd.io/force: enabled
 spec:
   ttlSecondsAfterFinished: 3600
   backoffLimit: 6
@@ -39,6 +42,7 @@ spec:
               \c mrakaki
               CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION mrakaki;
               CREATE SCHEMA IF NOT EXISTS esi_wrapper AUTHORIZATION mrakaki;
+              CREATE SCHEMA IF NOT EXISTS zkill_wrapper AUTHORIZATION mrakaki;
               CREATE SCHEMA IF NOT EXISTS market AUTHORIZATION mrakaki;
               CREATE SCHEMA IF NOT EXISTS universe AUTHORIZATION mrakaki;
               CREATE SCHEMA IF NOT EXISTS appraisal AUTHORIZATION mrakaki;
