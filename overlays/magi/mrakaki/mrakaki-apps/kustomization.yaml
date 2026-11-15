@@ -24,7 +24,7 @@ images:
   - name: git.vbalex.com/mrakaki/market
     newTag: "261114-0342" # {"$imagepolicy": "flux-system:akaki-market:tag"}
   - name: git.vbalex.com/mrakaki/universe
-    newTag: "261114-0342" # {"$imagepolicy": "flux-system:akaki-universe:tag"}
+    newTag: "261115-0333" # {"$imagepolicy": "flux-system:akaki-universe:tag"}
   - name: git.vbalex.com/mrakaki/appraisal
     newTag: "261114-0342" # {"$imagepolicy": "flux-system:akaki-appraisal:tag"}
   - name: git.vbalex.com/mrakaki/buyback
