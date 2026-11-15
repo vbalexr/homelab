@@ -59,6 +59,10 @@ spec:
                 secretKeyRef:
                   name: mrakaki-apps
                   key: ESI_USER_AGENT
+            - name: UNIVERSE_SEARCH_USER_ID
+              value: "1"
+            - name: UNIVERSE_SEARCH_CHARACTER_ID
+              value: "2120599058"
           ports:
             - name: http
               containerPort: 8084
