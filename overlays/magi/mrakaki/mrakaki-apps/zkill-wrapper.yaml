@@ -27,6 +27,8 @@ spec:
       containers:
         - name: zkill-wrapper
           image: git.vbalex.com/mrakaki/zkill-wrapper
+          # Native image: no -Xmx means a heap up to 80% of the limit, filled with garbage before it is collected. Cap it below the limit.
+          args: ["-Xmx640m"]
           env:
             - name: ZKILL_DB_URL
               value: "jdbc:postgresql://postgres.database.svc.cluster.local:5432/mrakaki?currentSchema=zkill_wrapper"
@@ -85,9 +87,9 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 192Mi
-            limits:
               memory: 512Mi
+            limits:
+              memory: 1Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
