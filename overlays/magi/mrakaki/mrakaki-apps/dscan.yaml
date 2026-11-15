@@ -42,6 +42,10 @@ spec:
                   key: DB_PASSWORD
             - name: UNIVERSE_URL
               value: "http://universe:8084"
+            - name: ZKILL_WRAPPER_URL
+              value: "http://zkill-wrapper:8090"
+            - name: ESI_WRAPPER_URL
+              value: "http://esi-wrapper:8082"
             - name: S2S_TOKEN
               valueFrom:
                 secretKeyRef:
