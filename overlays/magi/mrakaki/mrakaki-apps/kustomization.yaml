@@ -39,4 +39,4 @@ images:
   - name: git.vbalex.com/mrakaki/scheduler
     newTag: "261115-2316" # {"$imagepolicy": "flux-system:akaki-scheduler:tag"}
   - name: git.vbalex.com/mrakaki/webapp
-    newTag: "261116-0010" # {"$imagepolicy": "flux-system:akaki-webapp:tag"}
+    newTag: "261116-2111" # {"$imagepolicy": "flux-system:akaki-webapp:tag"}
