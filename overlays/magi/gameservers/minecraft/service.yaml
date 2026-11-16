@@ -7,6 +7,7 @@ metadata:
   namespace: gameservers
   annotations:
     lbipam.cilium.io/ips: "10.1.1.15,fd7a:2201:1ac::15"
+    external-dns.kubernetes.io/hostname: minecraft.vbalex.com
 spec:
   type: LoadBalancer
   ipFamilyPolicy: PreferDualStack

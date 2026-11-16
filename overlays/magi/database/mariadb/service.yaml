@@ -18,6 +18,7 @@ metadata:
   namespace: database
   annotations:
     lbipam.cilium.io/ips: "10.1.1.21,fd7a:2201:1ac::21"
+    external-dns.kubernetes.io/hostname: mariadb.vbalex.com
 spec:
   type: LoadBalancer
   ipFamilyPolicy: PreferDualStack

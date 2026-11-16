@@ -18,6 +18,7 @@ metadata:
   namespace: database
   annotations:
     lbipam.cilium.io/ips: "10.1.1.20,fd7a:2201:1ac::20"
+    external-dns.kubernetes.io/hostname: postgres.vbalex.com
 spec:
   type: LoadBalancer
   ipFamilyPolicy: PreferDualStack
