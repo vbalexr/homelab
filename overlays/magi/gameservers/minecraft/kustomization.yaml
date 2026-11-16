@@ -11,7 +11,8 @@ configMapGenerator:
     namespace: gameservers
     files:
       - guide/index.html
-      - guide/VaCe-Server-26.3.mrpack
+      - guide/logo.svg
+      - guide/CoyoteDensPack-1.2.1.mrpack
     options:
       disableNameSuffixHash: true
   - name: minecraft-guide-nginx
@@ -20,3 +21,8 @@ configMapGenerator:
       - default.conf=guide/nginx.conf
     options:
       disableNameSuffixHash: true
+# Server icon shown in the multiplayer list (64x64 PNG), mounted over /data/server-icon.png. Stored as .png.bin because Flux's default ignore skips .png files. Name hash on: changing the icon restarts the pod, which reads it at start.
+  - name: minecraft-icon
+    namespace: gameservers
+    files:
+      - server-icon.png=icon/server-icon.png.bin

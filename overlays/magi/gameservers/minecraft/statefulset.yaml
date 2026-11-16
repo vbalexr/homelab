@@ -30,9 +30,11 @@ spec:
             - {name: VERSION, value: "26.3"}
             - {name: PAPERBUILD, value: "194"}
             - {name: MEMORY, value: 4G}
-            - {name: DIFFICULTY, value: peaceful}
+            - {name: DIFFICULTY, value: easy}
+            - {name: SPAWN_MONSTERS, value: "false"}
+            - {name: MAX_PLAYERS, value: "50"}
             - {name: OPS, value: MrAkaki}
-            - {name: MOTD, value: VaCe Server}
+            - {name: MOTD, value: Coyote Den}
             - {name: TZ, value: UTC}
             - name: PLUGINS
               value: |
@@ -72,6 +74,7 @@ spec:
             timeoutSeconds: 10
           volumeMounts:
             - {name: data, mountPath: /data}
+            - {name: icon, mountPath: /data/server-icon.png, subPath: server-icon.png, readOnly: true}
         # Static player guide (ConfigMap minecraft-guide) on port 8080, published as port 80 of the minecraft Service.
         - name: guide
           image: docker.io/nginxinc/nginx-unprivileged:stable-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03
@@ -122,6 +125,9 @@ spec:
         - name: guide-tls
           secret:
             secretName: minecraft-tls
+        - name: icon
+          configMap:
+            name: minecraft-icon
         - name: guide-tmp
           emptyDir:
             sizeLimit: 16Mi
