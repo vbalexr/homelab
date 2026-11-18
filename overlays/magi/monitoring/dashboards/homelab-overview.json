@@ -16,398 +16,6 @@
   "graphTooltip": 1,
   "panels": [
     {
-      "id": 2,
-      "type": "timeseries",
-      "title": "Temperatures",
-      "description": "Hottest CPU core per host, hottest NVMe per node.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 0,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node-exporter\", chip=\"platform_coretemp_0\"}) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
-          "legendFormat": "{{nodename}} cpu",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node-exporter\", chip=~\"nvme_.*\"}) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
-          "legendFormat": "{{nodename}} nvme",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max by (instance) (node_cpu_temperature_celsius{job=\"routers\"})",
-          "legendFormat": "{{instance}} cpu",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(scale_truenas_cputemp_temperatures_cpu)",
-          "legendFormat": "truenas cpu",
-          "refId": "D"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "celsius",
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 0,
-            "showPoints": "never",
-            "spanNulls": true,
-            "thresholdsStyle": {
-              "mode": "dashed"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 85
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": []
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 4,
-      "type": "timeseries",
-      "title": "Nodes: bond",
-      "description": "Links under 1 kbit/s are hidden.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 16,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "(sum by (instance, device) (rate(node_network_receive_bytes_total{job=\"node-exporter\", device=~\"bond.*\"}[$__rate_interval])) * 8 > 1000) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
-          "legendFormat": "{{nodename}} {{device}} in",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "(sum by (instance, device) (rate(node_network_transmit_bytes_total{job=\"node-exporter\", device=~\"bond.*\"}[$__rate_interval])) * 8 > 1000) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
-          "legendFormat": "{{nodename}} {{device}} out",
-          "refId": "B"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bps",
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": []
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 6,
-      "type": "timeseries",
-      "title": "Routers: VLANs (without WANs)",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 8,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (instance, device) (rate(node_network_receive_bytes_total{job=\"routers\", device=~\"vlan.*\", device!~\"vlan02|vlan03\"}[$__rate_interval])) * 8",
-          "legendFormat": "{{instance}} {{device}} in",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (instance, device) (rate(node_network_transmit_bytes_total{job=\"routers\", device=~\"vlan.*\", device!~\"vlan02|vlan03\"}[$__rate_interval])) * 8",
-          "legendFormat": "{{instance}} {{device}} out",
-          "refId": "B"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bps",
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": []
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 7,
-      "type": "timeseries",
-      "title": "TrueNAS: bond",
-      "description": "TrueNAS reports kilobits per second, with transmit stored as a negative number; shown here as positive.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 24,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "scale_truenas_net_bond1_received * 1000",
-          "legendFormat": "bond1 in",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "abs(scale_truenas_net_bond1_sent) * 1000",
-          "legendFormat": "bond1 out",
-          "refId": "B"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bps",
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": []
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 14,
-      "type": "timeseries",
-      "title": "Routers: WANs",
-      "description": "vlan02 and vlan03 on Victim and Demiurg. ",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 8,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (instance, device) (rate(node_network_receive_bytes_total{job=\"routers\", device=~\"vlan02|vlan03\"}[$__rate_interval])) * 8",
-          "legendFormat": "{{instance}} {{device}} in",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (instance, device) (rate(node_network_transmit_bytes_total{job=\"routers\", device=~\"vlan02|vlan03\"}[$__rate_interval])) * 8",
-          "legendFormat": "{{instance}} {{device}} out",
-          "refId": "B"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bps",
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": []
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 15,
-      "type": "timeseries",
-      "title": "Nodes: SFP+ ports",
-      "description": "eno1-eno4, the X553 SFP+ ports. Links under 1 kbit/s are hidden.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 0,
-        "y": 16,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "(sum by (instance, device) (rate(node_network_receive_bytes_total{job=\"node-exporter\", device=~\"eno.*\"}[$__rate_interval])) * 8 > 1000) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
-          "legendFormat": "{{nodename}} {{device}} in",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "(sum by (instance, device) (rate(node_network_transmit_bytes_total{job=\"node-exporter\", device=~\"eno.*\"}[$__rate_interval])) * 8 > 1000) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
-          "legendFormat": "{{nodename}} {{device}} out",
-          "refId": "B"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bps",
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "spanNulls": true
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": []
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
       "id": 9,
       "type": "stat",
       "title": "Packet errors",
@@ -417,9 +25,9 @@
         "uid": "prometheus"
       },
       "gridPos": {
-        "x": 12,
+        "x": 0,
         "y": 0,
-        "w": 4,
+        "w": 8,
         "h": 3
       },
       "targets": [
@@ -479,9 +87,9 @@
         "uid": "prometheus"
       },
       "gridPos": {
-        "x": 16,
+        "x": 8,
         "y": 0,
-        "w": 4,
+        "w": 8,
         "h": 3
       },
       "targets": [
@@ -541,9 +149,9 @@
         "uid": "prometheus"
       },
       "gridPos": {
-        "x": 20,
+        "x": 16,
         "y": 0,
-        "w": 4,
+        "w": 8,
         "h": 3
       },
       "targets": [
@@ -594,6 +202,173 @@
       }
     },
     {
+      "id": 2,
+      "type": "timeseries",
+      "title": "CPU temperatures",
+      "description": "Hottest CPU core per host.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node-exporter\", chip=\"platform_coretemp_0\"}) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
+          "legendFormat": "{{nodename}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (instance) (node_cpu_temperature_celsius{job=\"routers\"})",
+          "legendFormat": "{{instance}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(scale_truenas_cputemp_temperatures_cpu)",
+          "legendFormat": "mausoleum",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Disk / NVMe temperatures",
+      "description": "Hottest NVMe per node; hottest disk (any of the NAS's NVMes and HDDs) for TrueNAS. TrueNAS series appear once its reporting sends disktemp metrics.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 3,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node-exporter\", chip=~\"nvme_.*\"}) * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
+          "legendFormat": "{{nodename}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max({__name__=~\"scale_truenas_disktemp.*\"})",
+          "legendFormat": "mausoleum",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
       "id": 12,
       "type": "table",
       "title": "Devices with errors or drops",
@@ -602,10 +377,10 @@
         "uid": "prometheus"
       },
       "gridPos": {
-        "x": 12,
+        "x": 16,
         "y": 3,
-        "w": 12,
-        "h": 5
+        "w": 8,
+        "h": 8
       },
       "targets": [
         {
@@ -613,7 +388,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(sum by (instance, device) (increase(node_network_receive_errs_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[1h]) + increase(node_network_transmit_errs_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[1h]))) > 0",
+          "expr": "(sum by (instance, device) (increase(node_network_receive_errs_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[1h]) + increase(node_network_transmit_errs_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[1h])) * on(instance) group_left(nodename) node_uname_info) > 0",
           "legendFormat": "errors",
           "refId": "A",
           "instant": true,
@@ -625,7 +400,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(sum by (instance, device) (increase(node_network_receive_drop_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[1h]) + increase(node_network_transmit_drop_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[1h]))) > 0",
+          "expr": "(sum by (instance, device) (increase(node_network_receive_drop_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[1h]) + increase(node_network_transmit_drop_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[1h])) * on(instance) group_left(nodename) node_uname_info) > 0",
           "legendFormat": "drops",
           "refId": "B",
           "instant": true,
@@ -642,11 +417,19 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "Time": true
+              "Time": true,
+              "instance": true
             },
             "renameByName": {
               "Value #A": "errors",
-              "Value #B": "drops"
+              "Value #B": "drops",
+              "nodename": "machine"
+            },
+            "indexByName": {
+              "nodename": 0,
+              "device": 1,
+              "Value #A": 2,
+              "Value #B": 3
             }
           }
         }
@@ -662,6 +445,215 @@
       }
     },
     {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Routers: WANs",
+      "description": "in + out per WAN: Metro (vlan 2) and Star (vlan 3) on victim and demiurg.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "label_replace(label_replace(sum by (instance, device) (rate(node_network_receive_bytes_total{job=\"routers\", device=~\"vlan02|vlan03\"}[$__rate_interval]) + rate(node_network_transmit_bytes_total{job=\"routers\", device=~\"vlan02|vlan03\"}[$__rate_interval])) * 8, \"device\", \"Metro\", \"device\", \"vlan02\"), \"device\", \"Star\", \"device\", \"vlan03\")",
+          "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Routers: VLANs (without WANs)",
+      "description": "in + out per router VLAN: LAB (10), HOME (15), IOT (20), CCTV (25), Management (500).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 11,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(sum by (instance, device) (rate(node_network_receive_bytes_total{job=\"routers\", device=~\"vlan.*\", device!~\"vlan02|vlan03\"}[$__rate_interval]) + rate(node_network_transmit_bytes_total{job=\"routers\", device=~\"vlan.*\", device!~\"vlan02|vlan03\"}[$__rate_interval])) * 8, \"device\", \"LAB\", \"device\", \"vlan010\"), \"device\", \"HOME\", \"device\", \"vlan015\"), \"device\", \"IOT\", \"device\", \"vlan020\"), \"device\", \"CCTV\", \"device\", \"vlan025\"), \"device\", \"Management\", \"device\", \"vlan0500\")",
+          "legendFormat": "{{instance}} {{device}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Bonds: nodes + mausoleum",
+      "description": "in + out per machine, summed over its bond interfaces.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 11,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{job=\"node-exporter\", device=~\"bond.*\"}[$__rate_interval]) + rate(node_network_transmit_bytes_total{job=\"node-exporter\", device=~\"bond.*\"}[$__rate_interval])) * 8 * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
+          "legendFormat": "{{nodename}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(scale_truenas_net_bond1_received + abs(scale_truenas_net_bond1_sent)) * 1000",
+          "legendFormat": "mausoleum",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Nodes: SFP+ ports",
+      "description": "eno1-eno4 (X553 SFP+ ports): in + out, summed over both ports, per node.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{job=\"node-exporter\", device=~\"eno.*\"}[$__rate_interval]) + rate(node_network_transmit_bytes_total{job=\"node-exporter\", device=~\"eno.*\"}[$__rate_interval])) * 8 * on(instance) group_left(nodename) node_uname_info{job=\"node-exporter\"}",
+          "legendFormat": "{{nodename}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
       "id": 13,
       "type": "timeseries",
       "title": "Errors and drops over time",
@@ -672,7 +664,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 24,
+        "y": 19,
         "w": 12,
         "h": 8
       },
@@ -682,8 +674,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (instance, device) (increase(node_network_receive_errs_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[5m]) + increase(node_network_transmit_errs_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[5m])) > 0",
-          "legendFormat": "{{instance}} {{device}} errors",
+          "expr": "sum by (instance, device) (increase(node_network_receive_errs_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[5m]) + increase(node_network_transmit_errs_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[5m])) * on(instance) group_left(nodename) node_uname_info > 0",
+          "legendFormat": "{{nodename}} {{device}} errors",
           "refId": "A"
         },
         {
@@ -691,8 +683,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (instance, device) (increase(node_network_receive_drop_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[5m]) + increase(node_network_transmit_drop_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[5m])) > 0",
-          "legendFormat": "{{instance}} {{device}} drops",
+          "expr": "sum by (instance, device) (increase(node_network_receive_drop_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[5m]) + increase(node_network_transmit_drop_total{device!~\"lo.*|veth.*|lxc.*|cilium.*|dummy.*|sit.*|ip6tnl.*|tunl.*|teql.*|enc.*|pf.*\"}[5m])) * on(instance) group_left(nodename) node_uname_info > 0",
+          "legendFormat": "{{nodename}} {{device}} drops",
           "refId": "B"
         },
         {
@@ -701,7 +693,7 @@
             "uid": "prometheus"
           },
           "expr": "increase(scale_truenas_net_drops_bond1_inbound[5m]) + increase(scale_truenas_net_drops_bond1_outbound[5m]) > 0",
-          "legendFormat": "truenas bond1 drops",
+          "legendFormat": "mausoleum bond1 drops",
           "refId": "C"
         }
       ],
