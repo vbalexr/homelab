@@ -1,7 +1,7 @@
 # external-dns
 
 Creates the DNS records of the HTTPRoute hostnames in the `vbalex.com` and `mrakaki.com` zones of Technitium. Records point at the address of the
-Gateway the route is attached to. Services of type LoadBalancer get a record too when they carry the `external-dns.kubernetes.io/hostname` annotation (minecraft, mqtt, postgres, mariadb); the record points at the LoadBalancer IPs (A and AAAA). Only `vbalex.com` and `mrakaki.com` are managed; routes for other domains are ignored.
+Gateway the route is attached to. Services of type LoadBalancer get a record too when they carry the `external-dns.kubernetes.io/hostname` annotation (mqtt, postgres, mariadb); the record points at the LoadBalancer IPs (A and AAAA). Only `vbalex.com` and `mrakaki.com` are managed; routes for other domains are ignored.
 
 ## Set up (once)
 

@@ -10,7 +10,6 @@ GitOps repo for **MAGI**, a three-node Talos Linux Kubernetes cluster. Flux sync
 - **DNS:** Technitium
 - **Home:** Home Assistant, ESPHome, Zigbee2MQTT, Mosquitto
 - **Shared apps:** Immich, Frigate
-- **Game servers:** Minecraft
 - **Other apps:** sspti, chilu, mrakaki, Tailscale, tunnels
 - **Custom images:** `aa-sspti` and `postgres`, built by GitHub Actions
 
@@ -26,7 +25,7 @@ overlays/magi/         What each layer deploys (one folder per layer or app grou
   configurations/      cert-manager issuers
   database/            postgres, mariadb, valkey
   monitoring/          Prometheus, Loki, Alloy
-  dns/ home/ shared/ gameservers/ ...   application groups
+  dns/ home/ shared/...   application groups
 containers/            Dockerfiles for custom images
 network/               Network and BGP routing design
 .github/workflows/     Image builds, update checks, secret scan

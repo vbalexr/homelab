@@ -1,5 +1,5 @@
 # Publishes the hostnames of the HTTPRoutes, and of the Services annotated with external-dns.kubernetes.io/hostname
-# (the TCP/UDP ones like minecraft, mqtt and the databases, pointing at their LoadBalancer IPs), into the vbalex.com and mrakaki.com zones of Technitium, pointing at the address of the Gateway
+# (the TCP/UDP ones like mqtt and the databases, pointing at their LoadBalancer IPs), into the vbalex.com and mrakaki.com zones of Technitium, pointing at the address of the Gateway
 # each route is attached to, so a new route gets its DNS record without a manual step. Updates go to the primary node over
 # RFC2136, signed with the TSIG key in the `external-dns-tsig` secret. The TXT registry marks the records it owns, so it
 # never touches records created by hand.
