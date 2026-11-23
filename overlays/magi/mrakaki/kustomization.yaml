@@ -6,5 +6,4 @@ resources:
   - certificate.yaml
   - secret-image-pull.yaml
   - image-automation.yaml
-  - mrakaki-eve
   - mrakaki-apps
