@@ -1,9 +1,9 @@
 # mariadb
 
-Single instance, StatefulSet `mariadb` in namespace `database`: MariaDB 11.4 (`docker.io/library/mariadb:11.4`), 20Gi on
+Single instance, StatefulSet `mariadb` in namespace `database`: MariaDB 11.4 (`docker.io/library/mariadb:11.4`), 50Gi on
 `longhorn-retain`, LoadBalancer port 3306 (`externalTrafficPolicy: Local`).
 
-- **Config:** `innodb.cnf` from the ConfigMap is mounted on `/etc/mysql/conf.d` and applied (buffer pool 7G, 512M redo log,
+- **Config:** `innodb.cnf` from the ConfigMap is mounted on `/etc/mysql/conf.d` and applied (buffer pool 2G, 512M redo log,
   `O_DIRECT`). Check with `SHOW VARIABLES`; charset `utf8mb4`, collation `utf8mb4_uca1400_ai_ci` and the default `sql_mode` are the image defaults.
 - **Root password:** `MARIADB_ROOT_PASSWORD` from the `mariadb-credentials` Secret is only used when the data directory is empty.
 - **Restore from a dump:** `mariadb-dump --single-transaction --routines --events --triggers --databases <databases>`

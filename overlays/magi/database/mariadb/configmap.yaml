@@ -6,7 +6,7 @@ metadata:
 data:
   innodb.cnf: |
     [mysqld]
-    innodb_buffer_pool_size = 7G
+    innodb_buffer_pool_size = 2G
     innodb_buffer_pool_dump_at_shutdown = ON
     innodb_buffer_pool_load_at_startup = ON
     innodb_buffer_pool_dump_pct = 100
