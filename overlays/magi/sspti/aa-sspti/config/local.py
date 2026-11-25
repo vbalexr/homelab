@@ -64,7 +64,7 @@ STATIC_ROOT = "/var/www/myauth/static/"
 _redis_host = os.environ.get("AA_REDIS", "redis:6379")
 _redis_password = os.environ.get("AA_REDIS_PASSWORD", "")
 _redis_auth = f":{_redis_password}@" if _redis_password else ""
-BROKER_URL = f"redis://{_redis_auth}{_redis_host}/0"
+BROKER_URL = f"redis://{_redis_auth}{_redis_host}/4"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",

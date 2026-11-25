@@ -58,6 +58,8 @@ spec:
                   key: S2S_PUBLIC_KEY
             - name: VALKEY_HOST
               value: "valkey.database.svc.cluster.local"
+            - name: SPRING_DATA_REDIS_DATABASE
+              value: "5"
             - name: SPRING_DATA_REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:

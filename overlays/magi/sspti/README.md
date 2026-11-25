@@ -9,6 +9,6 @@ AllianceAuth, reached through the Cloudflare tunnel (straight to the `aa-sspti-w
   `aa-sspti-config` ConfigMap, the environment from `aa-sspti-env` and `aa-sspti-secret`.
 - **Start command:** every container runs `pip install django-health-check==4.8.0` first (`urls.py` imports it), so the pods need outbound internet.
 - **Database:** MariaDB `sspti_aa` (account `sspti_aa`) in the `database` namespace, reached through the `mariadb` ExternalName Service
-  (`AA_DB_HOST=mariadb`). Valkey: `valkey.database.svc.cluster.local`, db 0 is the celery broker and db 1 the cache.
+  (`AA_DB_HOST=mariadb`). Valkey: `valkey.database.svc.cluster.local`, db 4 is the celery broker and db 1 the cache.
 - **Restore a dump:** `mariadb-dump --single-transaction --routines --events --triggers --databases sspti_aa` plus `SHOW CREATE USER` / `SHOW GRANTS` of
   `sspti_aa`@`%`; see `overlays/magi/database/mariadb/README.md` for the client.
